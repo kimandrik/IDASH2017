@@ -19,21 +19,25 @@ public:
 
 	//-----------------------------------------
 
-	long** dataFromFile(string& path, long& dim, long& sampledim);
+	long** zdataFromFile(string& path, long& dim, long& sampledim); // returns x_ij * y_i
 
 	//-----------------------------------------
 
-	double plaincost(double*& w, long**& data, long& dim, long& sampledim);
-	double plainnorm(double*& w, long& size);
 	double plainphi(double& b);
 	double plainphiprime(double& b);
-	double plainip(double*& wdata, long*& x, long& size);
-	double* plainGradient(double*& wdata, long**& data, long& dim, long& sampledim, double& lambda);
-	void plainsgd(long& iter, double*& wdata, long**& zdata, long& dim, long& sampledim);
 
+	double plainip(double*& wdata, long*& x, long& size);
+	double* plainGradient(double*& wdata, long**& zdata, long& dim, long& sampledim, double& lambda);
+	double* sgd(long& iter, long& wnum, double**& wdata, long**& zdata, double*& alpha, double& lambda, long& dim, long& sampledim);
+
+	void check(double*& w, long**& zdata, long& dim, long& sampledim);
 	//-----------------------------------------
 
 	Cipher* cipherGradient(Cipher*& zcipher, Cipher*& wcipher, const long& dim, const long& slots, const long& wnum);
+
+	Cipher* encryptzdata(long**& zdata, long& slots, long& wnum, long& dim, long& sampledim, ZZ& p);
+
+	Cipher* encryptwdata(double**& wdata, long& slots, long& wnum, long& dim, long& sampledim, long& logp);
 };
 
 #endif /* SGD_SGD_H_ */

@@ -19,6 +19,7 @@
 #include <SecKey.h>
 #include <StringUtils.h>
 #include <TimeUtils.h>
+#include <EvaluatorUtils.h>
 
 using namespace NTL;
 
@@ -42,9 +43,8 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 
 	long dim = 0;
 	long sampledim = 0;
-	long iter = 100;
 
-	long** zdata = sgd.dataFromFile(filename, dim, sampledim); //dim = 103, sampledim = 1579
+	long** zdata = sgd.zdataFromFile(filename, dim, sampledim); //dim = 103, sampledim = 1579
 
 	long slots = params.N / 2; // N /2
 	long sampledimbits = (long)ceil(log2(sampledim));
@@ -54,71 +54,42 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 	long po2dim = (1 << dimbits); //103 -> 128
 
 	cout << "dimension: " << dim << endl;
+	cout << "power of 2 dimension: " << po2dim << endl;
+
 	cout << "sample dimension: " << sampledim << endl;
 	cout << "power of 2 sample dimension: " << po2sampledim << endl;
-	cout << "power of 2 dimension: " << po2dim << endl;
+
+	cout << "slots: " << slots << endl;
+	cout << "wnum: " << wnum << endl;
 
 	double** wdata = new double*[wnum];
 	for (long l = 0; l < wnum; ++l) {
 		wdata[l] = new double[dim];
 		for (long i = 0; i < dim; ++i) {
-			wdata[l][i] = 2 - 4 * (double)rand() / RAND_MAX; // change to good initial w choice
+			wdata[l][i] = 1.0 - (double)rand() / RAND_MAX; // change to good initial w choice
 		}
-		sgd.plainsgd(iter, wdata[l], zdata, dim, sampledim);
 	}
 
-	double* w = new double[dim];
-
-	for (long i = 0; i < dim; ++i) {
-		for (int l = 0; l < wnum; ++l) {
-			w[i] += wdata[l][i];
-		}
-		w[i] /= wnum;
-		cout << w[i] << endl;
+	long iter = 1000;
+	double lambda = 2.0;
+	double* alpha = new double[iter];
+	for (long k = 0; k < iter; ++k) {
+		alpha[k] = 1.0 / (k + 1);
 	}
 
-	long num = 0;
-	for(long i = 0; i < sampledim; ++i){
-		if(sgd.plainip(w, zdata[i], dim) > 0) num++;
-	}
-	cout << "Correctness: " << num << "/" << sampledim << endl;
+	double* w = sgd.sgd(iter, wnum, wdata, zdata, alpha, lambda, dim, sampledim);
 
-	///////////////////////////// Correctness /////////////////////////////
+	sgd.check(w, zdata, dim, sampledim);
 
 	//-----------------------------------------
 
-
 	timeutils.start("Encrypting zdata");
-	Cipher* zciphers = new Cipher[dim];
-	for (long i = 0; i < dim; ++i) {
-		CZZ* zpdata = new CZZ[slots];
-		for (long j = 0; j < sampledim; ++j) {
-			if(zdata[i][j] == -1) {
-				for (long l = 0; l < wnum; ++l) {
-					zpdata[wnum * j + l] = CZZ(-p);
-				}
-			} else if(zdata[i][j] == 1) {
-				for (long l = 0; l < wnum; ++l) {
-					zpdata[wnum * j + l] = CZZ(p);
-				}
-			}
-		}
-		zciphers[i] = scheme.encrypt(zpdata, slots);
-	}
+	Cipher* zciphers = sgd.encryptzdata(zdata, slots, wnum, dim, sampledim, params.p);
 	timeutils.stop("Encrypting zdata");
 
 	timeutils.start("Encrypting wdata");
-	Cipher* wciphers = new Cipher[dim];
-	for (long i = 0; i < dim; ++i) {
-		CZZ* wpdata = new CZZ[slots];
-		for (long j = 0; j < sampledim; ++j) {
-			for (long l = 0; l < wnum; ++l) {
-				wpdata[wnum * j + l] = wpdata[l][i];
-			}
-		}
-		wciphers[i] = scheme.encrypt(wpdata, slots);
-	}
-	timeutils.start("Encrypting wdata");
+	Cipher* wciphers = sgd.encryptwdata(wdata, slots, wnum, dim, sampledim, params.logp);
+	timeutils.stop("Encrypting wdata");
 
 
 	iter = 100;
@@ -132,26 +103,10 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 		timeutils.start("change grad");
 		NTL_EXEC_RANGE(dim, first, last);
 		for (long i = first; i < last; ++i) {
-			scheme.addAndEqual(wtruecipher[i], cgrad[i]);
 		}
 		NTL_EXEC_RANGE_END;
 
-		if(init) {
-		} else {
-			for (long i = 0; i < dim; ++i) {
-				wtruecipher[i] = cgrad[i];
-			}
-			init = true;
-		}
 		timeutils.stop("change grad");
-	}
-
-	CZZ* wtrue = algo.decryptSingleArray(secretKey, wtruecipher, dim);
-
-	for (long i = 0; i < dim; ++i) {
-		RR wtruei;
-		MakeRR(wtruei, wtrue[i].r, (-10 - logp));
-		cout << wtruei << endl;
 	}
 
 	//-----------------------------------------
