@@ -1,0 +1,159 @@
+#include "TestSGD.h"
+
+#include <NTL/ZZ.h>
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <math.h>
+
+#include <NTL/BasicThreadPool.h>
+
+#include "SGD.h"
+#include <CZZ.h>
+#include <Cipher.h>
+#include <Params.h>
+#include <PubKey.h>
+#include <Scheme.h>
+#include <SchemeAlgo.h>
+#include <SecKey.h>
+#include <StringUtils.h>
+#include <TimeUtils.h>
+
+using namespace NTL;
+
+//-----------------------------------------
+
+void TestSGD::testSGD(long logN, long logl, long logp, long L) {
+	cout << "!!! START TEST SGD !!!" << endl;
+	//-----------------------------------------
+	TimeUtils timeutils;
+	Params params(logN, logl, logp, L);
+	SecKey secretKey(params);
+	PubKey publicKey(params, secretKey);
+	SchemeAux schemeaux(params);
+	Scheme scheme(params, publicKey, schemeaux);
+	SchemeAlgo algo(scheme);
+	SGD sgd(scheme, algo);
+	//-----------------------------------------
+	SetNumThreads(8);
+	//-----------------------------------------
+	string filename = "data.txt";
+
+	long dim = 0;
+	long sampledim = 0;
+	long iter = 100;
+
+	long** zdata = sgd.dataFromFile(filename, dim, sampledim); //dim = 103, sampledim = 1579
+
+	long slots = params.N / 2; // N /2
+	long sampledimbits = (long)ceil(log2(sampledim));
+	long po2sampledim = (1 << sampledimbits); // 1579 -> 2048
+	long wnum = slots / po2sampledim; // N / 2 / 2048
+	long dimbits = (long)ceil(log2(dim));
+	long po2dim = (1 << dimbits); //103 -> 128
+
+	cout << "dimension: " << dim << endl;
+	cout << "sample dimension: " << sampledim << endl;
+	cout << "power of 2 sample dimension: " << po2sampledim << endl;
+	cout << "power of 2 dimension: " << po2dim << endl;
+
+	double** wdata = new double*[wnum];
+	for (long l = 0; l < wnum; ++l) {
+		wdata[l] = new double[dim];
+		for (long i = 0; i < dim; ++i) {
+			wdata[l][i] = 2 - 4 * (double)rand() / RAND_MAX; // change to good initial w choice
+		}
+		sgd.plainsgd(iter, wdata[l], zdata, dim, sampledim);
+	}
+
+	double* w = new double[dim];
+
+	for (long i = 0; i < dim; ++i) {
+		for (int l = 0; l < wnum; ++l) {
+			w[i] += wdata[l][i];
+		}
+		w[i] /= wnum;
+		cout << w[i] << endl;
+	}
+
+	long num = 0;
+	for(long i = 0; i < sampledim; ++i){
+		if(sgd.plainip(w, zdata[i], dim) > 0) num++;
+	}
+	cout << "Correctness: " << num << "/" << sampledim << endl;
+
+	///////////////////////////// Correctness /////////////////////////////
+
+	//-----------------------------------------
+
+
+	timeutils.start("Encrypting zdata");
+	Cipher* zciphers = new Cipher[dim];
+	for (long i = 0; i < dim; ++i) {
+		CZZ* zpdata = new CZZ[slots];
+		for (long j = 0; j < sampledim; ++j) {
+			if(zdata[i][j] == -1) {
+				for (long l = 0; l < wnum; ++l) {
+					zpdata[wnum * j + l] = CZZ(-p);
+				}
+			} else if(zdata[i][j] == 1) {
+				for (long l = 0; l < wnum; ++l) {
+					zpdata[wnum * j + l] = CZZ(p);
+				}
+			}
+		}
+		zciphers[i] = scheme.encrypt(zpdata, slots);
+	}
+	timeutils.stop("Encrypting zdata");
+
+	timeutils.start("Encrypting wdata");
+	Cipher* wciphers = new Cipher[dim];
+	for (long i = 0; i < dim; ++i) {
+		CZZ* wpdata = new CZZ[slots];
+		for (long j = 0; j < sampledim; ++j) {
+			for (long l = 0; l < wnum; ++l) {
+				wpdata[wnum * j + l] = wpdata[l][i];
+			}
+		}
+		wciphers[i] = scheme.encrypt(wpdata, slots);
+	}
+	timeutils.start("Encrypting wdata");
+
+
+	iter = 100;
+	//-----------------------------------------
+	for (long k = 0; k < iter; ++k) {
+		timeutils.start("SGD");
+		Cipher* cgrad = sgd.cipherGradient(zciphers, wciphers, dim, slots, wnum);
+		timeutils.stop("SGD");
+		//-----------------------------------------
+
+		timeutils.start("change grad");
+		NTL_EXEC_RANGE(dim, first, last);
+		for (long i = first; i < last; ++i) {
+			scheme.addAndEqual(wtruecipher[i], cgrad[i]);
+		}
+		NTL_EXEC_RANGE_END;
+
+		if(init) {
+		} else {
+			for (long i = 0; i < dim; ++i) {
+				wtruecipher[i] = cgrad[i];
+			}
+			init = true;
+		}
+		timeutils.stop("change grad");
+	}
+
+	CZZ* wtrue = algo.decryptSingleArray(secretKey, wtruecipher, dim);
+
+	for (long i = 0; i < dim; ++i) {
+		RR wtruei;
+		MakeRR(wtruei, wtrue[i].r, (-10 - logp));
+		cout << wtruei << endl;
+	}
+
+	//-----------------------------------------
+	cout << "!!! END TEST SGD !!!" << endl;
+}
