@@ -77,37 +77,32 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 		alpha[k] = 1.0 / (k + 1);
 	}
 
-	double* w = sgd.sgd(iter, wnum, wdata, zdata, alpha, lambda, dim, sampledim);
+	double* w = sgd.sgd(iter, wdata, zdata, alpha, lambda, wnum, dim, sampledim);
 
 	sgd.check(w, zdata, dim, sampledim);
 
 	//-----------------------------------------
 
 	timeutils.start("Encrypting zdata");
-	Cipher* zciphers = sgd.encryptzdata(zdata, slots, wnum, dim, sampledim, params.p);
+	Cipher* czdata = sgd.encryptzdata(zdata, slots, wnum, dim, sampledim, params.p);
 	timeutils.stop("Encrypting zdata");
 
 	timeutils.start("Encrypting wdata");
-	Cipher* wciphers = sgd.encryptwdata(wdata, slots, wnum, dim, sampledim, params.logp);
+	Cipher* cwdata = sgd.encryptwdata(wdata, slots, wnum, dim, sampledim, params.logp);
 	timeutils.stop("Encrypting wdata");
 
 
 	iter = 100;
-	//-----------------------------------------
+	ZZ* palpha = new ZZ[iter];
 	for (long k = 0; k < iter; ++k) {
-		timeutils.start("SGD");
-		Cipher* cgrad = sgd.cipherGradient(zciphers, wciphers, dim, slots, wnum);
-		timeutils.stop("SGD");
-		//-----------------------------------------
-
-		timeutils.start("change grad");
-		NTL_EXEC_RANGE(dim, first, last);
-		for (long i = first; i < last; ++i) {
-		}
-		NTL_EXEC_RANGE_END;
-
-		timeutils.stop("change grad");
+		RR ralpha = to_RR(alpha[k]);
+		RR pralpha = MakeRR(ralpha.x, ralpha.e + logp);
+		palpha[k] = to_ZZ(pralpha);
 	}
+	//-----------------------------------------
+	timeutils.start("Cipher sgd");
+	Cipher* wciphers = sgd.ciphersgd(iter, czdata, cwdata, palpha, slots, wnum, dim);
+	timeutils.stop("Cipher sgd");
 
 	//-----------------------------------------
 	cout << "!!! END TEST SGD !!!" << endl;

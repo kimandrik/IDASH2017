@@ -96,7 +96,7 @@ double* SGD::plainGradient(double*& wdata, long**& zdata, long& dim, long& sampl
 	return grad;
 }
 
-double* SGD::sgd(long& iter, long& wnum, double**& wdata, long**& zdata, double*& alpha, double& lambda, long& dim, long& sampledim) {
+double* SGD::sgd(long& iter, double**& wdata, long**& zdata, double*& alpha, double& lambda, long& wnum, long& dim, long& sampledim) {
 	for (long l = 0; l < wnum; ++l) {
 		for (long k = 0; k < iter; ++k) {
 			double* grad = plainGradient(wdata[l], zdata, dim, sampledim, lambda);
@@ -126,15 +126,15 @@ void SGD::check(double*& w, long**& zdata, long& dim, long& sampledim) {
 
 }
 
-Cipher* SGD::cipherGradient(Cipher*& zciphers, Cipher*& wciphers, const long& dim, const long& slots, const long& wnum) {
+Cipher* SGD::cipherGradient(Cipher*& czdata, Cipher*& cwdata, long& slots, long& wnum, long& dim) {
 	Cipher* grad = new Cipher[dim];
 
-	Cipher ip = algo.innerProd(zciphers, wciphers, dim);
+	Cipher ip = algo.innerProd(czdata, cwdata, dim);
 	scheme.doubleAndEqual(ip);
 	Cipher sig =  algo.function(ip, SIGMOIDBARGOOD, 7); // 3 levels sig_i = sigmoid_i (z_i1 * w_1 + z_i2 * w_2 + ... + z_in * w_n) * p
 	NTL_EXEC_RANGE(dim, first, last);
 	for (long i = first; i < last; ++i) {
-		grad[i] = scheme.modEmbed(zciphers[i], sig.level);
+		grad[i] = scheme.modEmbed(czdata[i], sig.level);
 		scheme.multModSwitchOneAndEqual(grad[i], sig); // 1 level grad_i = sigmoid_j ( (xj1w1 + xj2w2 + ... + xjnwn) * y_j ) * z_ij * p
 		long logslots = log2(slots);
 		long logwnum = log2(wnum);
@@ -149,35 +149,55 @@ Cipher* SGD::cipherGradient(Cipher*& zciphers, Cipher*& wciphers, const long& di
 }
 
 Cipher* SGD::encryptzdata(long**& zdata, long& slots, long& wnum, long& dim, long& sampledim, ZZ& p) {
-	Cipher* zciphers = new Cipher[dim];
+	Cipher* czdata = new Cipher[dim];
 	for (long i = 0; i < dim; ++i) {
-		CZZ* zpdata = new CZZ[slots];
+		CZZ* pzdata = new CZZ[slots];
 		for (long j = 0; j < sampledim; ++j) {
 			if(zdata[i][j] == -1) {
 				for (long l = 0; l < wnum; ++l) {
-					zpdata[wnum * j + l] = CZZ(-p);
+					pzdata[wnum * j + l] = CZZ(-p);
 				}
 			} else if(zdata[i][j] == 1) {
 				for (long l = 0; l < wnum; ++l) {
-					zpdata[wnum * j + l] = CZZ(p);
+					pzdata[wnum * j + l] = CZZ(p);
 				}
 			}
 		}
-		zciphers[i] = scheme.encrypt(zpdata, slots);
+		czdata[i] = scheme.encrypt(pzdata, slots);
 	}
-	return zciphers;
+	return czdata;
 }
 
 Cipher* SGD::encryptwdata(double**& wdata, long& slots, long& wnum, long& dim, long& sampledim, long& logp) {
-	Cipher* wciphers = new Cipher[dim];
+	Cipher* cwdata = new Cipher[dim];
 	for (long i = 0; i < dim; ++i) {
-		CZZ* wpdata = new CZZ[slots];
+		CZZ* pwdata = new CZZ[slots];
 		for (long j = 0; j < sampledim; ++j) {
 			for (long l = 0; l < wnum; ++l) {
-				wpdata[wnum * j + l] = EvaluatorUtils::evaluateVal(wdata[l][i], 0.0, logp);
+				pwdata[wnum * j + l] = EvaluatorUtils::evaluateVal(wdata[l][i], 0.0, logp);
 			}
 		}
-		wciphers[i] = scheme.encrypt(wpdata, slots);
+		cwdata[i] = scheme.encrypt(pwdata, slots);
 	}
-	return wciphers;
+	return cwdata;
+}
+
+Cipher* SGD::ciphersgd(long& iter, Cipher*& czdata, Cipher*& cwdata, ZZ*& palpha, long& slots, long& wnum, long& dim) {
+	for (long k = 0; k < iter; ++k) {
+		Cipher* cgrad = cipherGradient(czdata, cwdata, slots, wnum, dim);
+		NTL_EXEC_RANGE(dim, first, last);
+		for (long i = first; i < last; ++i) {
+			scheme.multByConstAndEqual(cgrad[i], palpha[k]);
+			scheme.modSwitchOneAndEqual(cgrad[i]);
+			scheme.modEmbedAndEqual(cwdata, cgrad.level);
+			scheme.subAndEqual(cwdata, cgrad);
+		}
+		NTL_EXEC_RANGE_END;
+	}
+	Cipher* cw = new Cipher[dim];
+
+	for (long i = 0; i < dim; ++i) {
+		cw[i] = algo.partialSlotsSum(cwdata[i], wnum);
+	}
+	return cw;
 }

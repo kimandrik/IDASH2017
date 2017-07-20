@@ -28,16 +28,18 @@ public:
 
 	double plainip(double*& wdata, long*& x, long& size);
 	double* plainGradient(double*& wdata, long**& zdata, long& dim, long& sampledim, double& lambda);
-	double* sgd(long& iter, long& wnum, double**& wdata, long**& zdata, double*& alpha, double& lambda, long& dim, long& sampledim);
+	double* sgd(long& iter, double**& wdata, long**& zdata, double*& alpha, double& lambda, long& wnum, long& dim, long& sampledim);
 
 	void check(double*& w, long**& zdata, long& dim, long& sampledim);
 	//-----------------------------------------
 
-	Cipher* cipherGradient(Cipher*& zcipher, Cipher*& wcipher, const long& dim, const long& slots, const long& wnum);
-
 	Cipher* encryptzdata(long**& zdata, long& slots, long& wnum, long& dim, long& sampledim, ZZ& p);
-
 	Cipher* encryptwdata(double**& wdata, long& slots, long& wnum, long& dim, long& sampledim, long& logp);
+
+	Cipher* cipherGradient(Cipher*& zciphers, Cipher*& wciphers, long& slots, long& wnum, long& dim);
+
+	Cipher* ciphersgd(long& iter, Cipher*& zciphers, Cipher*& wciphers, ZZ*& palpha, long& slots, long& wnum, long& dim);
+
 };
 
 #endif /* SGD_SGD_H_ */
