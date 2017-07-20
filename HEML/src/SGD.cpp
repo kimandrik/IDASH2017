@@ -163,7 +163,9 @@ Cipher* SGD::encryptzdata(long**& zdata, long& slots, long& wnum, long& dim, lon
 				}
 			}
 		}
+		cout << i << endl;
 		czdata[i] = scheme.encrypt(pzdata, slots);
+		cout << i << endl;
 	}
 	return czdata;
 }
@@ -189,8 +191,8 @@ Cipher* SGD::ciphersgd(long& iter, Cipher*& czdata, Cipher*& cwdata, ZZ*& palpha
 		for (long i = first; i < last; ++i) {
 			scheme.multByConstAndEqual(cgrad[i], palpha[k]);
 			scheme.modSwitchOneAndEqual(cgrad[i]);
-			scheme.modEmbedAndEqual(cwdata, cgrad.level);
-			scheme.subAndEqual(cwdata, cgrad);
+			scheme.modEmbedAndEqual(cwdata[i], cgrad[i].level);
+			scheme.subAndEqual(cwdata[i], cgrad[i]);
 		}
 		NTL_EXEC_RANGE_END;
 	}

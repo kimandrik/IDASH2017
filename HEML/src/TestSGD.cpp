@@ -79,6 +79,10 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 
 	double* w = sgd.sgd(iter, wdata, zdata, alpha, lambda, wnum, dim, sampledim);
 
+	for (long i = 0; i < dim; ++i) {
+		cout << w[i] << ",";
+	}
+	cout << endl;
 	sgd.check(w, zdata, dim, sampledim);
 
 	//-----------------------------------------
@@ -101,7 +105,7 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 	}
 	//-----------------------------------------
 	timeutils.start("Cipher sgd");
-	Cipher* wciphers = sgd.ciphersgd(iter, czdata, cwdata, palpha, slots, wnum, dim);
+	Cipher* cw = sgd.ciphersgd(iter, czdata, cwdata, palpha, slots, wnum, dim);
 	timeutils.stop("Cipher sgd");
 
 	//-----------------------------------------

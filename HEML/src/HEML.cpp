@@ -16,7 +16,7 @@ int main() {
 
 //	test();
 
-	TestSGD::testSGD(15, 5, 30, 5);
+	TestSGD::testSGD(16, 5, 20, 60);
 	//-----------------------------------------
 
 	return 0;
