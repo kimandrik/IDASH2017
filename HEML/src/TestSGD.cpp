@@ -1,25 +1,19 @@
 #include "TestSGD.h"
 
-#include <NTL/ZZ.h>
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <math.h>
-
 #include <NTL/BasicThreadPool.h>
-
-#include "SGD.h"
-#include <CZZ.h>
-#include <Cipher.h>
+#include <NTL/ZZ.h>
 #include <Params.h>
 #include <PubKey.h>
 #include <Scheme.h>
 #include <SchemeAlgo.h>
+#include <SchemeAux.h>
 #include <SecKey.h>
-#include <StringUtils.h>
 #include <TimeUtils.h>
-#include <EvaluatorUtils.h>
+#include <cmath>
+#include <iostream>
+
+#include "CipherSGD.h"
+#include "SGD.h"
 
 using namespace NTL;
 
@@ -29,16 +23,9 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 	cout << "!!! START TEST SGD !!!" << endl;
 	//-----------------------------------------
 	TimeUtils timeutils;
-	Params params(logN, logl, logp, L);
-	SecKey secretKey(params);
-	PubKey publicKey(params, secretKey);
-	SchemeAux schemeaux(params);
-	Scheme scheme(params, publicKey, schemeaux);
-	SchemeAlgo algo(scheme);
-	SGD sgd(scheme, algo);
-	//-----------------------------------------
 	SetNumThreads(8);
 	//-----------------------------------------
+	SGD sgd;
 	string filename = "data.txt";
 
 	long dim = 0;
@@ -46,7 +33,7 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 
 	long** zdata = sgd.zdataFromFile(filename, dim, sampledim); //dim = 103, sampledim = 1579
 
-	long slots = params.N / 2; // N /2
+	long slots =  (1 << (logN-1)); // N /2
 	long sampledimbits = (long)ceil(log2(sampledim));
 	long po2sampledim = (1 << sampledimbits); // 1579 -> 2048
 	long wnum = slots / po2sampledim; // N / 2 / 2048
@@ -62,7 +49,7 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 	cout << "slots: " << slots << endl;
 	cout << "wnum: " << wnum << endl;
 
-	long iter = 10000;
+	long iter = 200;
 	double** wdata = sgd.wdatagen(wnum, dim);
 	double* gamma = sgd.gammagen(iter);
 
@@ -71,7 +58,8 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 	for (long k = 0; k < iter; ++k) {
 		NTL_EXEC_RANGE(wnum, first, last);
 		for (long l = first; l < last; ++l) {
-			sgd.step(wdata[l], zdata, gamma[k], lambda, dim, sampledim);
+//			sgd.steplogregress(wdata[l], zdata, gamma[k], lambda, dim, sampledim);
+			sgd.stepsimpleregress(wdata[l], zdata, gamma[k], lambda, dim, sampledim);
 		}
 		NTL_EXEC_RANGE_END;
 	}
@@ -82,32 +70,40 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 	sgd.check(w, zdata, dim, sampledim);
 
 	//-----------------------------------------
+	Params params(logN, logl, logp, L);
+	SecKey secretKey(params);
+	PubKey publicKey(params, secretKey);
+	SchemeAux schemeaux(params);
+	Scheme scheme(params, publicKey, schemeaux);
+	SchemeAlgo algo(scheme);
+	CipherSGD csgd(scheme, algo);
+	//-----------------------------------------
 
 	timeutils.start("Enc zdata");
-	Cipher* czdata = sgd.enczdata(zdata, slots, wnum, dim, sampledim, params.p);
+	Cipher* czdata = csgd.enczdata(zdata, slots, wnum, dim, sampledim, params.p);
 	timeutils.stop("Enc zdata");
 
 	timeutils.start("Enc wdata");
-	Cipher* cwdata = sgd.encwdata(wdata, slots, wnum, dim, sampledim, params.logp);
+	Cipher* cwdata = csgd.encwdata(wdata, slots, wnum, dim, sampledim, params.logp);
 	timeutils.stop("Enc wdata");
 
-	ZZ* pgamma = sgd.pgammagen(gamma, iter, params.logp);
+	ZZ* pgamma = csgd.pgammagen(gamma, iter, params.logp);
 
 	iter = 100;
 	//-----------------------------------------
 	for (long k = 0; k < iter; ++k) {
 		cout << k << endl;
 		timeutils.start("Enc sgd step");
-		sgd.encStep(czdata, cwdata, pgamma[k], lambda, slots, wnum, dim);
+		csgd.encSteplogregress(czdata, cwdata, pgamma[k], lambda, slots, wnum, dim);
 		timeutils.stop("Enc sgd step");
 	}
 
 	timeutils.start("Enc w out");
-	Cipher* cw = sgd.encwout(cwdata, wnum, dim);
+	Cipher* cw = csgd.encwout(cwdata, wnum, dim);
 	timeutils.start("Enc w out");
 
 	timeutils.start("Dec w");
-	double* dw = sgd.decw(secretKey, cw, dim);
+	double* dw = csgd.decw(secretKey, cw, dim);
 	timeutils.start("Dec w");
 
 	sgd.check(dw, zdata, dim, sampledim);
