@@ -52,12 +52,12 @@ long** SGD::zdataFromFile(string& path, long& dim, long& sampledim) {
 		cout << "Error: cannot read file" << endl;
 	}
 	long** zdata = new long*[sampledim];
-	for(int i = 0; i < sampledim; ++i){
-		long* zi = new long[dim];
-		for(int j = 0; j < dim; ++j){
-			zi[j] = ydata[i] * xdata[i][j];
+	for(int j = 0; j < sampledim; ++j){
+		long* zj = new long[dim];
+		for(int i = 0; i < dim; ++i){
+			zj[i] = ydata[j] * xdata[j][i];
 		}
-		zdata[i] = zi;
+		zdata[j] = zj;
 	}
 	return zdata;
 }
@@ -68,22 +68,6 @@ double SGD::innerprod(double*& wdata, long*& x, long& size){
 		res += wdata[i] * x[i];
 	}
 	return res;
-}
-
-double* SGD::plainGradient(double*& wdata, long**& zdata, long& dim, long& sampledim, double& lambda) {
-	double* grad = new double[dim];
-	for(int i = 0; i < dim; ++i) {
-		grad[i] = lambda * wdata[i];
-	}
-
-	for(int i = 0; i < sampledim; ++i) {
-		double ip = ip(wdata, zdata[i], dim);
-		double tmp = plainphiprime(ip);
-		for(int j = 0; j < dim; ++j) {
-			grad[j] += tmp * (double) zdata[i][j];
-		}
-	}
-	return grad;
 }
 
 double** SGD::wdatagen(long& wnum, long& dim) {
@@ -109,14 +93,14 @@ void SGD::step(double**& wdata, long**& zdata, double& gamma, double& lambda, lo
 	for (long l = 0; l < wnum; ++l) {
 		double* grad = new double[dim];
 		for(int i = 0; i < dim; ++i) {
-			grad[i] = lambda * wdata[i];
+			grad[i] = lambda * wdata[l][i];
 		}
 
-		for(int i = 0; i < sampledim; ++i) {
-			double ip = ip(wdata, zdata[i], dim);
+		for(int j = 0; j < sampledim; ++j) {
+			double ip = innerprod(wdata[l], zdata[j], dim);
 			double tmp = - 1. / (1. + exp(ip));
-			for(int j = 0; j < dim; ++j) {
-				grad[j] += tmp * (double) zdata[i][j];
+			for(int i = 0; i < dim; ++i) {
+				grad[i] += tmp * (double) zdata[j][i];
 			}
 		}
 		for (int i = 0; i < dim; ++i) {
@@ -125,7 +109,7 @@ void SGD::step(double**& wdata, long**& zdata, double& gamma, double& lambda, lo
 	}
 }
 
-double* SGD::wgen(double**& wdata, long& wnum, long& dim) {
+double* SGD::wout(double**& wdata, long& wnum, long& dim) {
 	double* w = new double[dim];
 
 	for (long i = 0; i < dim; ++i) {
@@ -198,14 +182,14 @@ ZZ* SGD::pgammagen(double*& alpha, long& iter, long& logp) {
 	return palpha;
 }
 
-void SGD::encStep(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, long& lambda, long& slots, long& wnum, long& dim, long& sampledim) {
+void SGD::encStep(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, long& slots, long& wnum, long& dim, long& sampledim) {
 
 	Cipher cip = algo.innerProd(czdata, cwdata, dim); // ip (-1)
 
 	Cipher* cpows = algo.powerOf2Extended(cip, 2); // ip (-1), ip^2 (-2), ip^4 (-3)
 
-	ZZ* pows = scheme.aux.taylorPowsMap.at(SIGMOIDBARGOOD);
-	ZZ* wcnst = scheme.params.p - pgamma * lambda;
+	ZZ* pows = scheme.aux.taylorPowsMap.at(SIGMOIDPRIMEGOOD);
+	ZZ wcnst = scheme.params.p - to_ZZ(to_RR(pgamma) * lambda);
 	for (long i = 0; i < dim; ++i) {
 		scheme.multByConstAndEqual(cwdata[i], wcnst); // (1 - gamma * lambda) w
 		scheme.modSwitchOneAndEqual(cwdata[i]); // (1 - gamma * lambda) w  (-1)
@@ -213,7 +197,7 @@ void SGD::encStep(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, long& lambda, lo
 
 	Cipher* cgrad = new Cipher[dim];
 	for (long t = 0; t < 8; ++t) {
-		ZZ* cnst = pgamma * pows[t] / sampledim / scheme.params.p; // p * (gamma * alpha_t / m)
+		ZZ cnst = pgamma * pows[t] / sampledim / scheme.params.p; // p * (gamma * alpha_t / m)
 		NTL_EXEC_RANGE(dim, first, last);
 		for (long i = first; i < last; ++i) {
 			if(cnst != ZZ::zero()) {
@@ -247,7 +231,7 @@ void SGD::encStep(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, long& lambda, lo
 	NTL_EXEC_RANGE_END;
 }
 
-Cipher* SGD::encwgen(Cipher*& cwdata, long& wnum, long& dim) {
+Cipher* SGD::encwout(Cipher*& cwdata, long& wnum, long& dim) {
 	Cipher* cw = new Cipher[dim];
 	for (long i = 0; i < dim; ++i) {
 		cw[i] = algo.partialSlotsSum(cwdata[i], wnum);
@@ -259,7 +243,9 @@ double* SGD::decw(SecKey& secretKey, Cipher*& cw, long& dim) {
 	double* w = new double[dim];
 	for (long i = 0; i < dim; ++i) {
 		CZZ* dcw = scheme.decrypt(secretKey, cw[i]);
-		w[i] = dcw[0];
+		RR wi = to_RR(dcw[0].r);
+		wi.e -= scheme.params.logp;
+		w[i] = to_double(wi);
 	}
 	return w;
 }
