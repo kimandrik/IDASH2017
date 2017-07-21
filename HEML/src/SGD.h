@@ -27,7 +27,7 @@ public:
 	double* gammagen(long& iter);
 	double innerprod(double*& wdata, long*& x, long& size);
 
-	void step(double**& wdata, long**& zdata, double& gamma, double& lambda, long& wnum, long& dim, long& sampledim);
+	void step(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& sampledim);
 	double* wout(double**& wdata, long& wnum, long& dim);
 	void check(double*& w, long**& zdata, long& dim, long& sampledim);
 
@@ -36,7 +36,7 @@ public:
 	Cipher* enczdata(long**& zdata, long& slots, long& wnum, long& dim, long& sampledim, ZZ& p);
 	Cipher* encwdata(double**& wdata, long& slots, long& wnum, long& dim, long& sampledim, long& logp);
 	ZZ* pgammagen(double*& alpha, long& iter, long& logp);
-	void encStep(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, long& slots, long& wnum, long& dim, long& sampledim);
+	void encStep(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, long& slots, long& wnum, long& dim);
 	Cipher* encwout(Cipher*& cwdata, long& wnum, long& dim);
 	double* decw(SecKey& secretKey, Cipher*& cw, long& dim);
 };

@@ -75,7 +75,7 @@ double** SGD::wdatagen(long& wnum, long& dim) {
 	for (long l = 0; l < wnum; ++l) {
 		wdata[l] = new double[dim];
 		for (long i = 0; i < dim; ++i) {
-			wdata[l][i] = 1.0 - (double)rand() / RAND_MAX; // change to good initial w choice
+			wdata[l][i] = (1.0 - 2.0 * (double)rand() / RAND_MAX) / 32.0; // change to good initial w choice
 		}
 	}
 	return wdata;
@@ -84,28 +84,26 @@ double** SGD::wdatagen(long& wnum, long& dim) {
 double* SGD::gammagen(long& iter) {
 	double* gamma = new double[iter];
 	for (long k = 0; k < iter; ++k) {
-		gamma[k] = 1.0 / (k + 1);
+		gamma[k] = 0.1 / (k + 1);
 	}
 	return gamma;
 }
 
-void SGD::step(double**& wdata, long**& zdata, double& gamma, double& lambda, long& wnum, long& dim, long& sampledim) {
-	for (long l = 0; l < wnum; ++l) {
-		double* grad = new double[dim];
-		for(int i = 0; i < dim; ++i) {
-			grad[i] = lambda * wdata[l][i];
-		}
+void SGD::step(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& sampledim) {
+	double* grad = new double[dim];
+	for(int i = 0; i < dim; ++i) {
+		grad[i] = lambda * wdata[i];
+	}
 
-		for(int j = 0; j < sampledim; ++j) {
-			double ip = innerprod(wdata[l], zdata[j], dim);
-			double tmp = - 1. / (1. + exp(ip));
-			for(int i = 0; i < dim; ++i) {
-				grad[i] += tmp * (double) zdata[j][i];
-			}
+	for(int j = 0; j < sampledim; ++j) {
+		double ip = innerprod(wdata, zdata[j], dim);
+		double tmp = - 1. / (1. + exp(ip));
+		for(int i = 0; i < dim; ++i) {
+			grad[i] += tmp * (double) zdata[j][i];
 		}
-		for (int i = 0; i < dim; ++i) {
-			wdata[l][i] -= gamma * grad[i];
-		}
+	}
+	for (int i = 0; i < dim; ++i) {
+		wdata[i] -= gamma * grad[i];
 	}
 }
 
@@ -129,8 +127,8 @@ void SGD::check(double*& w, long**& zdata, long& dim, long& sampledim) {
 	cout << endl;
 
 	long num = 0;
-	for(long i = 0; i < sampledim; ++i){
-		if(innerprod(w, zdata[i], dim) > 0) num++;
+	for(long j = 0; j < sampledim; ++j){
+		if(innerprod(w, zdata[j], dim) > 0) num++;
 	}
 	cout << "Correctness: " << num << "/" << sampledim << endl;
 
@@ -138,7 +136,8 @@ void SGD::check(double*& w, long**& zdata, long& dim, long& sampledim) {
 
 Cipher* SGD::enczdata(long**& zdata, long& slots, long& wnum, long& dim, long& sampledim, ZZ& p) {
 	Cipher* czdata = new Cipher[dim];
-	for (long i = 0; i < dim; ++i) {
+	NTL_EXEC_RANGE(dim, first, last);
+	for (long i = first; i < last; ++i) {
 		CZZ* pzdata = new CZZ[slots];
 		for (long j = 0; j < sampledim; ++j) {
 			if(zdata[i][j] == -1) {
@@ -151,16 +150,16 @@ Cipher* SGD::enczdata(long**& zdata, long& slots, long& wnum, long& dim, long& s
 				}
 			}
 		}
-		cout << i << endl;
 		czdata[i] = scheme.encrypt(pzdata, slots);
-		cout << i << endl;
 	}
+	NTL_EXEC_INDEX_END
 	return czdata;
 }
 
 Cipher* SGD::encwdata(double**& wdata, long& slots, long& wnum, long& dim, long& sampledim, long& logp) {
 	Cipher* cwdata = new Cipher[dim];
-	for (long i = 0; i < dim; ++i) {
+	NTL_EXEC_RANGE(dim, first, last);
+	for (long i = first; i < last; ++i) {
 		CZZ* pwdata = new CZZ[slots];
 		for (long j = 0; j < sampledim; ++j) {
 			for (long l = 0; l < wnum; ++l) {
@@ -169,6 +168,7 @@ Cipher* SGD::encwdata(double**& wdata, long& slots, long& wnum, long& dim, long&
 		}
 		cwdata[i] = scheme.encrypt(pwdata, slots);
 	}
+	NTL_EXEC_RANGE_END
 	return cwdata;
 }
 
@@ -182,7 +182,7 @@ ZZ* SGD::pgammagen(double*& alpha, long& iter, long& logp) {
 	return palpha;
 }
 
-void SGD::encStep(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, long& slots, long& wnum, long& dim, long& sampledim) {
+void SGD::encStep(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, long& slots, long& wnum, long& dim) {
 
 	Cipher cip = algo.innerProd(czdata, cwdata, dim); // ip (-1)
 
@@ -197,7 +197,7 @@ void SGD::encStep(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, 
 
 	Cipher* cgrad = new Cipher[dim];
 	for (long t = 0; t < 8; ++t) {
-		ZZ cnst = pgamma * pows[t] / sampledim / scheme.params.p; // p * (gamma * alpha_t / m)
+		ZZ cnst = pgamma * pows[t] / scheme.params.p; // p * (gamma * alpha_t / m)
 		NTL_EXEC_RANGE(dim, first, last);
 		for (long i = first; i < last; ++i) {
 			if(cnst != ZZ::zero()) {
