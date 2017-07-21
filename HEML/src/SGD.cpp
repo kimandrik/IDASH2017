@@ -97,15 +97,15 @@ double** SGD::wdatagen(long& wnum, long& dim) {
 	return wdata;
 }
 
-double* SGD::alphagen(long& iter) {
-	double* alpha = new alpha[iter];
+double* SGD::gammagen(long& iter) {
+	double* gamma = new double[iter];
 	for (long k = 0; k < iter; ++k) {
-		alpha[k] = 1.0 / (k + 1);
+		gamma[k] = 1.0 / (k + 1);
 	}
-	return alpha;
+	return gamma;
 }
 
-void SGD::step(double**& wdata, long**& zdata, double& alpha, double& lambda, long& wnum, long& dim, long& sampledim) {
+void SGD::step(double**& wdata, long**& zdata, double& gamma, double& lambda, long& wnum, long& dim, long& sampledim) {
 	for (long l = 0; l < wnum; ++l) {
 		double* grad = new double[dim];
 		for(int i = 0; i < dim; ++i) {
@@ -120,7 +120,7 @@ void SGD::step(double**& wdata, long**& zdata, double& alpha, double& lambda, lo
 			}
 		}
 		for (int i = 0; i < dim; ++i) {
-			wdata[l][i] -= alpha * grad[i];
+			wdata[l][i] -= gamma * grad[i];
 		}
 	}
 }
@@ -188,7 +188,7 @@ Cipher* SGD::encwdata(double**& wdata, long& slots, long& wnum, long& dim, long&
 	return cwdata;
 }
 
-ZZ* SGD::palphagen(double*& alpha, long& iter, long& logp) {
+ZZ* SGD::pgammagen(double*& alpha, long& iter, long& logp) {
 	ZZ* palpha = new ZZ[iter];
 	for (long k = 0; k < iter; ++k) {
 		RR ralpha = to_RR(alpha[k]);
@@ -198,44 +198,51 @@ ZZ* SGD::palphagen(double*& alpha, long& iter, long& logp) {
 	return palpha;
 }
 
-void SGD::encStep(Cipher*& czdata, Cipher*& cwdata, ZZ& palpha, long& slots, long& wnum, long& dim) {
+void SGD::encStep(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, long& lambda, long& slots, long& wnum, long& dim, long& sampledim) {
 
-	Cipher cip = algo.innerProd(czdata, cwdata, dim); // ip -1
+	Cipher cip = algo.innerProd(czdata, cwdata, dim); // ip (-1)
 
-	Cipher* cpows = algo.powerOf2Extended(cip, 2); // ip -1, ip^2 -2, ip^4 -3
+	Cipher* cpows = algo.powerOf2Extended(cip, 2); // ip (-1), ip^2 (-2), ip^4 (-3)
 
 	ZZ* pows = scheme.aux.taylorPowsMap.at(SIGMOIDBARGOOD);
-	double* coeffs = scheme.aux.taylorCoeffsMap.at(SIGMOIDBARGOOD);
-
-	Cipher sig = scheme.multByConst(cpows[0], pows[1]);
-	ZZ a0 = pows[0] << scheme.params.logp;
-	scheme.addConstAndEqual(sig, a0);
-
-	for (int i = 1; i < degree; ++i) {
-		if(abs(coeffs[i + 1]) > 1e-27) {
-			Cipher aixi = scheme.multByConst(cpows[i], pows[i + 1]);
-			scheme.modEmbedAndEqual(sig, aixi.level);
-			scheme.addAndEqual(sig, aixi);
-		}
+	ZZ* wcnst = scheme.params.p - pgamma * lambda;
+	for (long i = 0; i < dim; ++i) {
+		scheme.multByConstAndEqual(cwdata[i], wcnst); // (1 - gamma * lambda) w
+		scheme.modSwitchOneAndEqual(cwdata[i]); // (1 - gamma * lambda) w  (-1)
 	}
-	scheme.modSwitchOneAndEqual(sig);
 
 	Cipher* cgrad = new Cipher[dim];
+	for (long t = 0; t < 8; ++t) {
+		ZZ* cnst = pgamma * pows[t] / sampledim / scheme.params.p; // p * (gamma * alpha_t / m)
+		NTL_EXEC_RANGE(dim, first, last);
+		for (long i = first; i < last; ++i) {
+			if(cnst != ZZ::zero()) {
+				Cipher cgradit = scheme.multByConst(czdata[i], cnst); // p * p * (z * gamma * alpha_t / m)
+				scheme.modSwitchOneAndEqual(cgradit); // p * gamma * 1/m * (z * alpha_t) (-1)
+				for (int b = 0; b < 3; ++b) {
+					if(bit(t, b)) {
+						scheme.modEmbedAndEqual(cgradit, cpows[b].level);
+						scheme.multModSwitchOneAndEqual(cgradit, cpows[b]);
+					}
+				}
+				scheme.modEmbedAndEqual(cgrad[i], cgradit.level);
+				scheme.addAndEqual(cgrad[i], cgradit); // p * gamma * 1/m * (z * sigmoid(ip)) (-4)
+			}
+		}
+		NTL_EXEC_RANGE_END;
+	}
+
+	long logslots = log2(slots);
+	long logwnum = log2(wnum);
 
 	NTL_EXEC_RANGE(dim, first, last);
 	for (long i = first; i < last; ++i) {
-		cgrad[i] = scheme.modEmbed(czdata[i], sig.level);
-		scheme.multModSwitchOneAndEqual(cgrad[i], sig); // 1 level grad_i = sigmoid_j ( (xj1w1 + xj2w2 + ... + xjnwn) * y_j ) * z_ij * p
-		long logslots = log2(slots);
-		long logwnum = log2(wnum);
 		for (long i = logwnum; i < logslots; ++i) {
 			Cipher rot = scheme.leftRotateByPo2(cgrad[i], i);
-			scheme.addAndEqual(cgrad[i], rot);
+			scheme.addAndEqual(cgrad[i], rot); // p * gamma * 1/m * sum (z * sigmoid(ip)) (-4)
 		}
-		scheme.multByConstAndEqual(cgrad[i], palpha[k]);
-		scheme.modSwitchOneAndEqual(cgrad[i]);
 		scheme.modEmbedAndEqual(cwdata[i], cgrad[i].level);
-		scheme.subAndEqual(cwdata[i], cgrad[i]);
+		scheme.subAndEqual(cwdata[i], cgrad[i]); // w - gamma * grad(w) - gamma * lambda * w (-4)
 	}
 	NTL_EXEC_RANGE_END;
 }

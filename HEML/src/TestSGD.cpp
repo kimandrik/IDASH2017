@@ -62,13 +62,13 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 	cout << "slots: " << slots << endl;
 	cout << "wnum: " << wnum << endl;
 
-	double** wdata = sgd.wdatagen(wnum, dim);
-	double* alpha = sgd.alphagen(iter);
-
 	long iter = 1000;
+	double** wdata = sgd.wdatagen(wnum, dim);
+	double* gamma = sgd.gammagen(iter);
+
 	double lambda = 2.0;
 	for (long k = 0; k < iter; ++k) {
-		sgd.step(wdata, zdata, alpha[k], lambda, wnum, dim, sampledim);
+		sgd.step(wdata, zdata, gamma[k], lambda, wnum, dim, sampledim);
 	}
 
 	double* w = wgen(wdata, wnum, dim);
@@ -85,13 +85,13 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 	Cipher* cwdata = sgd.encwdata(wdata, slots, wnum, dim, sampledim, params.logp);
 	timeutils.stop("Enc wdata");
 
-	ZZ* palpha = sgd.palphagen(alpha, iter, params.logp)
+	ZZ* pgamma = sgd.pgammagen(gamma, iter, params.logp)
 
 	iter = 100;
 	//-----------------------------------------
 	for (long k = 0; k < iter; ++k) {
 		timeutils.start("Enc sgd step " + k);
-		sgd.encStep(czdata, cwdata, palpha[k], slots, wnum, dim);
+		sgd.encStep(czdata, cwdata, pgamma[k], slots, wnum, dim);
 		timeutils.stop("Enc sgd step " + k);
 	}
 
