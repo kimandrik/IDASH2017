@@ -23,23 +23,20 @@ public:
 
 	//-----------------------------------------
 
-	double plainphi(double& b);
-	double plainphiprime(double& b);
-
-	double plainip(double*& wdata, long*& x, long& size);
-	double* plainGradient(double*& wdata, long**& zdata, long& dim, long& sampledim, double& lambda);
-	double* sgd(long& iter, double**& wdata, long**& zdata, double*& alpha, double& lambda, long& wnum, long& dim, long& sampledim);
-
+	double** wdatagen(long& wnum, long& dim);
+	double* alphagen(long& iter);
+	double innerprod(double*& wdata, long*& x, long& size);
+	void step(double**& wdata, long**& zdata, double& alpha, double& lambda, long& wnum, long& dim, long& sampledim);
 	void check(double*& w, long**& zdata, long& dim, long& sampledim);
+	double* wgen(double**& wdata, long& wnum, long& dim);
 	//-----------------------------------------
 
-	Cipher* encryptzdata(long**& zdata, long& slots, long& wnum, long& dim, long& sampledim, ZZ& p);
-	Cipher* encryptwdata(double**& wdata, long& slots, long& wnum, long& dim, long& sampledim, long& logp);
-
-	Cipher* cipherGradient(Cipher*& zciphers, Cipher*& wciphers, long& slots, long& wnum, long& dim);
-
-	Cipher* ciphersgd(long& iter, Cipher*& zciphers, Cipher*& wciphers, ZZ*& palpha, long& slots, long& wnum, long& dim);
-
+	Cipher* enczdata(long**& zdata, long& slots, long& wnum, long& dim, long& sampledim, ZZ& p);
+	Cipher* encwdata(double**& wdata, long& slots, long& wnum, long& dim, long& sampledim, long& logp);
+	ZZ* palphagen(double*& alpha, long& iter, long& logp);
+	Cipher* encStep(Cipher*& czdata, Cipher*& cwdata, ZZ& palpha, long& slots, long& wnum, long& dim);
+	Cipher* encwgen(Cipher*& cwdata, long& wnum, long& dim);
+	double* decw(SecKey& secretKey, Cipher*& cw, long& dim);
 };
 
 #endif /* SGD_SGD_H_ */

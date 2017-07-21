@@ -62,52 +62,48 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 	cout << "slots: " << slots << endl;
 	cout << "wnum: " << wnum << endl;
 
-	double** wdata = new double*[wnum];
-	for (long l = 0; l < wnum; ++l) {
-		wdata[l] = new double[dim];
-		for (long i = 0; i < dim; ++i) {
-			wdata[l][i] = 1.0 - (double)rand() / RAND_MAX; // change to good initial w choice
-		}
-	}
+	double** wdata = sgd.wdatagen(wnum, dim);
+	double* alpha = sgd.alphagen(iter);
 
 	long iter = 1000;
 	double lambda = 2.0;
-	double* alpha = new double[iter];
 	for (long k = 0; k < iter; ++k) {
-		alpha[k] = 1.0 / (k + 1);
+		sgd.step(wdata, zdata, alpha[k], lambda, wnum, dim, sampledim);
 	}
 
-	double* w = sgd.sgd(iter, wdata, zdata, alpha, lambda, wnum, dim, sampledim);
+	double* w = wgen(wdata, wnum, dim);
 
-	for (long i = 0; i < dim; ++i) {
-		cout << w[i] << ",";
-	}
-	cout << endl;
 	sgd.check(w, zdata, dim, sampledim);
 
 	//-----------------------------------------
 
-	timeutils.start("Encrypting zdata");
-	Cipher* czdata = sgd.encryptzdata(zdata, slots, wnum, dim, sampledim, params.p);
-	timeutils.stop("Encrypting zdata");
+	timeutils.start("Enc zdata");
+	Cipher* czdata = sgd.enczdata(zdata, slots, wnum, dim, sampledim, params.p);
+	timeutils.stop("Enc zdata");
 
-	timeutils.start("Encrypting wdata");
-	Cipher* cwdata = sgd.encryptwdata(wdata, slots, wnum, dim, sampledim, params.logp);
-	timeutils.stop("Encrypting wdata");
+	timeutils.start("Enc wdata");
+	Cipher* cwdata = sgd.encwdata(wdata, slots, wnum, dim, sampledim, params.logp);
+	timeutils.stop("Enc wdata");
 
+	ZZ* palpha = sgd.palphagen(alpha, iter, params.logp)
 
 	iter = 100;
-	ZZ* palpha = new ZZ[iter];
-	for (long k = 0; k < iter; ++k) {
-		RR ralpha = to_RR(alpha[k]);
-		RR pralpha = MakeRR(ralpha.x, ralpha.e + logp);
-		palpha[k] = to_ZZ(pralpha);
-	}
 	//-----------------------------------------
-	timeutils.start("Cipher sgd");
-	Cipher* cw = sgd.ciphersgd(iter, czdata, cwdata, palpha, slots, wnum, dim);
-	timeutils.stop("Cipher sgd");
+	for (long k = 0; k < iter; ++k) {
+		timeutils.start("Enc sgd step " + k);
+		sgd.encStep(czdata, cwdata, palpha[k], slots, wnum, dim);
+		timeutils.stop("Enc sgd step " + k);
+	}
 
+	timeutils.start("Enc w gen");
+	Cipher* cw = sgd.encwgen(cwdata, wnum, dim);
+	timeutils.start("Enc w gen");
+
+	timeutils.start("Dec w");
+	double* dw = sgd.decw(secretKey, cw, dim);
+	timeutils.start("Dec w");
+
+	sgd.check(dw, zdata, dim, sampledim);
 	//-----------------------------------------
 	cout << "!!! END TEST SGD !!!" << endl;
 }
