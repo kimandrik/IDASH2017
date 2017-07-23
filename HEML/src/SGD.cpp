@@ -75,7 +75,7 @@ double** SGD::wdatagen(long& wnum, long& dim) {
 	for (long l = 0; l < wnum; ++l) {
 		wdata[l] = new double[dim];
 		for (long i = 0; i < dim; ++i) {
-			wdata[l][i] = (1.0 - 2.0 * (double)rand() / RAND_MAX) / 32.0; // change to good initial w choice
+			wdata[l][i] = (1.0 - 2.0 * (double)rand() / RAND_MAX) / 128.0; // change to good initial w choice
 		}
 	}
 	return wdata;
@@ -89,15 +89,15 @@ double* SGD::gammagen(long& iter) {
 	return gamma;
 }
 
-void SGD::steplogregress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& sampledim) {
+void SGD::steplogregress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim) {
 	double* grad = new double[dim];
 	for(int i = 0; i < dim; ++i) {
 		grad[i] = lambda * wdata[i];
 	}
 
-	for(int j = 0; j < sampledim; ++j) {
+	for(int j = 0; j < learndim; ++j) {
 		double ip = innerprod(wdata, zdata[j], dim);
-		double tmp = - 1. / (1. + exp(ip));
+		double tmp = - 1. / (1. + exp(ip)) / learndim;
 		for(int i = 0; i < dim; ++i) {
 			grad[i] += tmp * (double) zdata[j][i];
 		}
@@ -107,15 +107,15 @@ void SGD::steplogregress(double*& wdata, long**& zdata, double& gamma, double& l
 	}
 }
 
-void SGD::stepsimpleregress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& sampledim) {
+void SGD::stepsimpleregress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim) {
 	double* grad = new double[dim];
 	for(int i = 0; i < dim; ++i) {
 		grad[i] = lambda * wdata[i];
 	}
 
-	for(int j = 0; j < sampledim; ++j) {
+	for(int j = 0; j < learndim; ++j) {
 		double ip = innerprod(wdata, zdata[j], dim);
-		double tmp = (ip - 2) / dim;
+		double tmp = 2.0 * (ip - 1.0) / learndim;
 		for(int i = 0; i < dim; ++i) {
 			grad[i] += tmp * (double) zdata[j][i];
 		}

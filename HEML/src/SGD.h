@@ -25,9 +25,9 @@ public:
 	double* gammagen(long& iter);
 	double innerprod(double*& wdata, long*& x, long& size);
 
-	void steplogregress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& sampledim);
+	void steplogregress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim);
 
-	void stepsimpleregress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& sampledim);
+	void stepsimpleregress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim);
 
 	double* wout(double**& wdata, long& wnum, long& dim);
 	void check(double*& w, long**& zdata, long& dim, long& sampledim);

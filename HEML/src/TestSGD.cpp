@@ -9,6 +9,7 @@
 #include <SchemeAux.h>
 #include <SecKey.h>
 #include <TimeUtils.h>
+#include <NumUtils.h>
 #include <cmath>
 #include <iostream>
 
@@ -34,10 +35,11 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 	long** zdata = sgd.zdataFromFile(filename, dim, sampledim); //dim = 103, sampledim = 1579
 
 	long slots =  (1 << (logN-1)); // N /2
-	long sampledimbits = (long)ceil(log2(sampledim));
+	long sampledimbits = (long)ceil(log2(sampledim)); // log(1579) = 11
 	long po2sampledim = (1 << sampledimbits); // 1579 -> 2048
-	long wnum = slots / po2sampledim; // N / 2 / 2048
-	long dimbits = (long)ceil(log2(dim));
+	long learndim = (1 << (sampledimbits - 1)); // 1024
+	long wnum = slots / learndim; // N / 2 / 2048
+	long dimbits = (long)ceil(log2(dim)); // log(103) = 7
 	long po2dim = (1 << dimbits); //103 -> 128
 
 	cout << "dimension: " << dim << endl;
@@ -46,10 +48,12 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 	cout << "sample dimension: " << sampledim << endl;
 	cout << "power of 2 sample dimension: " << po2sampledim << endl;
 
+	cout << "learn dimension: " << learndim << endl;
+
 	cout << "slots: " << slots << endl;
 	cout << "wnum: " << wnum << endl;
 
-	long iter = 200;
+	long iter = 10;
 	double** wdata = sgd.wdatagen(wnum, dim);
 	double* gamma = sgd.gammagen(iter);
 
@@ -58,8 +62,8 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 	for (long k = 0; k < iter; ++k) {
 		NTL_EXEC_RANGE(wnum, first, last);
 		for (long l = first; l < last; ++l) {
-//			sgd.steplogregress(wdata[l], zdata, gamma[k], lambda, dim, sampledim);
-			sgd.stepsimpleregress(wdata[l], zdata, gamma[k], lambda, dim, sampledim);
+			sgd.stepsimpleregress(wdata[l], zdata, gamma[k], lambda, dim, learndim);
+//			sgd.steplogregress(wdata[l], zdata, gamma[k], lambda, dim, learndim);
 		}
 		NTL_EXEC_RANGE_END;
 	}
@@ -80,31 +84,43 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 	//-----------------------------------------
 
 	timeutils.start("Enc zdata");
-	Cipher* czdata = csgd.enczdata(zdata, slots, wnum, dim, sampledim, params.p);
+	Cipher* czdata = csgd.enczdata(zdata, slots, wnum, dim, learndim, params.p);
 	timeutils.stop("Enc zdata");
 
 	timeutils.start("Enc wdata");
-	Cipher* cwdata = csgd.encwdata(wdata, slots, wnum, dim, sampledim, params.logp);
+	Cipher* cwdata = csgd.encwdata(wdata, slots, wnum, dim, learndim, params.logp);
 	timeutils.stop("Enc wdata");
 
 	ZZ* pgamma = csgd.pgammagen(gamma, iter, params.logp);
 
-	iter = 100;
+	iter = 10;
 	//-----------------------------------------
 	for (long k = 0; k < iter; ++k) {
 		cout << k << endl;
 		timeutils.start("Enc sgd step");
-		csgd.encSteplogregress(czdata, cwdata, pgamma[k], lambda, slots, wnum, dim);
+		csgd.encStepsimpleregress(czdata, cwdata, pgamma[k], lambda, slots, wnum, dim, learndim);
+//		csgd.encSteplogregress(czdata, cwdata, pgamma[k], lambda, slots, wnum, dim, learndim);
 		timeutils.stop("Enc sgd step");
+
+		double* dw = new double[dim];
+		for (long i = 0; i < dim; ++i) {
+			CZZ* dcw = scheme.decrypt(secretKey, cwdata[i]);
+			RR wi = to_RR(dcw[0].r);
+			wi.e -= params.logp;
+			w[i] = to_double(wi);
+		}
+
+		sgd.check(dw, zdata, dim, sampledim);
+
 	}
 
 	timeutils.start("Enc w out");
 	Cipher* cw = csgd.encwout(cwdata, wnum, dim);
-	timeutils.start("Enc w out");
+	timeutils.stop("Enc w out");
 
 	timeutils.start("Dec w");
-	double* dw = csgd.decw(secretKey, cw, dim);
-	timeutils.start("Dec w");
+	double* dw = csgd.decw(secretKey, cwdata, dim);
+	timeutils.stop("Dec w");
 
 	sgd.check(dw, zdata, dim, sampledim);
 	//-----------------------------------------

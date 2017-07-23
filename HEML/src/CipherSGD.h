@@ -14,14 +14,14 @@ public:
 
 	CipherSGD(Scheme& scheme, SchemeAlgo& algo) : scheme(scheme), algo(algo) {}
 
-	Cipher* enczdata(long**& zdata, long& slots, long& wnum, long& dim, long& sampledim, ZZ& p);
-	Cipher* encwdata(double**& wdata, long& slots, long& wnum, long& dim, long& sampledim, long& logp);
+	Cipher* enczdata(long**& zdata, long& slots, long& wnum, long& dim, long& learndim, ZZ& p);
+	Cipher* encwdata(double**& wdata, long& slots, long& wnum, long& dim, long& learndim, long& logp);
 
 	ZZ* pgammagen(double*& alpha, long& iter, long& logp);
 
-	void encSteplogregress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, long& slots, long& wnum, long& dim);
+	void encSteplogregress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, long& slots, long& wnum, long& dim, long& learndim);
 
-	void encStepsimpleregress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, long& slots, long& wnum, long& dim);
+	void encStepsimpleregress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, long& slots, long& wnum, long& dim, long& learndim);
 
 	Cipher* encwout(Cipher*& cwdata, long& wnum, long& dim);
 	double* decw(SecKey& secretKey, Cipher*& cw, long& dim);
