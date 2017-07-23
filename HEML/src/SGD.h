@@ -32,6 +32,8 @@ public:
 	double* wout(double**& wdata, long& wnum, long& dim);
 	void check(double*& w, long**& zdata, long& dim, long& sampledim);
 
+	void debugcheck(string prefix, double*& w, long& dim);
+	void debugcheck(string prefix, long*& z, long& dim);
 	//-----------------------------------------
 
 };

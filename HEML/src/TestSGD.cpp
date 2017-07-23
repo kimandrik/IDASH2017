@@ -80,7 +80,7 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 	SchemeAux schemeaux(params);
 	Scheme scheme(params, publicKey, schemeaux);
 	SchemeAlgo algo(scheme);
-	CipherSGD csgd(scheme, algo);
+	CipherSGD csgd(scheme, algo, secretKey);
 	//-----------------------------------------
 
 	timeutils.start("Enc zdata");

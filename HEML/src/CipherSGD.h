@@ -11,8 +11,9 @@ class CipherSGD {
 public:
 	Scheme scheme;
 	SchemeAlgo algo;
+	SecKey secretKey;
 
-	CipherSGD(Scheme& scheme, SchemeAlgo& algo) : scheme(scheme), algo(algo) {}
+	CipherSGD(Scheme& scheme, SchemeAlgo& algo, SecKey& secretKey) : scheme(scheme), algo(algo), secretKey(secretKey) {}
 
 	Cipher* enczdata(long**& zdata, long& slots, long& wnum, long& dim, long& learndim, ZZ& p);
 	Cipher* encwdata(double**& wdata, long& slots, long& wnum, long& dim, long& learndim, long& logp);
@@ -25,6 +26,9 @@ public:
 
 	Cipher* encwout(Cipher*& cwdata, long& wnum, long& dim);
 	double* decw(SecKey& secretKey, Cipher*& cw, long& dim);
+
+	void debugcheck(string prefix, SecKey& secretKey, Cipher*& ciphers, long& dim);
+	void debugcheck(string prefix, SecKey& secretKey, Cipher& cipher);
 
 };
 

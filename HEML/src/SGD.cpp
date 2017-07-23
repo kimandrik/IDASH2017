@@ -152,3 +152,19 @@ void SGD::check(double*& w, long**& zdata, long& dim, long& sampledim) {
 
 }
 
+void SGD::debugcheck(string prefix, double*& w, long& dim) {
+	cout << prefix;
+	for (long i = 0; i < dim; ++i) {
+		cout << w[i] << ",";
+	}
+	cout << endl;
+}
+
+void SGD:: debugcheck(string prefix, long*& z, long& dim) {
+	cout << prefix;
+	for (long i = 0; i < dim; ++i) {
+		cout << z[i] << ",";
+	}
+	cout << endl;
+}
+
