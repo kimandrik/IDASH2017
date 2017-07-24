@@ -45,6 +45,7 @@ int main() {
 //	TestScheme::testEncodeBatch(13, 5, 30, 5, 12);
 //	TestScheme::testExponentBatch(13, 5, 30, 5, 7, 12);
 //	TestScheme::testSlotsSum(13, 5, 50, 5, 12);
+	TestScheme::testConjugateBatch(13, 5, 30, 4, 5);
 	//-----------------------------------------
 
 	return 0;
