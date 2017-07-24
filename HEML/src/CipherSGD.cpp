@@ -71,21 +71,18 @@ void CipherSGD::encSteplogregress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, 
 
 	Cipher* cprod = new Cipher[dim];
 
-//	NTL_EXEC_RANGE(dim, first, last);
-//	for (long i = first; i < last; ++i) {
-	for (long i = 0; i < dim; ++i) {
-		cout << i << endl;
+	NTL_EXEC_RANGE(dim, first, last);
+	for (long i = first; i < last; ++i) {
 		cprod[i] = scheme.modEmbed(czdata[i], cwdata[i].level);
 		scheme.multAndEqual(cprod[i], cwdata[i]);
 	}
-//	NTL_EXEC_RANGE_END;
+	NTL_EXEC_RANGE_END;
 
 	Cipher cip = algo.sum(cprod, dim);
 
-	scheme.modSwitchOneAndEqual(cip);
+	scheme.modSwitchOneAndEqual(cip); // cip (-1)
 
 	debugcheck("c inner prod:", secretKey, cip);
-
 
 	ZZ* pows = scheme.aux.taylorPowsMap.at(SIGMOIDPRIMEGOOD);
 	ZZ wcnst = scheme.params.p - to_ZZ(to_RR(pgamma) * lambda);
@@ -94,27 +91,43 @@ void CipherSGD::encSteplogregress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, 
 		scheme.modSwitchOneAndEqual(cwdata[i]); // (1 - gamma * lambda) * w  (-1)
 	}
 
-	debugcheck("c (1-gamma * lambda) * wdata: ", secretKey, cwdata, dim);
+	debugcheck("c (1-gamma * lambda) * wdata: ", secretKey, cwdata, dimcheck);
 
 	Cipher* cpows = algo.powerOf2Extended(cip, 2); // ip (-1), ip^2 (-2), ip^4 (-3)
 
 	Cipher* cgrad = new Cipher[dim];
-	for (long t = 0; t < 8; ++t) {
-		ZZ cnst = pgamma * pows[t] / scheme.params.p; // p * gamma * (alpha_t)
+
+	ZZ cnst = pgamma * pows[0] / scheme.params.p; // p * gamma * (alpha_t)
+
+	NTL_EXEC_RANGE(dim, first, last);
+	for (long i = first; i < last; ++i) {
+		cgrad[i] = scheme.multByConst(czdata[i], cnst); // p * p * gamma * (z * alpha_t)
+		scheme.modSwitchOneAndEqual(cgrad[i]); // p * gamma * (z * alpha_t) (-1)
+		scheme.modEmbedAndEqual(cgrad[i], cpows[0].level);
+		scheme.multModSwitchOneAndEqual(cgrad[i], cpows[0]); // p * gamma * (z * alpha_t * ip^t)
+	}
+	NTL_EXEC_RANGE_END;
+
+	for (long t = 1; t < 8; t=t+2) {
+		cnst = pgamma * pows[t] / scheme.params.p; // p * gamma * (alpha_t)
 		NTL_EXEC_RANGE(dim, first, last);
 		for (long i = first; i < last; ++i) {
-			if(cnst != ZZ::zero()) {
-				Cipher cgradit = scheme.multByConst(czdata[i], cnst); // p * p * gamma * (z * alpha_t)
-				scheme.modSwitchOneAndEqual(cgradit); // p * gamma * (z * alpha_t) (-1)
-				for (int b = 0; b < 3; ++b) {
-					if(bit(t, b)) {
-						scheme.modEmbedAndEqual(cgradit, cpows[b].level);
-						scheme.multModSwitchOneAndEqual(cgradit, cpows[b]); // p * gamma * (z * alpha_t * ip^t)
-					}
-				}
-				scheme.modEmbedAndEqual(cgrad[i], cgradit.level);
-				scheme.addAndEqual(cgrad[i], cgradit); // p * gamma * (z * sigmoid(ip)) (-4)
+			Cipher cgradit = scheme.multByConst(czdata[i], cnst); // p * p * gamma * (z * alpha_t)
+			scheme.modSwitchOneAndEqual(cgradit); // p * gamma * (z * alpha_t) (-1)
+			if(bit(t, 0)) {
+				scheme.modEmbedAndEqual(cgradit, cpows[0].level);
+				scheme.multModSwitchOneAndEqual(cgradit, cpows[0]); // p * gamma * (z * alpha_t * ip^t)
 			}
+			if(bit(t, 1)) {
+				scheme.modEmbedAndEqual(cgradit, cpows[1].level);
+				scheme.multModSwitchOneAndEqual(cgradit, cpows[1]); // p * gamma * (z * alpha_t * ip^t)
+			}
+			if(bit(t, 2)) {
+				scheme.modEmbedAndEqual(cgradit, cpows[2].level);
+				scheme.multModSwitchOneAndEqual(cgradit, cpows[2]); // p * gamma * (z * alpha_t * ip^t)
+			}
+			scheme.modEmbedAndEqual(cgrad[i], cgradit.level);
+			scheme.addAndEqual(cgrad[i], cgradit); // p * gamma * (z * sigmoid(ip)) (-4)
 		}
 		NTL_EXEC_RANGE_END;
 	}
@@ -168,7 +181,7 @@ void CipherSGD::encStepsimpleregress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamm
 		scheme.modSwitchOneAndEqual(cwdata[i]); // p * (1 - gamma * lambda) * w  (-1)
 	}
 
-	debugcheck("c (1-gamma * lambda) * wdata: ", secretKey, cwdata, dim);
+	debugcheck("c (1-gamma * lambda) * wdata: ", secretKey, cwdata, dimcheck);
 
 	ZZ minusp = -scheme.params.p; // -p
 	scheme.addConstAndEqual(cip, minusp); // p * (ip - 1) (-1)
@@ -229,24 +242,22 @@ double* CipherSGD::decw(SecKey& secretKey, Cipher*& cw, long& dim) {
 }
 
 void CipherSGD::debugcheck(string prefix, SecKey& secretKey, Cipher*& ciphers, long& dim) {
-	cout << prefix << " " << ciphers[0].level << ": ";
+	cout << prefix << " " << ciphers[0].level << endl;
 	for (long i = 0; i < dim; ++i) {
 		CZZ* deci = scheme.decrypt(secretKey, ciphers[i]);
-		cout << "wp[" << i << "] = " << deci[0].r << " -> ";
 		RR wi = to_RR(deci[0].r);
 		wi.e -= scheme.params.logp;
 		double w = to_double(wi);
-		cout << "w:[" << i << "] = " << w << " , ";
+		cout << w << ",";
 	}
 	cout << endl;
 }
 
 void CipherSGD::debugcheck(string prefix, SecKey& secretKey, Cipher& cipher) {
-	cout << prefix << " " << cipher.level << ": ";
+	cout << prefix << " " << cipher.level << endl;
 	CZZ* dec = scheme.decrypt(secretKey, cipher);
-	cout << "wp = " << dec[0].r << " -> ";
 	RR wrr = to_RR(dec[0].r);
 	wrr.e -= scheme.params.logp;
 	double w = to_double(wrr);
-	cout << "w = " << w << endl;;
+	cout << w << endl;
 }
