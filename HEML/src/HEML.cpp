@@ -40,9 +40,11 @@ int main() {
 	//19, 30, 30, 335
 	//20, 60, 30, 670
 
-	TestSGD::testSGD(12, 10, 30, 25);
-//	TestScheme::testEncodeBatch(13, 5, 30, 5, 3);
-//	TestScheme::testExponentBatch(13, 5, 30, 5, 7, 3);
+//	TestSGD::testSimpleSGD(12, 10, 30, 10);
+	TestSGD::testLogSGD(12, 10, 30, 10);
+//	TestScheme::testEncodeBatch(13, 5, 30, 5, 12);
+//	TestScheme::testExponentBatch(13, 5, 30, 5, 7, 12);
+//	TestScheme::testSlotsSum(13, 5, 50, 5, 12);
 	//-----------------------------------------
 
 	return 0;

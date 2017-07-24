@@ -81,7 +81,15 @@ double** SGD::wdatagen(long& wnum, long& dim) {
 	return wdata;
 }
 
-double* SGD::gammagen(long& iter) {
+double* SGD::gammaloggen(long& iter) {
+	double* gamma = new double[iter];
+	for (long k = 0; k < iter; ++k) {
+		gamma[k] = 1.0 / (k + 1);
+	}
+	return gamma;
+}
+
+double* SGD::gammasimplegen(long& iter) {
 	double* gamma = new double[iter];
 	for (long k = 0; k < iter; ++k) {
 		gamma[k] = 0.1 / (k + 1);
@@ -97,7 +105,7 @@ void SGD::steplogregress(double*& wdata, long**& zdata, double& gamma, double& l
 
 	for(int j = 0; j < learndim; ++j) {
 		double ip = innerprod(wdata, zdata[j], dim);
-		double tmp = - 1. / (1. + exp(ip)) / learndim;
+		double tmp = - 1. / (1. + exp(ip));
 		for(int i = 0; i < dim; ++i) {
 			grad[i] += tmp * (double) zdata[j][i];
 		}

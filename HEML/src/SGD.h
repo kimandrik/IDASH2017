@@ -22,7 +22,8 @@ public:
 	//-----------------------------------------
 
 	double** wdatagen(long& wnum, long& dim);
-	double* gammagen(long& iter);
+	double* gammaloggen(long& iter);
+	double* gammasimplegen(long& iter);
 	double innerprod(double*& wdata, long*& x, long& size);
 
 	void steplogregress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim);
