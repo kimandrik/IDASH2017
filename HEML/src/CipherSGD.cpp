@@ -52,16 +52,6 @@ Cipher* CipherSGD::encwdata(double**& wdata, long& slots, long& wnum, long& dim,
 	return cwdata;
 }
 
-ZZ* CipherSGD::pgammagen(double*& gamma, long& iter, long& logp) {
-	ZZ* pgamma = new ZZ[iter];
-	for (long k = 0; k < iter; ++k) {
-		RR rgamma = to_RR(gamma[k]);
-		RR prgamma = MakeRR(rgamma.x, rgamma.e + logp);
-		pgamma[k] = to_ZZ(prgamma);
-	}
-	return pgamma;
-}
-
 void CipherSGD::encStepQuadraticRegress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, long& slots, long& wnum, long& dim, long& learndim) {
 
 	long dimcheck = 5;

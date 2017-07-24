@@ -34,13 +34,15 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 
 	long** zdata = sgd.zdataFromFile(filename, dim, sampledim); //dim = 103, sampledim = 1579
 
-	long slots =  (1 << (logN-1)); // N /2
 	long sampledimbits = (long)ceil(log2(sampledim)); // log(1579) = 11
 	long po2sampledim = (1 << sampledimbits); // 1579 -> 2048
-//	long learndim = (1 << (sampledimbits - 1)); // 1024
-//	long wnum = slots / learndim;
-	long learndim = sampledim;
-	long wnum = slots / po2sampledim; // N / 2 / 2048
+	long learndim = (1 << (sampledimbits - 1)); // 1024
+//	long slots =  (1 << (logN-1)); // N /2
+	long slots =  learndim; // N /2
+	long wnum = slots / learndim;
+//	long learndim = sampledim;
+//	long slots =  (1 << (logN-1)); // N /2
+//	long wnum = slots / po2sampledim; // N / 2 / 2048
 	long dimbits = (long)ceil(log2(dim)); // log(103) = 7
 	long po2dim = (1 << dimbits); //103 -> 128
 
@@ -56,15 +58,15 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 	cout << "wnum: " << wnum << endl;
 
 	double** vdata = new double*[wnum];
-	for (long l = 0; l < wnum; ++l) {
-		vdata[l] = new double[dim];
-	}
-
 	double** wdata = new double*[wnum];
 	for (long l = 0; l < wnum; ++l) {
 		wdata[l] = new double[dim];
+		vdata[l] = new double[dim];
 		for (long i = 0; i < dim; ++i) {
-			wdata[l][i] = (1.0 - 2.0 * (double)rand() / RAND_MAX) / 2.0; // change to good initial w choice
+			double tmp = (1.0 - 2.0 * (double)rand() / RAND_MAX) / 64.0;
+//			double tmp = 0.0;
+			wdata[l][i] = tmp;
+			vdata[l][i] = tmp;
 		}
 	}
 
@@ -72,27 +74,26 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 	long additer = 3;
 	long totaliter = iter + additer;
 
-	double* gamma = new double[iter];
-	for (long k = 0; k < iter; ++k) {
-//		gamma[k] = 0.1 / (k + 1);
-//		gamma[k] = 1.0 / (k + 1);
-		gamma[k] = (double)learndim / (k + 1);
-//		gamma[k] = 10.;
+	double* alpha = new double[iter + 2];
+	alpha[0] = 0.0;
+	for (long i = 1; i < iter + 2; ++i) {
+		alpha[i] = (1. + sqrt(1. + 4.0 * alpha[i-1] * alpha[i-1])) / 2.0;
 	}
 
-	double eta = 0.6;
-	double beta = 0.8;
 //	double lambda = 2.0;
-	double lambda = 2.0 / learndim;
 
 	timeutils.start("sgd");
 	for (long k = 0; k < iter; ++k) {
+//		double gamma = 5.0 / (k+1);
+		double gamma = 1.0 / 5.0;
+		double eta = (1. - alpha[k+1]) / alpha[k+2];
+		cout << eta << endl;
 		NTL_EXEC_RANGE(wnum, first, last);
 		for (long l = first; l < last; ++l) {
 //			sgd.stepQuadraticRegress(wdata[l], zdata, gamma[k], lambda, dim, learndim);
 //			sgd.stepLogRegress(wdata[l], zdata, gamma[k], lambda, dim, learndim);
 //			sgd.stepMomentumLogRegress(wdata[l], vdata[l], zdata, gamma[k], lambda, dim, learndim, eta);
-			sgd.stepNesterovLogRegress(wdata[l], vdata[l], zdata, gamma[k], lambda, dim, learndim, beta, eta);
+			sgd.stepNesterovLogRegress(wdata[l], vdata[l], zdata, gamma, dim, learndim, eta);
 		}
 		NTL_EXEC_RANGE_END;
 	}
@@ -120,13 +121,13 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 	Cipher* cwdata = csgd.encwdata(wdata, slots, wnum, dim, learndim, params.logp);
 	timeutils.stop("Enc wdata");
 
-	ZZ* pgamma = csgd.pgammagen(gamma, totaliter, params.logp);
-
 	//-----------------------------------------
 	for (long k = iter; k < totaliter; ++k) {
+		ZZ pgamma = ZZ(0);
+		double lambda = 2.0;
 		cout << k << endl;
 		timeutils.start("Enc sgd step");
-		csgd.encStepQuadraticRegress(czdata, cwdata, pgamma[k], lambda, slots, wnum, dim, learndim);
+		csgd.encStepQuadraticRegress(czdata, cwdata, pgamma, lambda, slots, wnum, dim, learndim);
 
 		timeutils.stop("Enc sgd step");
 	}

@@ -18,8 +18,6 @@ public:
 	Cipher* enczdata(long**& zdata, long& slots, long& wnum, long& dim, long& learndim, ZZ& p);
 	Cipher* encwdata(double**& wdata, long& slots, long& wnum, long& dim, long& learndim, long& logp);
 
-	ZZ* pgammagen(double*& alpha, long& iter, long& logp);
-
 	void encStepQuadraticRegress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, long& slots, long& wnum, long& dim, long& learndim);
 	void encStepLogRegress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, long& slots, long& wnum, long& dim, long& learndim);
 

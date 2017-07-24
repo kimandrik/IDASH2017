@@ -27,8 +27,8 @@ public:
 	void stepLogRegress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim);
 	void stepStochasticQuadraticRegress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim, long& stochdim);
 	void stepStochasticLogRegress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim, long& stochdim);
-	void stepMomentumLogRegress(double*& wdata, double*& vdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim, double& eta);
-	void stepNesterovLogRegress(double*& wdata, double*& vdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim, double& beta, double& eta);
+	void stepMomentumLogRegress(double*& wdata, double*& vdata, long**& zdata, double& gamma, long& dim, long& learndim, double& eta);
+	void stepNesterovLogRegress(double*& wdata, double*& vdata, long**& zdata, double& gamma, long& dim, long& learndim, double& eta);
 
 	double* waverage(double**& wdata, long& wnum, long& dim);
 
