@@ -149,7 +149,7 @@ void TestSGD::testLogSGD(long logN, long logl, long logp, long L) {
 	cout << "slots: " << slots << endl;
 	cout << "wnum: " << wnum << endl;
 
-	long iter = 1000;
+	long iter = 1;
 	long additer = 3;
 	long totaliter = iter + additer;
 	double** wdata = sgd.wdataloggen(wnum, dim);

@@ -25,8 +25,8 @@ public:
 	Cipher* encwout(Cipher*& cwdata, long& wnum, long& dim);
 	double* decw(SecKey& secretKey, Cipher*& cw, long& dim);
 
-	void debugcheck(string prefix, SecKey& secretKey, Cipher*& ciphers, long& dim);
-	void debugcheck(string prefix, SecKey& secretKey, Cipher& cipher);
+	void debugcheck(string prefix, SecKey& secretKey, Cipher*& ciphers, long dim, long slots);
+	void debugcheck(string prefix, SecKey& secretKey, Cipher& cipher, long slots);
 
 };
 

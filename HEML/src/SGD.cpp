@@ -95,7 +95,7 @@ double** SGD::wdatasimplegen(long& wnum, long& dim) {
 double* SGD::gammaloggen(long& iter) {
 	double* gamma = new double[iter];
 	for (long k = 0; k < iter; ++k) {
-		gamma[k] = 1.0 / (k + 1);
+		gamma[k] = 1.0 / (k + 100);
 	}
 	return gamma;
 }
@@ -103,7 +103,7 @@ double* SGD::gammaloggen(long& iter) {
 double* SGD::gammasimplegen(long& iter) {
 	double* gamma = new double[iter];
 	for (long k = 0; k < iter; ++k) {
-		gamma[k] = 0.1 / (k + 1);
+		gamma[k] = 0.1 / (k + 100);
 	}
 	return gamma;
 }
