@@ -70,63 +70,7 @@ double SGD::innerprod(double*& wdata, long*& x, long& size){
 	return res;
 }
 
-double** SGD::wdataloggen(long& wnum, long& dim) {
-	double** wdata = new double*[wnum];
-	for (long l = 0; l < wnum; ++l) {
-		wdata[l] = new double[dim];
-		for (long i = 0; i < dim; ++i) {
-			wdata[l][i] = (1.0 - 2.0 * (double)rand() / RAND_MAX) / 128.0; // change to good initial w choice
-		}
-	}
-	return wdata;
-}
-
-double** SGD::wdatasimplegen(long& wnum, long& dim) {
-	double** wdata = new double*[wnum];
-	for (long l = 0; l < wnum; ++l) {
-		wdata[l] = new double[dim];
-		for (long i = 0; i < dim; ++i) {
-			wdata[l][i] = (1.0 - 2.0 * (double)rand() / RAND_MAX) / 128.0; // change to good initial w choice
-		}
-	}
-	return wdata;
-}
-
-double* SGD::gammaloggen(long& iter) {
-	double* gamma = new double[iter];
-	for (long k = 0; k < iter; ++k) {
-		gamma[k] = 1.0 / (k + 100);
-	}
-	return gamma;
-}
-
-double* SGD::gammasimplegen(long& iter) {
-	double* gamma = new double[iter];
-	for (long k = 0; k < iter; ++k) {
-		gamma[k] = 0.1 / (k + 100);
-	}
-	return gamma;
-}
-
-void SGD::steplogregress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim) {
-	double* grad = new double[dim];
-	for(int i = 0; i < dim; ++i) {
-		grad[i] = lambda * wdata[i];
-	}
-
-	for(int j = 0; j < learndim; ++j) {
-		double ip = innerprod(wdata, zdata[j], dim);
-		double tmp = - 1. / (1. + exp(ip));
-		for(int i = 0; i < dim; ++i) {
-			grad[i] += tmp * (double) zdata[j][i];
-		}
-	}
-	for (int i = 0; i < dim; ++i) {
-		wdata[i] -= gamma * grad[i];
-	}
-}
-
-void SGD::stepsimpleregress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim) {
+void SGD::stepQuadraticRegress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim) {
 	double* grad = new double[dim];
 	for(int i = 0; i < dim; ++i) {
 		grad[i] = lambda * wdata[i];
@@ -144,7 +88,109 @@ void SGD::stepsimpleregress(double*& wdata, long**& zdata, double& gamma, double
 	}
 }
 
-double* SGD::wout(double**& wdata, long& wnum, long& dim) {
+
+void SGD::stepLogRegress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim) {
+	double* grad = new double[dim];
+	for(int i = 0; i < dim; ++i) {
+		grad[i] = lambda * wdata[i];
+	}
+
+	for(int j = 0; j < learndim; ++j) {
+		double ip = innerprod(wdata, zdata[j], dim);
+		double tmp = - 1. / (1. + exp(ip));
+		tmp /= (double)learndim;
+		for(int i = 0; i < dim; ++i) {
+			grad[i] += tmp * (double) zdata[j][i];
+		}
+	}
+	for (int i = 0; i < dim; ++i) {
+		wdata[i] -= gamma * grad[i];
+	}
+}
+
+void SGD::stepStochasticQuadraticRegress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim, long& stochdim) {
+	double* grad = new double[dim];
+	for(int i = 0; i < dim; ++i) {
+		grad[i] = lambda * wdata[i];
+	}
+
+	for(int j = 0; j < stochdim; ++j) {
+		long rnd = RandomBnd(learndim);
+		double ip = innerprod(wdata, zdata[rnd], dim);
+		double tmp = 2.0 * (ip - 1.0) / stochdim;
+		for(int i = 0; i < dim; ++i) {
+			grad[i] += tmp * (double) zdata[rnd][i];
+		}
+	}
+	for (int i = 0; i < dim; ++i) {
+		wdata[i] -= gamma * grad[i];
+	}
+}
+
+void SGD::stepStochasticLogRegress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim, long& stochdim) {
+	double* grad = new double[dim];
+	for(int i = 0; i < dim; ++i) {
+		grad[i] = lambda * wdata[i];
+	}
+
+	for(int j = 0; j < stochdim; ++j) {
+		long rnd = RandomBnd(learndim);
+		double ip = innerprod(wdata, zdata[rnd], dim);
+		double tmp = - 1. / (1. + exp(ip)) / stochdim;
+		for(int i = 0; i < dim; ++i) {
+			grad[i] += tmp * (double) zdata[rnd][i];
+		}
+	}
+
+	for (int i = 0; i < dim; ++i) {
+		wdata[i] -= gamma * grad[i];
+	}
+}
+
+void SGD::stepMomentumLogRegress(double*& wdata, double*& vdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim, double& eta) {
+	double* grad = new double[dim];
+	for(int i = 0; i < dim; ++i) {
+		grad[i] = lambda * wdata[i];
+	}
+
+	for(int j = 0; j < learndim; ++j) {
+		double ip = innerprod(wdata, zdata[j], dim);
+		double tmp = - 1. / (1. + exp(ip));
+		tmp /= learndim;
+		for(int i = 0; i < dim; ++i) {
+			grad[i] += tmp * (double) zdata[j][i];
+		}
+	}
+
+	for (int i = 0; i < dim; ++i) {
+		vdata[i] *= eta;
+		vdata[i] += gamma * grad[i];
+		wdata[i] -= vdata[i];
+	}
+}
+
+void SGD::stepNesterovLogRegress(double*& wdata, double*& vdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim, double& beta, double& eta) {
+	double* grad = new double[dim];
+	for(int i = 0; i < dim; ++i) {
+		grad[i] = lambda * wdata[i];
+	}
+
+	for(int j = 0; j < learndim; ++j) {
+		double ip = innerprod(wdata, zdata[j], dim);
+		double tmp = - 1. / (1. + exp(ip)) / learndim;
+		for(int i = 0; i < dim; ++i) {
+			grad[i] += tmp * (double) zdata[j][i];
+		}
+	}
+
+	for (int i = 0; i < dim; ++i) {
+		double tmpv = wdata[i] - gamma * grad[i];
+		wdata[i] = beta * tmpv + eta * vdata[i];
+		vdata[i] = tmpv;
+	}
+}
+
+double* SGD::waverage(double**& wdata, long& wnum, long& dim) {
 	double* w = new double[dim];
 
 	for (long i = 0; i < dim; ++i) {

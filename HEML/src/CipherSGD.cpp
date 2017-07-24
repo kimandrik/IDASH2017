@@ -62,7 +62,76 @@ ZZ* CipherSGD::pgammagen(double*& gamma, long& iter, long& logp) {
 	return pgamma;
 }
 
-void CipherSGD::encSteplogregress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, long& slots, long& wnum, long& dim, long& sampledim) {
+void CipherSGD::encStepQuadraticRegress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, long& slots, long& wnum, long& dim, long& learndim) {
+
+	long dimcheck = 5;
+	long slotscheck = 10;
+	debugcheck("c zdata: ", secretKey, czdata, dimcheck, slotscheck);
+
+	debugcheck("c wdata: ", secretKey, cwdata, dimcheck, slotscheck);
+
+	Cipher* cprod = new Cipher[dim];
+	NTL_EXEC_RANGE(dim, first, last);
+	for (long i = first; i < last; ++i) {
+		cout << i << endl;
+		cprod[i] = scheme.modEmbed(czdata[i], cwdata[i].level);
+		scheme.multAndEqual(cprod[i], cwdata[i]);
+	}
+	NTL_EXEC_RANGE_END;
+
+	Cipher cip = algo.sum(cprod, dim);
+
+	scheme.modSwitchOneAndEqual(cip);
+
+	debugcheck("c inner prod:", secretKey, cip, slotscheck);
+
+	ZZ wcnst = scheme.params.p - to_ZZ(to_RR(pgamma) * lambda); // p * (1 - gamma * lambda)
+	for (long i = 0; i < dim; ++i) {
+		scheme.multByConstAndEqual(cwdata[i], wcnst); // p * p * (1 - gamma * lambda) * w
+		scheme.modSwitchOneAndEqual(cwdata[i]); // p * (1 - gamma * lambda) * w  (-1)
+	}
+
+	debugcheck("c (1-gamma * lambda) * wdata: ", secretKey, cwdata, dimcheck, slotscheck);
+
+	ZZ minusp = -scheme.params.p; // -p
+	scheme.addConstAndEqual(cip, minusp); // p * (ip - 1) (-1)
+	scheme.doubleAndEqual(cip); // p * (2 * ip - 2) (-1)
+
+	debugcheck("c (2ip - 2): ", secretKey, cip, slotscheck);
+
+	Cipher* cgrad = new Cipher[dim];
+	ZZ cnst = pgamma / learndim; // p * gamma * (1 / m)
+	NTL_EXEC_RANGE(dim, first, last);
+	for (long i = first; i < last; ++i) {
+		cgrad[i] = scheme.multByConst(czdata[i], cnst); // p * p * gamma * (z / m)
+		scheme.modSwitchOneAndEqual(cgrad[i]); // p * gamma * (z / m) (-1)
+		scheme.modEmbedAndEqual(cgrad[i], cip.level);
+		scheme.multModSwitchOneAndEqual(cgrad[i], cip); // p * gamma * (z * ip / m) (-2)
+	}
+	NTL_EXEC_RANGE_END;
+
+	debugcheck("c grad: ", secretKey, cgrad, dimcheck, slotscheck);
+
+	long logslots = log2(slots);
+	long logwnum = log2(wnum);
+
+	NTL_EXEC_RANGE(dim, first, last);
+	for (long i = first; i < last; ++i) {
+		for (long l = logwnum; l < logslots; ++l) {
+			Cipher rot = scheme.leftRotateByPo2(cgrad[i], l);
+			scheme.addAndEqual(cgrad[i], rot); // p * gamma * sum(z * (ip - 2)) (-2)
+		}
+		scheme.modEmbedAndEqual(cwdata[i], cgrad[i].level);
+		scheme.subAndEqual(cwdata[i], cgrad[i]); // w - gamma * (sum(z * (ip - 2)) - lambda * w) (-2)
+	}
+	NTL_EXEC_RANGE_END;
+
+	debugcheck("c grad: ", secretKey, cgrad, dimcheck, slotscheck);
+
+	debugcheck("c wdata: ", secretKey, cwdata, dimcheck, slotscheck);
+}
+
+void CipherSGD::encStepLogRegress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, long& slots, long& wnum, long& dim, long& sampledim) {
 
 	long dimcheck = 5;
 	long slotscheck = 10;
@@ -160,75 +229,6 @@ void CipherSGD::encSteplogregress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, 
 	NTL_EXEC_RANGE_END;
 
 	debugcheck("c grad: ", secretKey, cgrad, dimcheck, 20);
-
-	debugcheck("c wdata: ", secretKey, cwdata, dimcheck, slotscheck);
-}
-
-void CipherSGD::encStepsimpleregress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, long& slots, long& wnum, long& dim, long& learndim) {
-
-	long dimcheck = 5;
-	long slotscheck = 10;
-	debugcheck("c zdata: ", secretKey, czdata, dimcheck, slotscheck);
-
-	debugcheck("c wdata: ", secretKey, cwdata, dimcheck, slotscheck);
-
-	Cipher* cprod = new Cipher[dim];
-	NTL_EXEC_RANGE(dim, first, last);
-	for (long i = first; i < last; ++i) {
-		cout << i << endl;
-		cprod[i] = scheme.modEmbed(czdata[i], cwdata[i].level);
-		scheme.multAndEqual(cprod[i], cwdata[i]);
-	}
-	NTL_EXEC_RANGE_END;
-
-	Cipher cip = algo.sum(cprod, dim);
-
-	scheme.modSwitchOneAndEqual(cip);
-
-	debugcheck("c inner prod:", secretKey, cip, slotscheck);
-
-	ZZ wcnst = scheme.params.p - to_ZZ(to_RR(pgamma) * lambda); // p * (1 - gamma * lambda)
-	for (long i = 0; i < dim; ++i) {
-		scheme.multByConstAndEqual(cwdata[i], wcnst); // p * p * (1 - gamma * lambda) * w
-		scheme.modSwitchOneAndEqual(cwdata[i]); // p * (1 - gamma * lambda) * w  (-1)
-	}
-
-	debugcheck("c (1-gamma * lambda) * wdata: ", secretKey, cwdata, dimcheck, slotscheck);
-
-	ZZ minusp = -scheme.params.p; // -p
-	scheme.addConstAndEqual(cip, minusp); // p * (ip - 1) (-1)
-	scheme.doubleAndEqual(cip); // p * (2 * ip - 2) (-1)
-
-	debugcheck("c (2ip - 2): ", secretKey, cip, slotscheck);
-
-	Cipher* cgrad = new Cipher[dim];
-	ZZ cnst = pgamma / learndim; // p * gamma * (1 / m)
-	NTL_EXEC_RANGE(dim, first, last);
-	for (long i = first; i < last; ++i) {
-		cgrad[i] = scheme.multByConst(czdata[i], cnst); // p * p * gamma * (z / m)
-		scheme.modSwitchOneAndEqual(cgrad[i]); // p * gamma * (z / m) (-1)
-		scheme.modEmbedAndEqual(cgrad[i], cip.level);
-		scheme.multModSwitchOneAndEqual(cgrad[i], cip); // p * gamma * (z * ip / m) (-2)
-	}
-	NTL_EXEC_RANGE_END;
-
-	debugcheck("c grad: ", secretKey, cgrad, dimcheck, slotscheck);
-
-	long logslots = log2(slots);
-	long logwnum = log2(wnum);
-
-	NTL_EXEC_RANGE(dim, first, last);
-	for (long i = first; i < last; ++i) {
-		for (long l = logwnum; l < logslots; ++l) {
-			Cipher rot = scheme.leftRotateByPo2(cgrad[i], l);
-			scheme.addAndEqual(cgrad[i], rot); // p * gamma * sum(z * (ip - 2)) (-2)
-		}
-		scheme.modEmbedAndEqual(cwdata[i], cgrad[i].level);
-		scheme.subAndEqual(cwdata[i], cgrad[i]); // w - gamma * (sum(z * (ip - 2)) - lambda * w) (-2)
-	}
-	NTL_EXEC_RANGE_END;
-
-	debugcheck("c grad: ", secretKey, cgrad, dimcheck, slotscheck);
 
 	debugcheck("c wdata: ", secretKey, cwdata, dimcheck, slotscheck);
 }

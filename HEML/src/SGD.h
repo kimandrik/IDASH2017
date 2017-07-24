@@ -21,16 +21,17 @@ public:
 
 	//-----------------------------------------
 
-	double** wdataloggen(long& wnum, long& dim);
-	double** wdatasimplegen(long& wnum, long& dim);
-	double* gammaloggen(long& iter);
-	double* gammasimplegen(long& iter);
 	double innerprod(double*& wdata, long*& x, long& size);
 
-	void stepsimpleregress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim);
-	void steplogregress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim);
+	void stepQuadraticRegress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim);
+	void stepLogRegress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim);
+	void stepStochasticQuadraticRegress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim, long& stochdim);
+	void stepStochasticLogRegress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim, long& stochdim);
+	void stepMomentumLogRegress(double*& wdata, double*& vdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim, double& eta);
+	void stepNesterovLogRegress(double*& wdata, double*& vdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim, double& beta, double& eta);
 
-	double* wout(double**& wdata, long& wnum, long& dim);
+	double* waverage(double**& wdata, long& wnum, long& dim);
+
 	void check(double*& w, long**& zdata, long& dim, long& sampledim);
 
 	void debugcheck(string prefix, double*& w, long& dim);
