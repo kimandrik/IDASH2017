@@ -21,14 +21,14 @@ public:
 
 	//-----------------------------------------
 
-	double** wdatagen(long& wnum, long& dim);
+	double** wdataloggen(long& wnum, long& dim);
+	double** wdatasimplegen(long& wnum, long& dim);
 	double* gammaloggen(long& iter);
 	double* gammasimplegen(long& iter);
 	double innerprod(double*& wdata, long*& x, long& size);
 
-	void steplogregress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim);
-
 	void stepsimpleregress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim);
+	void steplogregress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim);
 
 	double* wout(double**& wdata, long& wnum, long& dim);
 	void check(double*& w, long**& zdata, long& dim, long& sampledim);

@@ -70,7 +70,18 @@ double SGD::innerprod(double*& wdata, long*& x, long& size){
 	return res;
 }
 
-double** SGD::wdatagen(long& wnum, long& dim) {
+double** SGD::wdataloggen(long& wnum, long& dim) {
+	double** wdata = new double*[wnum];
+	for (long l = 0; l < wnum; ++l) {
+		wdata[l] = new double[dim];
+		for (long i = 0; i < dim; ++i) {
+			wdata[l][i] = (1.0 - 2.0 * (double)rand() / RAND_MAX) / 128.0; // change to good initial w choice
+		}
+	}
+	return wdata;
+}
+
+double** SGD::wdatasimplegen(long& wnum, long& dim) {
 	double** wdata = new double*[wnum];
 	for (long l = 0; l < wnum; ++l) {
 		wdata[l] = new double[dim];

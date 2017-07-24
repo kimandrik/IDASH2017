@@ -54,8 +54,11 @@ void TestSGD::testSimpleSGD(long logN, long logl, long logp, long L) {
 	cout << "wnum: " << wnum << endl;
 
 	long iter = 1000;
-	double** wdata = sgd.wdatagen(wnum, dim);
-	double* gamma = sgd.gammasimplegen(iter);
+	long additer = 3;
+	long totaliter = iter + additer;
+
+	double** wdata = sgd.wdatasimplegen(wnum, dim);
+	double* gamma = sgd.gammasimplegen(totaliter);
 
 	double lambda = 2.0;
 	timeutils.start("sgd");
@@ -90,11 +93,10 @@ void TestSGD::testSimpleSGD(long logN, long logl, long logp, long L) {
 	Cipher* cwdata = csgd.encwdata(wdata, slots, wnum, dim, learndim, params.logp);
 	timeutils.stop("Enc wdata");
 
-	ZZ* pgamma = csgd.pgammagen(gamma, iter, params.logp);
+	ZZ* pgamma = csgd.pgammagen(gamma, totaliter, params.logp);
 
-	iter = 10;
 	//-----------------------------------------
-	for (long k = 0; k < iter; ++k) {
+	for (long k = iter; k < totaliter; ++k) {
 		cout << k << endl;
 		timeutils.start("Enc sgd step");
 		csgd.encStepsimpleregress(czdata, cwdata, pgamma[k], lambda, slots, wnum, dim, learndim);
@@ -148,8 +150,11 @@ void TestSGD::testLogSGD(long logN, long logl, long logp, long L) {
 	cout << "wnum: " << wnum << endl;
 
 	long iter = 1000;
-	double** wdata = sgd.wdatagen(wnum, dim);
-	double* gamma = sgd.gammaloggen(iter);
+	long additer = 3;
+	long totaliter = iter + additer;
+	double** wdata = sgd.wdataloggen(wnum, dim);
+
+	double* gamma = sgd.gammaloggen(totaliter);
 
 	double lambda = 2.0;
 	timeutils.start("sgd");
@@ -184,11 +189,10 @@ void TestSGD::testLogSGD(long logN, long logl, long logp, long L) {
 	Cipher* cwdata = csgd.encwdata(wdata, slots, wnum, dim, learndim, params.logp);
 	timeutils.stop("Enc wdata");
 
-	ZZ* pgamma = csgd.pgammagen(gamma, iter, params.logp);
+	ZZ* pgamma = csgd.pgammagen(gamma, totaliter, params.logp);
 
-	iter = 10;
 	//-----------------------------------------
-	for (long k = 0; k < iter; ++k) {
+	for (long k = iter; k < totaliter; ++k) {
 		cout << k << endl;
 		timeutils.start("Enc sgd step");
 		csgd.encSteplogregress(czdata, cwdata, pgamma[k], lambda, slots, wnum, dim, learndim);

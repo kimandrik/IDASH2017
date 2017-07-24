@@ -52,19 +52,19 @@ Cipher* CipherSGD::encwdata(double**& wdata, long& slots, long& wnum, long& dim,
 	return cwdata;
 }
 
-ZZ* CipherSGD::pgammagen(double*& alpha, long& iter, long& logp) {
-	ZZ* palpha = new ZZ[iter];
+ZZ* CipherSGD::pgammagen(double*& gamma, long& iter, long& logp) {
+	ZZ* pgamma = new ZZ[iter];
 	for (long k = 0; k < iter; ++k) {
-		RR ralpha = to_RR(alpha[k]);
-		RR pralpha = MakeRR(ralpha.x, ralpha.e + logp);
-		palpha[k] = to_ZZ(pralpha);
+		RR rgamma = to_RR(gamma[k]);
+		RR prgamma = MakeRR(rgamma.x, rgamma.e + logp);
+		pgamma[k] = to_ZZ(prgamma);
 	}
-	return palpha;
+	return pgamma;
 }
 
 void CipherSGD::encSteplogregress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, long& slots, long& wnum, long& dim, long& sampledim) {
 
-	long dimcheck = 10;
+	long dimcheck = 5;
 	debugcheck("c zdata: ", secretKey, czdata, dimcheck);
 
 	debugcheck("c wdata: ", secretKey, cwdata, dimcheck);
@@ -84,8 +84,12 @@ void CipherSGD::encSteplogregress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, 
 
 	debugcheck("c inner prod:", secretKey, cip);
 
-	ZZ* pows = scheme.aux.taylorPowsMap.at(SIGMOIDPRIMEGOOD);
+	cout << "pgamma=" << pgamma << endl;
+	cout << "lamda=" << lambda << endl;
 	ZZ wcnst = scheme.params.p - to_ZZ(to_RR(pgamma) * lambda);
+
+	cout << "p(1 - lambda * gamma)=" << wcnst << endl;
+
 	for (long i = 0; i < dim; ++i) {
 		scheme.multByConstAndEqual(cwdata[i], wcnst); // (1 - gamma * lambda) * w
 		scheme.modSwitchOneAndEqual(cwdata[i]); // (1 - gamma * lambda) * w  (-1)
@@ -93,6 +97,7 @@ void CipherSGD::encSteplogregress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, 
 
 	debugcheck("c (1-gamma * lambda) * wdata: ", secretKey, cwdata, dimcheck);
 
+	ZZ* pows = scheme.aux.taylorPowsMap.at(SIGMOIDPRIMEGOOD);
 	Cipher* cpows = algo.powerOf2Extended(cip, 2); // ip (-1), ip^2 (-2), ip^4 (-3)
 
 	Cipher* cgrad = new Cipher[dim];
@@ -244,7 +249,10 @@ double* CipherSGD::decw(SecKey& secretKey, Cipher*& cw, long& dim) {
 void CipherSGD::debugcheck(string prefix, SecKey& secretKey, Cipher*& ciphers, long& dim) {
 	cout << prefix << " " << ciphers[0].level << endl;
 	for (long i = 0; i < dim; ++i) {
+//		cout << i << endl;
+//		cout << "start dec" << endl;
 		CZZ* deci = scheme.decrypt(secretKey, ciphers[i]);
+//		cout << "stop dec" << endl;
 		RR wi = to_RR(deci[0].r);
 		wi.e -= scheme.params.logp;
 		double w = to_double(wi);
