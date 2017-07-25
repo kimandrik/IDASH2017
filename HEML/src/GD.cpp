@@ -115,7 +115,7 @@ void GD::stepLGD(long**& xyData, double*& wData, long& factorDim, long& learnDim
 
 	for(int j = 0; j < learnDim; ++j) {
 		double ip = innerprod(wData, xyData[j], factorDim);
-		double tmp = - 1. / (1. + exp(ip));
+		double tmp = (ip > 15.0) ? 0 : (ip < -15.0) ? -1.0 : - 1. / (1. + exp(ip));
 		tmp /= (double)learnDim;
 		for(int i = 0; i < factorDim; ++i) {
 			grad[i] += tmp * (double) xyData[j][i];
@@ -135,7 +135,7 @@ void GD::stepSLGD(long**& xyData, double*& wData, long& factorDim, long& learnDi
 	for(int j = 0; j < stochDim; ++j) {
 		long rnd = RandomBnd(learnDim);
 		double ip = innerprod(wData, xyData[rnd], factorDim);
-		double tmp = - 1. / (1. + exp(ip)) / stochDim;
+		double tmp = (ip > 15.0) ? 0 : (ip < -15.0) ? -1.0 : - 1. / (1. + exp(ip));
 		for(int i = 0; i < factorDim; ++i) {
 			grad[i] += tmp * (double) xyData[rnd][i];
 		}
@@ -154,7 +154,7 @@ void GD::stepMLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 
 	for(int j = 0; j < learnDim; ++j) {
 		double ip = innerprod(wData, xyData[j], factorDim);
-		double tmp = - 1. / (1. + exp(ip));
+		double tmp = (ip > 15.0) ? 0 : (ip < -15.0) ? -1.0 : - 1. / (1. + exp(ip));
 		for(int i = 0; i < factorDim; ++i) {
 			grad[i] += tmp * (double) xyData[j][i];
 		}
@@ -175,7 +175,18 @@ void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 
 	for(int j = 0; j < learnDim; ++j) {
 		double ip = innerprod(wData, xyData[j], factorDim);
-		double tmp = - 1. / (1. + exp(ip));
+		double tmp = 0;
+//		if(ip > 5) {
+//			cout << ip << endl;
+//			tmp = 0.0;
+//		} else if(tmp < -5)	{
+//			cout << ip << endl;
+//			tmp = -1.0;
+//		} else {
+//			tmp = - 1. / (1. + exp(ip));
+//		}
+
+		double tmp = (ip > 15.0) ? 0 : (ip < -15.0) ? -1.0 : - 1. / (1. + exp(ip));
 		for(int i = 0; i < factorDim; ++i) {
 			grad[i] += tmp * (double) xyData[j][i];
 		}

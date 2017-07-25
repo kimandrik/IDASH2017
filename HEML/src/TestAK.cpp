@@ -69,7 +69,7 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 		wData[l] = new double[factorDim];
 		vData[l] = new double[factorDim];
 		for (long i = 0; i < factorDim; ++i) {
-//			double tmp = (1.0 - 2.0 * (double)rand() / RAND_MAX) / 128.0; // take small initial values
+//			double tmp = (1.0 - 2.0 * (double)rand() / RAND_MAX) / 64.0; // take small initial values
 			double tmp = 0.0;
 			wData[l][i] = tmp;
 			vData[l][i] = tmp;
@@ -93,12 +93,10 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 		double gamma = 0.001 / (1.0 + k);
 		double eta = (1. - alpha[k+1]) / alpha[k+2];
 
-		NTL_EXEC_RANGE(wBatch, first, last);
-		for (long l = first; l < last; ++l) {
+		for (long l = 0; l < wBatch; ++l) {
 //			sgd.stepLGD(xyData, wData[l], factorDim, learnDim, lambda, gamma);
 			sgd.stepNLGD(xyData, wData[l], vData[l], factorDim, learnDim, lambda, gamma, eta);
 		}
-		NTL_EXEC_RANGE_END;
 	}
 	timeutils.stop("sgd");
 
