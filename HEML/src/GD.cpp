@@ -175,7 +175,7 @@ void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 
 	for(int j = 0; j < learnDim; ++j) {
 		double ip = innerprod(wData, xyData[j], factorDim);
-		double tmp = 0;
+//		double tmp = 0;
 //		if(ip > 5) {
 //			cout << ip << endl;
 //			tmp = 0.0;
@@ -206,7 +206,6 @@ double* GD::waverage(double**& wData, long& factorDim, long& wBatch) {
 		for (int l = 0; l < wBatch; ++l) {
 			w[i] += wData[l][i];
 		}
-		w[i] /= wBatch;
 	}
 	return w;
 }

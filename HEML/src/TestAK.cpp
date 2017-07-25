@@ -48,8 +48,8 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	long ldimBits = (long)ceil(log2(learnDim)); //11
 	long learnDimPo2 = (1 << ldimBits); // 2048
 
-	long slots =  (1 << (logN-1)); // 2^16
-	long wBatch = slots / sampleDimPo2; // 32
+	long slots =  (1 << (logN-1)); // 2^15
+	long wBatch = slots / sampleDimPo2; // 16
 
 	cout << "factorDim: " << factorDim << endl;
 	cout << "factorDimPo2: " << factorDimPo2 << endl;
@@ -76,8 +76,8 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 		}
 	}
 
-	long iter = 10;
-	long enciteradded = 3;
+	long iter = 0;
+	long enciteradded = 5;
 	long totaliter = iter + enciteradded;
 
 	double* alpha = new double[totaliter + 2];
@@ -114,23 +114,28 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	CipherGD csgd(scheme, algo, secretKey);
 	//-----------------------------------------
 
-	timeutils.start("Enc zdata");
+	timeutils.start("Enc xyData");
 	Cipher* cxyData = csgd.encxyData(xyData, slots, factorDim, learnDim, wBatch);
-	timeutils.stop("Enc zdata");
+	timeutils.stop("Enc xyData");
 
-	timeutils.start("Enc wdata");
+	timeutils.start("Enc wData");
 	Cipher* cwData = csgd.encwData(wData, slots, factorDim, learnDim, wBatch);
-	timeutils.stop("Enc wdata");
+	timeutils.stop("Enc wData");
+
+	Cipher* cvData = new Cipher[factorDim];
+	for (long i = 0; i < factorDim; ++i) {
+		cvData[i] = cwData[i];
+	}
 
 	//-----------------------------------------
 	for (long k = iter; k < totaliter; ++k) {
 
 		double lambda = 0.0;
-		double gamma = 1.0 / 5.0;
+		double gamma = 0.001 / (1.0 + k);
 		double eta = (1. - alpha[k+1]) / alpha[k+2];
 
 		timeutils.start("Enc sgd step");
-		csgd.encStepLGD(cxyData, cwData, slots, factorDim, learnDim, wBatch, lambda, gamma);
+		csgd.encStepNLGD(cxyData, cwData, cvData, slots, factorDim, learnDim, wBatch, lambda, gamma, eta);
 		timeutils.stop("Enc sgd step");
 	}
 
