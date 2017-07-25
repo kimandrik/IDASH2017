@@ -69,7 +69,7 @@ void TestKW::testKW(long logN, long logl, long logp, long L) {
 		wData[l] = new double[factorDim];
 		vData[l] = new double[factorDim];
 		for (long i = 0; i < factorDim; ++i) {
-			double tmp = (1.0 - 2.0 * (double)rand() / RAND_MAX) / 128.0; // take small initial values
+			double tmp = (1.0 - 2.0 * (double)rand() / RAND_MAX) / 32.0; // take small initial values
 			wData[l][i] = tmp;
 			vData[l][i] = tmp;
 		}
@@ -88,8 +88,8 @@ void TestKW::testKW(long logN, long logl, long logp, long L) {
 	timeutils.start("sgd");
 	for (long k = 0; k < iter; ++k) {
 
-		double lambda = 2.0;
-		double gamma = 1.0 / 5.0;
+		double lambda = 0.0;
+		double gamma = 0.01 / (5.0 + k);
 		double eta = (1. - alpha[k+1]) / alpha[k+2];
 
 		NTL_EXEC_RANGE(wBatch, first, last);

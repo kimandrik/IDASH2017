@@ -222,10 +222,195 @@ void CipherGD::encStepLGD(Cipher*& cxyData, Cipher*& cwData, long& slots, long& 
 }
 
 void CipherGD::encStepMLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& lambda, double& gamma, double& eta) {
+
+	long dimcheck = 5;
+	long slotscheck = 10;
+	debugcheck("c xyData: ", secretKey, cxyData, dimcheck, slotscheck);
+
+	debugcheck("c wData: ", secretKey, cwData, dimcheck, slotscheck);
+
+	Cipher* cprod = new Cipher[factorDim];
+
+	NTL_EXEC_RANGE(factorDim, first, last);
+	for (long i = first; i < last; ++i) {
+		cprod[i] = scheme.modEmbed(cxyData[i], cwData[i].level);
+		scheme.multAndEqual(cprod[i], cwData[i]);
+	}
+	NTL_EXEC_RANGE_END;
+
+	Cipher cip = algo.sum(cprod, factorDim);
+
+	scheme.modSwitchOneAndEqual(cip); // cip (-1)
+
+	debugcheck("c inner prod:", secretKey, cip, slotscheck);
+
+
+	RR cnst = 1.0 - to_RR(gamma) * lambda; // 1 - gamma * lambda
+	ZZ pcnst = pmult(cnst); // p * (1 - gamma * lambda)
+
+	for (long i = 0; i < factorDim; ++i) {
+		scheme.multByConstAndEqual(cwData[i], pcnst); // (1 - gamma * lambda) * w
+		scheme.modSwitchOneAndEqual(cwData[i]); // (1 - gamma * lambda) * w  (-1)
+	}
+
+	debugcheck("c (1-gamma * lambda) * wdata: ", secretKey, cwData, dimcheck, slotscheck);
+
+	double* coeffs = scheme.aux.taylorCoeffsMap.at(SIGMOIDPRIMEGOOD);
+	Cipher* cpows = algo.powerOf2Extended(cip, 2); // ip (-1), ip^2 (-2), ip^4 (-3)
+
+	cnst = to_RR(gamma) * coeffs[0]; // gamma * coeff_0
+	pcnst = pmult(cnst); // p * gamma * coeff_0
+
+	Cipher* cgrad = new Cipher[factorDim];
+	NTL_EXEC_RANGE(factorDim, first, last);
+	for (long i = first; i < last; ++i) {
+		cgrad[i] = scheme.multByConst(cxyData[i], pcnst); // p * p * gamma * (z * coeff_0)
+		scheme.modSwitchOneAndEqual(cgrad[i]); // p * gamma * (z * coeff_0) (-1)
+	}
+	NTL_EXEC_RANGE_END;
+
+	for (long t = 1; t < 8; t=t+2) {
+		cnst = to_RR(gamma) * coeffs[t]; // gamma * coeff_0
+		pcnst = pmult(cnst); // p * gamma * coeff_0
+
+		NTL_EXEC_RANGE(factorDim, first, last);
+		for (long i = first; i < last; ++i) {
+			Cipher cgradit = scheme.multByConst(cxyData[i], pcnst); // p * p * gamma * (z * coeff_t)
+			scheme.modSwitchOneAndEqual(cgradit); // p * gamma * (z * coeff_t) (-1)
+			if(bit(t, 0)) {
+				scheme.modEmbedAndEqual(cgradit, cpows[0].level);
+				scheme.multModSwitchOneAndEqual(cgradit, cpows[0]); // p * gamma * (z * coeff_t * ip^t)
+			}
+			if(bit(t, 1)) {
+				scheme.modEmbedAndEqual(cgradit, cpows[1].level);
+				scheme.multModSwitchOneAndEqual(cgradit, cpows[1]); // p * gamma * (z * coeff_t * ip^t)
+			}
+			if(bit(t, 2)) {
+				scheme.modEmbedAndEqual(cgradit, cpows[2].level);
+				scheme.multModSwitchOneAndEqual(cgradit, cpows[2]); // p * gamma * (z * coeff_t * ip^t)
+			}
+			scheme.modEmbedAndEqual(cgrad[i], cgradit.level);
+			scheme.addAndEqual(cgrad[i], cgradit); // p * gamma * (z * sigmoid(ip)) (-4)
+		}
+		NTL_EXEC_RANGE_END;
+	}
+
+	debugcheck("c grad: ", secretKey, cgrad, dimcheck, 20);
+
+	long logslots = log2(slots);
+	long logwnum = log2(wBatch);
+
+	NTL_EXEC_RANGE(factorDim, first, last);
+	for (long i = first; i < last; ++i) {
+		for (long l = logwnum; l < logslots; ++l) {
+			Cipher rot = scheme.leftRotateByPo2(cgrad[i], l);
+			scheme.addAndEqual(cgrad[i], rot); // p * gamma * sum(z * sigmoid(ip)) (-4)
+		}
+		scheme.modEmbedAndEqual(cwData[i], cgrad[i].level);
+		scheme.subAndEqual(cwData[i], cgrad[i]); // w - gamma * grad(w) - gamma * lambda * w (-4)
+	}
+	NTL_EXEC_RANGE_END;
+
+	debugcheck("c grad: ", secretKey, cgrad, dimcheck, 20);
+
+	debugcheck("c wData: ", secretKey, cwData, dimcheck, slotscheck);
 	//TODO: kimandrik
 }
 
 void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& lambda, double& gamma, double& eta) {
+
+	long dimcheck = 5;
+	long slotscheck = 10;
+	debugcheck("c xyData: ", secretKey, cxyData, dimcheck, slotscheck);
+
+	debugcheck("c wData: ", secretKey, cwData, dimcheck, slotscheck);
+
+	Cipher* cprod = new Cipher[factorDim];
+
+	NTL_EXEC_RANGE(factorDim, first, last);
+	for (long i = first; i < last; ++i) {
+		cprod[i] = scheme.modEmbed(cxyData[i], cwData[i].level);
+		scheme.multAndEqual(cprod[i], cwData[i]);
+	}
+	NTL_EXEC_RANGE_END;
+
+	Cipher cip = algo.sum(cprod, factorDim);
+
+	scheme.modSwitchOneAndEqual(cip); // cip (-1)
+
+	debugcheck("c inner prod:", secretKey, cip, slotscheck);
+
+
+	RR cnst = 1.0 - to_RR(gamma) * lambda; // 1 - gamma * lambda
+	ZZ pcnst = pmult(cnst); // p * (1 - gamma * lambda)
+
+	for (long i = 0; i < factorDim; ++i) {
+		scheme.multByConstAndEqual(cwData[i], pcnst); // (1 - gamma * lambda) * w
+		scheme.modSwitchOneAndEqual(cwData[i]); // (1 - gamma * lambda) * w  (-1)
+	}
+
+	debugcheck("c (1-gamma * lambda) * wdata: ", secretKey, cwData, dimcheck, slotscheck);
+
+	double* coeffs = scheme.aux.taylorCoeffsMap.at(SIGMOIDPRIMEGOOD);
+	Cipher* cpows = algo.powerOf2Extended(cip, 2); // ip (-1), ip^2 (-2), ip^4 (-3)
+
+	cnst = to_RR(gamma) * coeffs[0]; // gamma * coeff_0
+	pcnst = pmult(cnst); // p * gamma * coeff_0
+
+	Cipher* cgrad = new Cipher[factorDim];
+	NTL_EXEC_RANGE(factorDim, first, last);
+	for (long i = first; i < last; ++i) {
+		cgrad[i] = scheme.multByConst(cxyData[i], pcnst); // p * p * gamma * (z * coeff_0)
+		scheme.modSwitchOneAndEqual(cgrad[i]); // p * gamma * (z * coeff_0) (-1)
+	}
+	NTL_EXEC_RANGE_END;
+
+	for (long t = 1; t < 8; t=t+2) {
+		cnst = to_RR(gamma) * coeffs[t]; // gamma * coeff_0
+		pcnst = pmult(cnst); // p * gamma * coeff_0
+
+		NTL_EXEC_RANGE(factorDim, first, last);
+		for (long i = first; i < last; ++i) {
+			Cipher cgradit = scheme.multByConst(cxyData[i], pcnst); // p * p * gamma * (z * coeff_t)
+			scheme.modSwitchOneAndEqual(cgradit); // p * gamma * (z * coeff_t) (-1)
+			if(bit(t, 0)) {
+				scheme.modEmbedAndEqual(cgradit, cpows[0].level);
+				scheme.multModSwitchOneAndEqual(cgradit, cpows[0]); // p * gamma * (z * coeff_t * ip^t)
+			}
+			if(bit(t, 1)) {
+				scheme.modEmbedAndEqual(cgradit, cpows[1].level);
+				scheme.multModSwitchOneAndEqual(cgradit, cpows[1]); // p * gamma * (z * coeff_t * ip^t)
+			}
+			if(bit(t, 2)) {
+				scheme.modEmbedAndEqual(cgradit, cpows[2].level);
+				scheme.multModSwitchOneAndEqual(cgradit, cpows[2]); // p * gamma * (z * coeff_t * ip^t)
+			}
+			scheme.modEmbedAndEqual(cgrad[i], cgradit.level);
+			scheme.addAndEqual(cgrad[i], cgradit); // p * gamma * (z * sigmoid(ip)) (-4)
+		}
+		NTL_EXEC_RANGE_END;
+	}
+
+	debugcheck("c grad: ", secretKey, cgrad, dimcheck, 20);
+
+	long logslots = log2(slots);
+	long logwnum = log2(wBatch);
+
+	NTL_EXEC_RANGE(factorDim, first, last);
+	for (long i = first; i < last; ++i) {
+		for (long l = logwnum; l < logslots; ++l) {
+			Cipher rot = scheme.leftRotateByPo2(cgrad[i], l);
+			scheme.addAndEqual(cgrad[i], rot); // p * gamma * sum(z * sigmoid(ip)) (-4)
+		}
+		scheme.modEmbedAndEqual(cwData[i], cgrad[i].level);
+		scheme.subAndEqual(cwData[i], cgrad[i]); // w - gamma * grad(w) - gamma * lambda * w (-4)
+	}
+	NTL_EXEC_RANGE_END;
+
+	debugcheck("c grad: ", secretKey, cgrad, dimcheck, 20);
+
+	debugcheck("c wData: ", secretKey, cwData, dimcheck, slotscheck);
+
 	//TODO: kimandrik
 }
 
