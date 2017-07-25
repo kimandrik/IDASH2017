@@ -70,158 +70,158 @@ double SGD::innerprod(double*& wdata, long*& x, long& size){
 	return res;
 }
 
-void SGD::stepQuadraticRegress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim) {
-	double* grad = new double[dim];
-	for(int i = 0; i < dim; ++i) {
-		grad[i] = lambda * wdata[i];
+void SGD::stepQGD(double*& wData, long**& xyData, double& gamma, double& lambda, long& factorDim, long& learnDim) {
+	double* grad = new double[factorDim];
+	for(int i = 0; i < factorDim; ++i) {
+		grad[i] = lambda * wData[i];
 	}
 
-	for(int j = 0; j < learndim; ++j) {
-		double ip = innerprod(wdata, zdata[j], dim);
-		double tmp = 2.0 * (ip - 1.0) / learndim;
-		for(int i = 0; i < dim; ++i) {
-			grad[i] += tmp * (double) zdata[j][i];
+	for(int j = 0; j < learnDim; ++j) {
+		double ip = innerprod(wData, xyData[j], factorDim);
+		double tmp = 2.0 * (ip - 1.0) / learnDim;
+		for(int i = 0; i < factorDim; ++i) {
+			grad[i] += tmp * (double) xyData[j][i];
 		}
 	}
-	for (int i = 0; i < dim; ++i) {
-		wdata[i] -= gamma * grad[i];
+	for (int i = 0; i < factorDim; ++i) {
+		wData[i] -= gamma * grad[i];
 	}
 }
 
 
-void SGD::stepLogRegress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim) {
-	double* grad = new double[dim];
-	for(int i = 0; i < dim; ++i) {
-		grad[i] = lambda * wdata[i];
+void SGD::stepLGD(double*& wData, long**& xyData, double& gamma, double& lambda, long& factorDim, long& learnDim) {
+	double* grad = new double[factorDim];
+	for(int i = 0; i < factorDim; ++i) {
+		grad[i] = lambda * wData[i];
 	}
 
-	for(int j = 0; j < learndim; ++j) {
-		double ip = innerprod(wdata, zdata[j], dim);
+	for(int j = 0; j < learnDim; ++j) {
+		double ip = innerprod(wData, xyData[j], factorDim);
 		double tmp = - 1. / (1. + exp(ip));
-		tmp /= (double)learndim;
-		for(int i = 0; i < dim; ++i) {
-			grad[i] += tmp * (double) zdata[j][i];
+		tmp /= (double)learnDim;
+		for(int i = 0; i < factorDim; ++i) {
+			grad[i] += tmp * (double) xyData[j][i];
 		}
 	}
-	for (int i = 0; i < dim; ++i) {
-		wdata[i] -= gamma * grad[i];
+	for (int i = 0; i < factorDim; ++i) {
+		wData[i] -= gamma * grad[i];
 	}
 }
 
-void SGD::stepStochasticQuadraticRegress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim, long& stochdim) {
-	double* grad = new double[dim];
-	for(int i = 0; i < dim; ++i) {
-		grad[i] = lambda * wdata[i];
+void SGD::stepSQGD(double*& wData, long**& xyData, double& gamma, double& lambda, long& factorDim, long& learnDim, long& stochDim) {
+	double* grad = new double[factorDim];
+	for(int i = 0; i < factorDim; ++i) {
+		grad[i] = lambda * wData[i];
 	}
 
-	for(int j = 0; j < stochdim; ++j) {
-		long rnd = RandomBnd(learndim);
-		double ip = innerprod(wdata, zdata[rnd], dim);
-		double tmp = 2.0 * (ip - 1.0) / stochdim;
-		for(int i = 0; i < dim; ++i) {
-			grad[i] += tmp * (double) zdata[rnd][i];
+	for(int j = 0; j < stochDim; ++j) {
+		long rnd = RandomBnd(learnDim);
+		double ip = innerprod(wData, xyData[rnd], factorDim);
+		double tmp = 2.0 * (ip - 1.0) / stochDim;
+		for(int i = 0; i < factorDim; ++i) {
+			grad[i] += tmp * (double) xyData[rnd][i];
 		}
 	}
-	for (int i = 0; i < dim; ++i) {
-		wdata[i] -= gamma * grad[i];
+	for (int i = 0; i < factorDim; ++i) {
+		wData[i] -= gamma * grad[i];
 	}
 }
 
-void SGD::stepStochasticLogRegress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim, long& stochdim) {
-	double* grad = new double[dim];
-	for(int i = 0; i < dim; ++i) {
-		grad[i] = lambda * wdata[i];
+void SGD::stepSLGD(double*& wData, long**& xyData, double& gamma, double& lambda, long& factorDim, long& learnDim, long& stochDim) {
+	double* grad = new double[factorDim];
+	for(int i = 0; i < factorDim; ++i) {
+		grad[i] = lambda * wData[i];
 	}
 
-	for(int j = 0; j < stochdim; ++j) {
-		long rnd = RandomBnd(learndim);
-		double ip = innerprod(wdata, zdata[rnd], dim);
-		double tmp = - 1. / (1. + exp(ip)) / stochdim;
-		for(int i = 0; i < dim; ++i) {
-			grad[i] += tmp * (double) zdata[rnd][i];
+	for(int j = 0; j < stochDim; ++j) {
+		long rnd = RandomBnd(learnDim);
+		double ip = innerprod(wData, xyData[rnd], factorDim);
+		double tmp = - 1. / (1. + exp(ip)) / stochDim;
+		for(int i = 0; i < factorDim; ++i) {
+			grad[i] += tmp * (double) xyData[rnd][i];
 		}
 	}
 
-	for (int i = 0; i < dim; ++i) {
-		wdata[i] -= gamma * grad[i];
+	for (int i = 0; i < factorDim; ++i) {
+		wData[i] -= gamma * grad[i];
 	}
 }
 
-void SGD::stepMomentumLogRegress(double*& wdata, double*& vdata, long**& zdata, double& gamma, long& dim, long& learndim, double& eta) {
-	double* grad = new double[dim]();
+void SGD::stepMLGD(double*& wData, double*& vData, long**& xyData, double& gamma, long& factorDim, long& learnDim, double& eta) {
+	double* grad = new double[factorDim]();
 
-	for(int j = 0; j < learndim; ++j) {
-		double ip = innerprod(wdata, zdata[j], dim);
+	for(int j = 0; j < learnDim; ++j) {
+		double ip = innerprod(wData, xyData[j], factorDim);
 		double tmp = - 1. / (1. + exp(ip));
-		for(int i = 0; i < dim; ++i) {
-			grad[i] += tmp * (double) zdata[j][i];
+		for(int i = 0; i < factorDim; ++i) {
+			grad[i] += tmp * (double) xyData[j][i];
 		}
 	}
 
-	for (int i = 0; i < dim; ++i) {
-		vdata[i] *= eta;
-		vdata[i] += gamma * grad[i];
-		wdata[i] -= vdata[i];
+	for (int i = 0; i < factorDim; ++i) {
+		vData[i] *= eta;
+		vData[i] += gamma * grad[i];
+		wData[i] -= vData[i];
 	}
 }
 
-void SGD::stepNesterovLogRegress(double*& wdata, double*& vdata, long**& xtData, double& gamma, long& dim, long& learndim, double& eta) {
-	double* grad = new double[dim]();
+void SGD::stepNLGD(double*& wData, double*& vData, long**& xyData, double& gamma, long& factorDim, long& learnDim, double& eta) {
+	double* grad = new double[factorDim]();
 
-	for(int j = 0; j < learndim; ++j) {
-		double ip = innerprod(wdata, xtData[j], dim);
+	for(int j = 0; j < learnDim; ++j) {
+		double ip = innerprod(wData, xyData[j], factorDim);
 		double tmp = - 1. / (1. + exp(ip));
-		for(int i = 0; i < dim; ++i) {
-			grad[i] += tmp * (double) xtData[j][i];
+		for(int i = 0; i < factorDim; ++i) {
+			grad[i] += tmp * (double) xyData[j][i];
 		}
 	}
 
-	for (int i = 0; i < dim; ++i) {
-		double tmpv = wdata[i] - gamma * grad[i];
-		wdata[i] = (1.0 - eta) * tmpv + eta * vdata[i];
-		vdata[i] = tmpv;
+	for (int i = 0; i < factorDim; ++i) {
+		double tmpv = wData[i] - gamma * grad[i];
+		wData[i] = (1.0 - eta) * tmpv + eta * vData[i];
+		vData[i] = tmpv;
 	}
 }
 
-double* SGD::waverage(double**& wdata, long& wnum, long& dim) {
-	double* w = new double[dim];
+double* SGD::waverage(double**& wData, long& wBatch, long& factorDim) {
+	double* w = new double[factorDim];
 
-	for (long i = 0; i < dim; ++i) {
-		for (int l = 0; l < wnum; ++l) {
-			w[i] += wdata[l][i];
+	for (long i = 0; i < factorDim; ++i) {
+		for (int l = 0; l < wBatch; ++l) {
+			w[i] += wData[l][i];
 		}
-		w[i] /= wnum;
+		w[i] /= wBatch;
 	}
 	return w;
 }
 
-void SGD::check(double*& w, long**& zdata, long& dim, long& sampledim) {
+void SGD::check(double*& w, long**& xyData, long& factorDim, long& sampleDim) {
 	cout << "w:";
-	for (long i = 0; i < dim; ++i) {
+	for (long i = 0; i < factorDim; ++i) {
 		cout << w[i] << ",";
 	}
 	cout << endl;
 
 	long num = 0;
-	for(long j = 0; j < sampledim; ++j){
-		if(innerprod(w, zdata[j], dim) > 0) num++;
+	for(long j = 0; j < sampleDim; ++j){
+		if(innerprod(w, xyData[j], factorDim) > 0) num++;
 	}
-	cout << "Correctness: " << num << "/" << sampledim << endl;
+	cout << "Correctness: " << num << "/" << sampleDim << endl;
 
 }
 
-void SGD::debugcheck(string prefix, double*& w, long& dim) {
+void SGD::debugcheck(string prefix, double*& w, long& factorDim) {
 	cout << prefix;
-	for (long i = 0; i < dim; ++i) {
+	for (long i = 0; i < factorDim; ++i) {
 		cout << w[i] << ",";
 	}
 	cout << endl;
 }
 
-void SGD:: debugcheck(string prefix, long*& z, long& dim) {
+void SGD:: debugcheck(string prefix, long*& xy, long& factorDim) {
 	cout << prefix;
-	for (long i = 0; i < dim; ++i) {
-		cout << z[i] << ",";
+	for (long i = 0; i < factorDim; ++i) {
+		cout << xy[i] << ",";
 	}
 	cout << endl;
 }

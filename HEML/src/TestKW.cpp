@@ -1,4 +1,4 @@
-#include "TestSGD.h"
+#include "TestKW.h"
 
 #include <NTL/BasicThreadPool.h>
 #include <NTL/ZZ.h>
@@ -20,8 +20,8 @@ using namespace NTL;
 
 //-----------------------------------------
 
-void TestSGD::testSGD(long logN, long logl, long logp, long L) {
-	cout << "!!! START TEST SGD !!!" << endl;
+void TestKW::testKW(long logN, long logl, long logp, long L) {
+	cout << "!!! START TEST KW !!!" << endl;
 	//-----------------------------------------
 	TimeUtils timeutils;
 	SetNumThreads(8);
@@ -92,10 +92,7 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 
 		NTL_EXEC_RANGE(wBatch, first, last);
 		for (long l = first; l < last; ++l) {
-//			sgd.stepQuadraticRegress(wData[l], xyData, gamma, lambda, factorDim, learnDim);
-//			sgd.stepLogRegress(wData[l], xyData, gamma, lambda, factorDim, learnDim);
-//			sgd.stepMomentumLogRegress(wData[l], vData[l], xyData, gamma, lambda, factorDim, learnDim, eta);
-			sgd.stepNesterovLogRegress(wData[l], vData[l], xyData, gamma, factorDim, learnDim, eta);
+			sgd.stepNLGD(wData[l], vData[l], xyData, gamma, factorDim, learnDim, eta);
 		}
 		NTL_EXEC_RANGE_END;
 	}
@@ -129,8 +126,7 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 		double lambda = 2.0;
 		cout << k << endl;
 		timeutils.start("Enc sgd step");
-		csgd.encStepQuadraticRegress(cxyData, cwData, pgamma, lambda, slots, wBatch, factorDim, learnDim);
-
+		csgd.encStepQGD(cxyData, cwData, pgamma, lambda, slots, wBatch, factorDim, learnDim);
 		timeutils.stop("Enc sgd step");
 	}
 
@@ -144,5 +140,5 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 
 	sgd.check(dw, xyData, factorDim, sampleDim);
 	//-----------------------------------------
-	cout << "!!! END TEST SGD !!!" << endl;
+	cout << "!!! END TEST KW !!!" << endl;
 }

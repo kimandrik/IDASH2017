@@ -52,7 +52,7 @@ Cipher* CipherSGD::encwData(double**& wData, long& slots, long& wBatch, long& fa
 	return cwData;
 }
 
-void CipherSGD::encStepQuadraticRegress(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, long& slots, long& wBatch, long& factorDim, long& learnDim) {
+void CipherSGD::encStepQGD(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, long& slots, long& wBatch, long& factorDim, long& learnDim) {
 
 	long dimcheck = 5;
 	long slotscheck = 10;
@@ -122,7 +122,7 @@ void CipherSGD::encStepQuadraticRegress(Cipher*& cxyData, Cipher*& cwData, ZZ& p
 	debugcheck("c wdata: ", secretKey, cwData, dimcheck, slotscheck);
 }
 
-void CipherSGD::encStepLogRegress(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, long& slots, long& wBatch, long& factorDim, long& learnDim) {
+void CipherSGD::encStepLGD(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, long& slots, long& wBatch, long& factorDim, long& learnDim) {
 
 	long dimcheck = 5;
 	long slotscheck = 10;

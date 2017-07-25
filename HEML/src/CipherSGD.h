@@ -18,11 +18,11 @@ public:
 	Cipher* encxyData(long**& xyData, long& slots, long& wnum, long& factorDim, long& learnDim);
 	Cipher* encwData(double**& wData, long& slots, long& wnum, long& factorDim, long& learnDim);
 
-	void encStepQuadraticRegress(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, long& slots, long& wBatch, long& factorDim, long& learnDim);
-	void encStepLogRegress(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, long& slots, long& wBatch, long& factorDim, long& learnDim);
+	void encStepQGD(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, long& slots, long& wBatch, long& factorDim, long& learnDim);
+	void encStepLGD(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, long& slots, long& wBatch, long& factorDim, long& learnDim);
 
-	void encStepMomentumLogRegress(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, double& eta, long& slots, long& wBatch, long& factorDim, long& learnDim);
-	void encStepNesterovLogRegress(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, double& eta, long& slots, long& wBatch, long& factorDim, long& learnDim);
+	void encStepMLGD(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, double& eta, long& slots, long& wBatch, long& factorDim, long& learnDim);
+	void encStepNLGD(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, double& eta, long& slots, long& wBatch, long& factorDim, long& learnDim);
 
 	Cipher* encwaverage(Cipher*& cwData, long& wBatch, long& factorDim);
 	double* decw(SecKey& secretKey, Cipher*& cw, long& factorDim);

@@ -23,12 +23,14 @@ public:
 
 	double innerprod(double*& wdata, long*& x, long& size);
 
-	void stepQuadraticRegress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim);
-	void stepLogRegress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim);
-	void stepStochasticQuadraticRegress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim, long& stochdim);
-	void stepStochasticLogRegress(double*& wdata, long**& zdata, double& gamma, double& lambda, long& dim, long& learndim, long& stochdim);
-	void stepMomentumLogRegress(double*& wdata, double*& vdata, long**& zdata, double& gamma, long& dim, long& learndim, double& eta);
-	void stepNesterovLogRegress(double*& wdata, double*& vdata, long**& zdata, double& gamma, long& dim, long& learndim, double& eta);
+	void stepQGD(double*& wData, long**& xyData, double& gamma, double& lambda, long& factorDim, long& learnDim);
+	void stepSQGD(double*& wData, long**& xyData, double& gamma, double& lambda, long& factorDim, long& learnDim, long& stochDim);
+
+	void stepLGD(double*& wData, long**& xyData, double& gamma, double& lambda, long& factorDim, long& learnDim);
+	void stepSLGD(double*& wData, long**& xyData, double& gamma, double& lambda, long& factorDim, long& learnDim, long& stochDim);
+
+	void stepMLGD(double*& wData, double*& vData, long**& xyData, double& gamma, long& factorDim, long& learnDim, double& eta);
+	void stepNLGD(double*& wData, double*& vData, long**& xyData, double& gamma, long& factorDim, long& learnDim, double& eta);
 
 	double* waverage(double**& wdata, long& wnum, long& dim);
 
