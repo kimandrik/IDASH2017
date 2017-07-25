@@ -19,14 +19,7 @@ int main() {
 
 //	test();
 
-	//logN, logl, logp, L
-
-	//15, 30, 20, 30
-	//16, 60, 20, 60
-	//17, 20, 20, 125
-	//18, 40, 20, 250
-	//19, 80, 20, 500
-	//20, 160, 20, 1000 (+)
+	//logN, logl, logp, L (some secure parameter sets)
 
 	//15, 5, 25, 25
 	//16, 10, 25, 50
@@ -42,8 +35,8 @@ int main() {
 	//19, 30, 30, 335
 	//20, 60, 30, 670
 
-	TestAK::testAK(17, 120, 30, 80);
-//	TestCH::testCH(17, 120, 30, 80);
+//	TestAK::testAK(17, 120, 30, 80);
+//	TestCH::testJH(17, 120, 30, 80);
 //	TestKW::testKW(17, 120, 30, 80);
 
 //	TestScheme::testEncodeBatch(13, 5, 30, 5, 12);

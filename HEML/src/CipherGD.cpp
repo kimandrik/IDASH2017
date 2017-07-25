@@ -221,6 +221,14 @@ void CipherGD::encStepLGD(Cipher*& cxyData, Cipher*& cwData, long& slots, long& 
 	debugcheck("c wData: ", secretKey, cwData, dimcheck, slotscheck);
 }
 
+void CipherGD::encStepMLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& lambda, double& gamma, double& eta) {
+	//TODO: kimandrik
+}
+
+void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& lambda, double& gamma, double& eta) {
+	//TODO: kimandrik
+}
+
 Cipher* CipherGD::encwaverage(Cipher*& cwData, long& factorDim, long& wBatch) {
 	Cipher* cw = new Cipher[factorDim];
 	for (long i = 0; i < factorDim; ++i) {

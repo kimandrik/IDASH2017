@@ -147,7 +147,10 @@ void GD::stepSLGD(long**& xyData, double*& wData, long& factorDim, long& learnDi
 }
 
 void GD::stepMLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& lambda, double& gamma, double& eta) {
-	double* grad = new double[factorDim]();
+	double* grad = new double[factorDim];
+	for(int i = 0; i < factorDim; ++i) {
+		grad[i] = lambda * wData[i];
+	}
 
 	for(int j = 0; j < learnDim; ++j) {
 		double ip = innerprod(wData, xyData[j], factorDim);
@@ -165,7 +168,10 @@ void GD::stepMLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 }
 
 void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& lambda, double& gamma, double& eta) {
-	double* grad = new double[factorDim]();
+	double* grad = new double[factorDim];
+	for(int i = 0; i < factorDim; ++i) {
+		grad[i] = lambda * wData[i];
+	}
 
 	for(int j = 0; j < learnDim; ++j) {
 		double ip = innerprod(wData, xyData[j], factorDim);

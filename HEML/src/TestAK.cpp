@@ -88,7 +88,7 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	timeutils.start("sgd");
 	for (long k = 0; k < iter; ++k) {
 
-		double lambda = 2.0;
+		double lambda = 0.0;
 		double gamma = 1.0 / 5.0;
 		double eta = (1. - alpha[k+1]) / alpha[k+2];
 
@@ -125,7 +125,7 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	//-----------------------------------------
 	for (long k = iter; k < totaliter; ++k) {
 
-		double lambda = 2.0;
+		double lambda = 0.0;
 		double gamma = 1.0 / 5.0;
 		double eta = (1. - alpha[k+1]) / alpha[k+2];
 
