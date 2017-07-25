@@ -27,52 +27,53 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 	SetNumThreads(8);
 	//-----------------------------------------
 	SGD sgd;
-	string filename = "data.txt";
 
-	long dim = 0;
-	long sampledim = 0;
+	string filename = "data103x1579.txt";
+//	string filename = "data15x1500.txt";
+//	string filename = "data5x500.txt";
+//	string filename = "data9x1253.txt";
 
-	long** zdata = sgd.zdataFromFile(filename, dim, sampledim); //dim = 103, sampledim = 1579
+	long factorDim = 0;
+	long sampleDim = 0;
 
-	long sampledimbits = (long)ceil(log2(sampledim)); // log(1579) = 11
-	long po2sampledim = (1 << sampledimbits); // 1579 -> 2048
-	long learndim = (1 << (sampledimbits - 1)); // 1024
-//	long slots =  (1 << (logN-1)); // N /2
-	long slots =  learndim; // N /2
-	long wnum = slots / learndim;
-//	long learndim = sampledim;
-//	long slots =  (1 << (logN-1)); // N /2
-//	long wnum = slots / po2sampledim; // N / 2 / 2048
-	long dimbits = (long)ceil(log2(dim)); // log(103) = 7
-	long po2dim = (1 << dimbits); //103 -> 128
+	long** xyData = sgd.xyDataFromFile(filename, factorDim, sampleDim); //dim = 103, sampledim = 1579
 
-	cout << "dimension: " << dim << endl;
-	cout << "power of 2 dimension: " << po2dim << endl;
+	long sdimBits = (long)ceil(log2(sampleDim)); // log(1579) = 11
+	long sampleDimPo2 = (1 << sdimBits); // 1579 -> 2048
+	long learnDim = (1 << (sdimBits - 1)); //1024
+//	long slots =  learnDim; // N /2
+	long slots =  (1 << (logN-1)); // N /2
+	long wBatch = slots / learnDim;
+	long fdimBits = (long)ceil(log2(factorDim)); // log(103) = 7
+	long factorDimPo2 = (1 << fdimBits); //103 -> 128
 
-	cout << "sample dimension: " << sampledim << endl;
-	cout << "power of 2 sample dimension: " << po2sampledim << endl;
+	cout << "factor dimension: " << factorDim << endl;
+	cout << "factor dimension power of 2: " << factorDimPo2 << endl;
 
-	cout << "learn dimension: " << learndim << endl;
+	cout << "sample dimension: " << sampleDim << endl;
+	cout << "sample dimension power of 2: " << sampleDimPo2 << endl;
+
+	cout << "learn dimension: " << learnDim << endl;
 
 	cout << "slots: " << slots << endl;
-	cout << "wnum: " << wnum << endl;
+	cout << "w batch: " << wBatch << endl;
 
-	double** vdata = new double*[wnum];
-	double** wdata = new double*[wnum];
-	for (long l = 0; l < wnum; ++l) {
-		wdata[l] = new double[dim];
-		vdata[l] = new double[dim];
-		for (long i = 0; i < dim; ++i) {
+	double** vData = new double*[wBatch];
+	double** wData = new double*[wBatch];
+	for (long l = 0; l < wBatch; ++l) {
+		wData[l] = new double[factorDim];
+		vData[l] = new double[factorDim];
+		for (long i = 0; i < factorDim; ++i) {
 			double tmp = (1.0 - 2.0 * (double)rand() / RAND_MAX) / 64.0;
 //			double tmp = 0.0;
-			wdata[l][i] = tmp;
-			vdata[l][i] = tmp;
+			wData[l][i] = tmp;
+			vData[l][i] = tmp;
 		}
 	}
 
 	long iter = 20;
-	long additer = 3;
-	long totaliter = iter + additer;
+	long enciter = 3;
+	long totaliter = iter + enciter;
 
 	double* alpha = new double[iter + 2];
 	alpha[0] = 0.0;
@@ -84,24 +85,25 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 
 	timeutils.start("sgd");
 	for (long k = 0; k < iter; ++k) {
+
 //		double gamma = 5.0 / (k+1);
 		double gamma = 1.0 / 5.0;
 		double eta = (1. - alpha[k+1]) / alpha[k+2];
-		cout << eta << endl;
-		NTL_EXEC_RANGE(wnum, first, last);
+
+		NTL_EXEC_RANGE(wBatch, first, last);
 		for (long l = first; l < last; ++l) {
 //			sgd.stepQuadraticRegress(wdata[l], zdata, gamma[k], lambda, dim, learndim);
 //			sgd.stepLogRegress(wdata[l], zdata, gamma[k], lambda, dim, learndim);
 //			sgd.stepMomentumLogRegress(wdata[l], vdata[l], zdata, gamma[k], lambda, dim, learndim, eta);
-			sgd.stepNesterovLogRegress(wdata[l], vdata[l], zdata, gamma, dim, learndim, eta);
+			sgd.stepNesterovLogRegress(wData[l], vData[l], xyData, gamma, factorDim, learnDim, eta);
 		}
 		NTL_EXEC_RANGE_END;
 	}
 	timeutils.stop("sgd");
 
-	double* w = sgd.waverage(wdata, wnum, dim);
+	double* w = sgd.waverage(wData, wBatch, factorDim);
 
-	sgd.check(w, zdata, dim, sampledim);
+	sgd.check(w, xyData, factorDim, sampleDim);
 
 	//-----------------------------------------
 	Params params(logN, logl, logp, L);
@@ -114,11 +116,11 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 	//-----------------------------------------
 
 	timeutils.start("Enc zdata");
-	Cipher* czdata = csgd.enczdata(zdata, slots, wnum, dim, learndim, params.p);
+	Cipher* cxyData = csgd.encxyData(xyData, slots, wBatch, factorDim, learnDim);
 	timeutils.stop("Enc zdata");
 
 	timeutils.start("Enc wdata");
-	Cipher* cwdata = csgd.encwdata(wdata, slots, wnum, dim, learndim, params.logp);
+	Cipher* cwData = csgd.encwData(wData, slots, wBatch, factorDim, learnDim);
 	timeutils.stop("Enc wdata");
 
 	//-----------------------------------------
@@ -127,20 +129,20 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 		double lambda = 2.0;
 		cout << k << endl;
 		timeutils.start("Enc sgd step");
-		csgd.encStepQuadraticRegress(czdata, cwdata, pgamma, lambda, slots, wnum, dim, learndim);
+		csgd.encStepQuadraticRegress(cxyData, cwData, pgamma, lambda, slots, wBatch, factorDim, learnDim);
 
 		timeutils.stop("Enc sgd step");
 	}
 
 	timeutils.start("Enc w out");
-	Cipher* cw = csgd.encwout(cwdata, wnum, dim);
+	Cipher* cw = csgd.encwaverage(cwData, wBatch, factorDim);
 	timeutils.stop("Enc w out");
 
 	timeutils.start("Dec w");
-	double* dw = csgd.decw(secretKey, cw, dim);
+	double* dw = csgd.decw(secretKey, cw, factorDim);
 	timeutils.stop("Dec w");
 
-	sgd.check(dw, zdata, dim, sampledim);
+	sgd.check(dw, xyData, factorDim, sampleDim);
 	//-----------------------------------------
 	cout << "!!! END TEST SGD !!!" << endl;
 }

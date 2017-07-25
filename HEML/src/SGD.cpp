@@ -10,18 +10,18 @@
 #include <string>
 #include <vector>
 
-long** SGD::zdataFromFile(string& path, long& dim, long& sampledim) {
+long** SGD::xyDataFromFile(string& filename, long& factorDim, long& sampleDim) {
 	vector<vector<long>> xdata;
 	vector<long> ydata;
-	dim = 0; 		// dimension of x
-	sampledim = 0;	// number of samples
-	ifstream openFile(path.data());
+	factorDim = 0; 		// dimension of x
+	sampleDim = 0;	// number of samples
+	ifstream openFile(filename.data());
 	if(openFile.is_open()) {
 		string line;
 		getline(openFile, line);
-		for(long i = 0; i < line.length(); ++i) if(line[i] == ',' ) dim++;
+		for(long i = 0; i < line.length(); ++i) if(line[i] == ',' ) factorDim++;
 		while(getline(openFile, line)){
-			if(line.length() != 2 * dim + 1 ) {
+			if(line.length() != 2 * factorDim + 1 ) {
 				cout << "Error: data format" << endl;
 				break;
 			}
@@ -34,7 +34,7 @@ long** SGD::zdataFromFile(string& path, long& dim, long& sampledim) {
 				break;
 			}
 			vector<long> vecline;
-			for(long i = 2; i < 2 * dim + 1; i += 2) {
+			for(long i = 2; i < 2 * factorDim + 1; i += 2) {
 				if(line[i] == '0') {
 					vecline.push_back(0);
 				} else if(line[i] == '1') {
@@ -45,16 +45,16 @@ long** SGD::zdataFromFile(string& path, long& dim, long& sampledim) {
 				}
 			}
 			xdata.push_back(vecline);
-			sampledim++;
+			sampleDim++;
 		}
 		openFile.close();
 	} else {
 		cout << "Error: cannot read file" << endl;
 	}
-	long** zdata = new long*[sampledim];
-	for(int j = 0; j < sampledim; ++j){
-		long* zj = new long[dim];
-		for(int i = 0; i < dim; ++i){
+	long** zdata = new long*[sampleDim];
+	for(int j = 0; j < sampleDim; ++j){
+		long* zj = new long[factorDim];
+		for(int i = 0; i < factorDim; ++i){
 			zj[i] = ydata[j] * xdata[j][i];
 		}
 		zdata[j] = zj;
@@ -165,14 +165,14 @@ void SGD::stepMomentumLogRegress(double*& wdata, double*& vdata, long**& zdata, 
 	}
 }
 
-void SGD::stepNesterovLogRegress(double*& wdata, double*& vdata, long**& zdata, double& gamma, long& dim, long& learndim, double& eta) {
+void SGD::stepNesterovLogRegress(double*& wdata, double*& vdata, long**& xtData, double& gamma, long& dim, long& learndim, double& eta) {
 	double* grad = new double[dim]();
 
 	for(int j = 0; j < learndim; ++j) {
-		double ip = innerprod(wdata, zdata[j], dim);
+		double ip = innerprod(wdata, xtData[j], dim);
 		double tmp = - 1. / (1. + exp(ip));
 		for(int i = 0; i < dim; ++i) {
-			grad[i] += tmp * (double) zdata[j][i];
+			grad[i] += tmp * (double) xtData[j][i];
 		}
 	}
 

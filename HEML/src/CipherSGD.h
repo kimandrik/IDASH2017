@@ -15,16 +15,16 @@ public:
 
 	CipherSGD(Scheme& scheme, SchemeAlgo& algo, SecKey& secretKey) : scheme(scheme), algo(algo), secretKey(secretKey) {}
 
-	Cipher* enczdata(long**& zdata, long& slots, long& wnum, long& dim, long& learndim, ZZ& p);
-	Cipher* encwdata(double**& wdata, long& slots, long& wnum, long& dim, long& learndim, long& logp);
+	Cipher* encxyData(long**& xyData, long& slots, long& wnum, long& factorDim, long& learnDim);
+	Cipher* encwData(double**& wData, long& slots, long& wnum, long& factorDim, long& learnDim);
 
-	void encStepQuadraticRegress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, long& slots, long& wnum, long& dim, long& learndim);
-	void encStepLogRegress(Cipher*& czdata, Cipher*& cwdata, ZZ& pgamma, double& lambda, long& slots, long& wnum, long& dim, long& learndim);
+	void encStepQuadraticRegress(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, long& slots, long& wBatch, long& factorDim, long& learnDim);
+	void encStepLogRegress(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, long& slots, long& wBatch, long& factorDim, long& learnDim);
 
-	Cipher* encwout(Cipher*& cwdata, long& wnum, long& dim);
-	double* decw(SecKey& secretKey, Cipher*& cw, long& dim);
+	Cipher* encwaverage(Cipher*& cwData, long& wBatch, long& factorDim);
+	double* decw(SecKey& secretKey, Cipher*& cw, long& factorDim);
 
-	void debugcheck(string prefix, SecKey& secretKey, Cipher*& ciphers, long dim, long slots);
+	void debugcheck(string prefix, SecKey& secretKey, Cipher*& ciphers, long factorData, long slots);
 	void debugcheck(string prefix, SecKey& secretKey, Cipher& cipher, long slots);
 
 };

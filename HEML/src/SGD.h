@@ -17,7 +17,7 @@ public:
 
 	//-----------------------------------------
 
-	long** zdataFromFile(string& path, long& dim, long& sampledim); // returns x_ij * y_i
+	long** xyDataFromFile(string& path, long& factordim, long& sampledim); // returns x_ij * y_i
 
 	//-----------------------------------------
 
