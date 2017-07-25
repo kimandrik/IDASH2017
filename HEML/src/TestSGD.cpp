@@ -92,9 +92,9 @@ void TestSGD::testSGD(long logN, long logl, long logp, long L) {
 
 		NTL_EXEC_RANGE(wBatch, first, last);
 		for (long l = first; l < last; ++l) {
-//			sgd.stepQuadraticRegress(wdata[l], zdata, gamma[k], lambda, dim, learndim);
-//			sgd.stepLogRegress(wdata[l], zdata, gamma[k], lambda, dim, learndim);
-//			sgd.stepMomentumLogRegress(wdata[l], vdata[l], zdata, gamma[k], lambda, dim, learndim, eta);
+//			sgd.stepQuadraticRegress(wData[l], xyData, gamma, lambda, factorDim, learnDim);
+//			sgd.stepLogRegress(wData[l], xyData, gamma, lambda, factorDim, learnDim);
+//			sgd.stepMomentumLogRegress(wData[l], vData[l], xyData, gamma, lambda, factorDim, learnDim, eta);
 			sgd.stepNesterovLogRegress(wData[l], vData[l], xyData, gamma, factorDim, learnDim, eta);
 		}
 		NTL_EXEC_RANGE_END;

@@ -21,6 +21,9 @@ public:
 	void encStepQuadraticRegress(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, long& slots, long& wBatch, long& factorDim, long& learnDim);
 	void encStepLogRegress(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, long& slots, long& wBatch, long& factorDim, long& learnDim);
 
+	void encStepMomentumLogRegress(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, double& eta, long& slots, long& wBatch, long& factorDim, long& learnDim);
+	void encStepNesterovLogRegress(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, double& eta, long& slots, long& wBatch, long& factorDim, long& learnDim);
+
 	Cipher* encwaverage(Cipher*& cwData, long& wBatch, long& factorDim);
 	double* decw(SecKey& secretKey, Cipher*& cw, long& factorDim);
 
