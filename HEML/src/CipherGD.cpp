@@ -1,4 +1,4 @@
-#include "CipherSGD.h"
+#include "CipherGD.h"
 
 #include <NTL/ZZ.h>
 #include <NTL/BasicThreadPool.h>
@@ -13,7 +13,7 @@
 #include <cmath>
 #include <map>
 
-Cipher* CipherSGD::encxyData(long**& xyData, long& slots, long& wBatch, long& factorDim, long& learnDim) {
+Cipher* CipherGD::encxyData(long**& xyData, long& slots, long& factorDim, long& learnDim, long& wBatch) {
 	Cipher* cxyData = new Cipher[factorDim];
 	NTL_EXEC_RANGE(factorDim, first, last);
 	for (long i = first; i < last; ++i) {
@@ -35,7 +35,7 @@ Cipher* CipherSGD::encxyData(long**& xyData, long& slots, long& wBatch, long& fa
 	return cxyData;
 }
 
-Cipher* CipherSGD::encwData(double**& wData, long& slots, long& wBatch, long& factorDim, long& learnDim) {
+Cipher* CipherGD::encwData(double**& wData, long& slots, long& factorDim, long& learnDim, long& wBatch) {
 	Cipher* cwData = new Cipher[factorDim];
 	NTL_EXEC_RANGE(factorDim, first, last);
 	for (long i = first; i < last; ++i) {
@@ -52,7 +52,7 @@ Cipher* CipherSGD::encwData(double**& wData, long& slots, long& wBatch, long& fa
 	return cwData;
 }
 
-void CipherSGD::encStepQGD(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, long& slots, long& wBatch, long& factorDim, long& learnDim) {
+void CipherGD::encStepQGD(Cipher*& cxyData, Cipher*& cwData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& gamma, double& lambda) {
 
 	long dimcheck = 5;
 	long slotscheck = 10;
@@ -76,9 +76,10 @@ void CipherSGD::encStepQGD(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double
 
 	debugcheck("c inner prod:", secretKey, cip, slotscheck);
 
-	ZZ wcnst = scheme.params.p - to_ZZ(to_RR(pgamma) * lambda); // p * (1 - gamma * lambda)
+	RR cnst = 1.0 - to_RR(gamma) * lambda; // 1 - gamma * lambda
+	ZZ pcnst = pmult(cnst); // p * (1 - gamma * lambda)
 	for (long i = 0; i < factorDim; ++i) {
-		scheme.multByConstAndEqual(cwData[i], wcnst); // p * p * (1 - gamma * lambda) * w
+		scheme.multByConstAndEqual(cwData[i], pcnst); // p * p * (1 - gamma * lambda) * w
 		scheme.modSwitchOneAndEqual(cwData[i]); // p * (1 - gamma * lambda) * w  (-1)
 	}
 
@@ -91,10 +92,13 @@ void CipherSGD::encStepQGD(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double
 	debugcheck("c (2ip - 2): ", secretKey, cip, slotscheck);
 
 	Cipher* cgrad = new Cipher[factorDim];
-	ZZ cnst = pgamma / learnDim; // p * gamma * (1 / m)
+
+	cnst = to_RR(gamma) / learnDim; // gamma / learnDim
+	pcnst = pmult(cnst); // p * gamma / learnDim
+
 	NTL_EXEC_RANGE(factorDim, first, last);
 	for (long i = first; i < last; ++i) {
-		cgrad[i] = scheme.multByConst(cxyData[i], cnst); // p * p * gamma * (z / m)
+		cgrad[i] = scheme.multByConst(cxyData[i], pcnst); // p * p * gamma * (z / m)
 		scheme.modSwitchOneAndEqual(cgrad[i]); // p * gamma * (z / m) (-1)
 		scheme.modEmbedAndEqual(cgrad[i], cip.level);
 		scheme.multModSwitchOneAndEqual(cgrad[i], cip); // p * gamma * (z * ip / m) (-2)
@@ -122,7 +126,7 @@ void CipherSGD::encStepQGD(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double
 	debugcheck("c wdata: ", secretKey, cwData, dimcheck, slotscheck);
 }
 
-void CipherSGD::encStepLGD(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double& lambda, long& slots, long& wBatch, long& factorDim, long& learnDim) {
+void CipherGD::encStepLGD(Cipher*& cxyData, Cipher*& cwData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& lambda, double& gamma) {
 
 	long dimcheck = 5;
 	long slotscheck = 10;
@@ -145,54 +149,50 @@ void CipherSGD::encStepLGD(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double
 
 	debugcheck("c inner prod:", secretKey, cip, slotscheck);
 
-	cout << "pgamma=" << pgamma << endl;
-	cout << "lamda=" << lambda << endl;
-	ZZ wcnst = scheme.params.p - to_ZZ(to_RR(pgamma) * lambda);
 
-	cout << "p(1 - lambda * gamma)=" << wcnst << endl;
+	RR cnst = 1.0 - to_RR(gamma) * lambda; // 1 - gamma * lambda
+	ZZ pcnst = pmult(cnst); // p * (1 - gamma * lambda)
 
 	for (long i = 0; i < factorDim; ++i) {
-		scheme.multByConstAndEqual(cwData[i], wcnst); // (1 - gamma * lambda) * w
+		scheme.multByConstAndEqual(cwData[i], pcnst); // (1 - gamma * lambda) * w
 		scheme.modSwitchOneAndEqual(cwData[i]); // (1 - gamma * lambda) * w  (-1)
 	}
 
 	debugcheck("c (1-gamma * lambda) * wdata: ", secretKey, cwData, dimcheck, slotscheck);
 
-	ZZ* pows = scheme.aux.taylorPowsMap.at(SIGMOIDPRIMEGOOD);
+	double* coeffs = scheme.aux.taylorCoeffsMap.at(SIGMOIDPRIMEGOOD);
 	Cipher* cpows = algo.powerOf2Extended(cip, 2); // ip (-1), ip^2 (-2), ip^4 (-3)
 
+	cnst = to_RR(gamma) * coeffs[0]; // gamma * coeff_0
+	pcnst = pmult(cnst); // p * gamma * coeff_0
+
 	Cipher* cgrad = new Cipher[factorDim];
-
-	ZZ cnst = pgamma * pows[0] / scheme.params.p; // p * gamma * (alpha_t)
-
-	cout << "gamma * alpha0=" << cnst << endl;
 	NTL_EXEC_RANGE(factorDim, first, last);
 	for (long i = first; i < last; ++i) {
-		cgrad[i] = scheme.multByConst(cxyData[i], cnst); // p * p * gamma * (z * alpha_t)
-		scheme.modSwitchOneAndEqual(cgrad[i]); // p * gamma * (z * alpha_t) (-1)
-		scheme.modEmbedAndEqual(cgrad[i], cpows[0].level);
-		scheme.multModSwitchOneAndEqual(cgrad[i], cpows[0]); // p * gamma * (z * alpha_t * ip^t)
+		cgrad[i] = scheme.multByConst(cxyData[i], pcnst); // p * p * gamma * (z * coeff_0)
+		scheme.modSwitchOneAndEqual(cgrad[i]); // p * gamma * (z * coeff_0) (-1)
 	}
 	NTL_EXEC_RANGE_END;
 
 	for (long t = 1; t < 8; t=t+2) {
-		cnst = pgamma * pows[t] / scheme.params.p; // p * gamma * (alpha_t)
-		cout << "gamma * alphat=" << cnst << endl;
+		cnst = to_RR(gamma) * coeffs[t]; // gamma * coeff_0
+		pcnst = pmult(cnst); // p * gamma * coeff_0
+
 		NTL_EXEC_RANGE(factorDim, first, last);
 		for (long i = first; i < last; ++i) {
-			Cipher cgradit = scheme.multByConst(cxyData[i], cnst); // p * p * gamma * (z * alpha_t)
-			scheme.modSwitchOneAndEqual(cgradit); // p * gamma * (z * alpha_t) (-1)
+			Cipher cgradit = scheme.multByConst(cxyData[i], pcnst); // p * p * gamma * (z * coeff_t)
+			scheme.modSwitchOneAndEqual(cgradit); // p * gamma * (z * coeff_t) (-1)
 			if(bit(t, 0)) {
 				scheme.modEmbedAndEqual(cgradit, cpows[0].level);
-				scheme.multModSwitchOneAndEqual(cgradit, cpows[0]); // p * gamma * (z * alpha_t * ip^t)
+				scheme.multModSwitchOneAndEqual(cgradit, cpows[0]); // p * gamma * (z * coeff_t * ip^t)
 			}
 			if(bit(t, 1)) {
 				scheme.modEmbedAndEqual(cgradit, cpows[1].level);
-				scheme.multModSwitchOneAndEqual(cgradit, cpows[1]); // p * gamma * (z * alpha_t * ip^t)
+				scheme.multModSwitchOneAndEqual(cgradit, cpows[1]); // p * gamma * (z * coeff_t * ip^t)
 			}
 			if(bit(t, 2)) {
 				scheme.modEmbedAndEqual(cgradit, cpows[2].level);
-				scheme.multModSwitchOneAndEqual(cgradit, cpows[2]); // p * gamma * (z * alpha_t * ip^t)
+				scheme.multModSwitchOneAndEqual(cgradit, cpows[2]); // p * gamma * (z * coeff_t * ip^t)
 			}
 			scheme.modEmbedAndEqual(cgrad[i], cgradit.level);
 			scheme.addAndEqual(cgrad[i], cgradit); // p * gamma * (z * sigmoid(ip)) (-4)
@@ -204,9 +204,6 @@ void CipherSGD::encStepLGD(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double
 
 	long logslots = log2(slots);
 	long logwnum = log2(wBatch);
-
-	cout << "logslots=" << logslots << endl;
-	cout << "logwnum=" << logwnum << endl;
 
 	NTL_EXEC_RANGE(factorDim, first, last);
 	for (long i = first; i < last; ++i) {
@@ -224,7 +221,7 @@ void CipherSGD::encStepLGD(Cipher*& cxyData, Cipher*& cwData, ZZ& pgamma, double
 	debugcheck("c wData: ", secretKey, cwData, dimcheck, slotscheck);
 }
 
-Cipher* CipherSGD::encwaverage(Cipher*& cwData, long& wBatch, long& factorDim) {
+Cipher* CipherGD::encwaverage(Cipher*& cwData, long& factorDim, long& wBatch) {
 	Cipher* cw = new Cipher[factorDim];
 	for (long i = 0; i < factorDim; ++i) {
 		cw[i] = algo.partialSlotsSum(cwData[i], wBatch);
@@ -232,7 +229,7 @@ Cipher* CipherSGD::encwaverage(Cipher*& cwData, long& wBatch, long& factorDim) {
 	return cw;
 }
 
-double* CipherSGD::decw(SecKey& secretKey, Cipher*& cw, long& factorDim) {
+double* CipherGD::decw(SecKey& secretKey, Cipher*& cw, long& factorDim) {
 	double* w = new double[factorDim];
 	for (long i = 0; i < factorDim; ++i) {
 		CZZ* dcw = scheme.decrypt(secretKey, cw[i]);
@@ -244,11 +241,16 @@ double* CipherSGD::decw(SecKey& secretKey, Cipher*& cw, long& factorDim) {
 	return w;
 }
 
-void CipherSGD::debugcheck(string prefix, SecKey& secretKey, Cipher*& ciphers, long factorDim, long slots) {
+ZZ CipherGD::pmult(RR val) {
+	val.e += scheme.params.logp;
+	return to_ZZ(val);
+}
+
+void CipherGD::debugcheck(string prefix, SecKey& secretKey, Cipher*& ciphers, long factorCheck, long slotCheck) {
 	cout << prefix << " " << ciphers[0].level << endl;
-	for (long i = 0; i < factorDim; ++i) {
+	for (long i = 0; i < factorCheck; ++i) {
 		CZZ* deci = scheme.decrypt(secretKey, ciphers[i]);
-		for (int j = 0; j < factorDim; ++j) {
+		for (int j = 0; j < factorCheck; ++j) {
 			RR wi = to_RR(deci[j].r);
 			wi.e -= scheme.params.logp;
 			double w = to_double(wi);
@@ -259,10 +261,10 @@ void CipherSGD::debugcheck(string prefix, SecKey& secretKey, Cipher*& ciphers, l
 	cout << endl;
 }
 
-void CipherSGD::debugcheck(string prefix, SecKey& secretKey, Cipher& cipher, long slots) {
+void CipherGD::debugcheck(string prefix, SecKey& secretKey, Cipher& cipher, long slotCheck) {
 	cout << prefix << " " << cipher.level << endl;
 	CZZ* dec = scheme.decrypt(secretKey, cipher);
-	for (long j = 0; j < slots; ++j) {
+	for (long j = 0; j < slotCheck; ++j) {
 		RR wrr = to_RR(dec[j].r);
 		wrr.e -= scheme.params.logp;
 		double w = to_double(wrr);

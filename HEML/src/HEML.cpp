@@ -42,7 +42,7 @@ int main() {
 	//19, 30, 30, 335
 	//20, 60, 30, 670
 
-//	TestAK::testAK(17, 120, 30, 80);
+	TestAK::testAK(17, 120, 30, 80);
 //	TestCH::testCH(17, 120, 30, 80);
 //	TestKW::testKW(17, 120, 30, 80);
 

@@ -1,4 +1,4 @@
-#include "SGD.h"
+#include "GD.h"
 
 #include <EvaluatorUtils.h>
 #include <CZZ.h>
@@ -10,12 +10,12 @@
 #include <string>
 #include <vector>
 
-long** SGD::xyDataFromFile(string& filename, long& factorDim, long& sampleDim) {
+long** GD::xyDataFromFile(string& path, long& factorDim, long& sampleDim) {
 	vector<vector<long>> xdata;
 	vector<long> ydata;
 	factorDim = 0; 		// dimension of x
 	sampleDim = 0;	// number of samples
-	ifstream openFile(filename.data());
+	ifstream openFile(path.data());
 	if(openFile.is_open()) {
 		string line;
 		getline(openFile, line);
@@ -62,15 +62,15 @@ long** SGD::xyDataFromFile(string& filename, long& factorDim, long& sampleDim) {
 	return zdata;
 }
 
-double SGD::innerprod(double*& wdata, long*& x, long& size){
+double GD::innerprod(double*& w, long*& xy, long& size){
 	double res = 0.0;
 	for(int i = 0; i < size; ++i) {
-		res += wdata[i] * x[i];
+		res += w[i] * xy[i];
 	}
 	return res;
 }
 
-void SGD::stepQGD(double*& wData, long**& xyData, double& gamma, double& lambda, long& factorDim, long& learnDim) {
+void GD::stepQGD(long**& xyData, double*& wData, long& factorDim, long& learnDim, double& lambda, double& gamma) {
 	double* grad = new double[factorDim];
 	for(int i = 0; i < factorDim; ++i) {
 		grad[i] = lambda * wData[i];
@@ -88,27 +88,7 @@ void SGD::stepQGD(double*& wData, long**& xyData, double& gamma, double& lambda,
 	}
 }
 
-
-void SGD::stepLGD(double*& wData, long**& xyData, double& gamma, double& lambda, long& factorDim, long& learnDim) {
-	double* grad = new double[factorDim];
-	for(int i = 0; i < factorDim; ++i) {
-		grad[i] = lambda * wData[i];
-	}
-
-	for(int j = 0; j < learnDim; ++j) {
-		double ip = innerprod(wData, xyData[j], factorDim);
-		double tmp = - 1. / (1. + exp(ip));
-		tmp /= (double)learnDim;
-		for(int i = 0; i < factorDim; ++i) {
-			grad[i] += tmp * (double) xyData[j][i];
-		}
-	}
-	for (int i = 0; i < factorDim; ++i) {
-		wData[i] -= gamma * grad[i];
-	}
-}
-
-void SGD::stepSQGD(double*& wData, long**& xyData, double& gamma, double& lambda, long& factorDim, long& learnDim, long& stochDim) {
+void GD::stepSQGD(long**& xyData, double*& wData, long& factorDim, long& learnDim, double& lambda, double& gamma, long& stochDim) {
 	double* grad = new double[factorDim];
 	for(int i = 0; i < factorDim; ++i) {
 		grad[i] = lambda * wData[i];
@@ -127,7 +107,26 @@ void SGD::stepSQGD(double*& wData, long**& xyData, double& gamma, double& lambda
 	}
 }
 
-void SGD::stepSLGD(double*& wData, long**& xyData, double& gamma, double& lambda, long& factorDim, long& learnDim, long& stochDim) {
+void GD::stepLGD(long**& xyData, double*& wData, long& factorDim, long& learnDim, double& lambda, double& gamma) {
+	double* grad = new double[factorDim];
+	for(int i = 0; i < factorDim; ++i) {
+		grad[i] = lambda * wData[i];
+	}
+
+	for(int j = 0; j < learnDim; ++j) {
+		double ip = innerprod(wData, xyData[j], factorDim);
+		double tmp = - 1. / (1. + exp(ip));
+		tmp /= (double)learnDim;
+		for(int i = 0; i < factorDim; ++i) {
+			grad[i] += tmp * (double) xyData[j][i];
+		}
+	}
+	for (int i = 0; i < factorDim; ++i) {
+		wData[i] -= gamma * grad[i];
+	}
+}
+
+void GD::stepSLGD(long**& xyData, double*& wData, long& factorDim, long& learnDim, double& lambda, double& gamma, long& stochDim) {
 	double* grad = new double[factorDim];
 	for(int i = 0; i < factorDim; ++i) {
 		grad[i] = lambda * wData[i];
@@ -147,7 +146,7 @@ void SGD::stepSLGD(double*& wData, long**& xyData, double& gamma, double& lambda
 	}
 }
 
-void SGD::stepMLGD(double*& wData, double*& vData, long**& xyData, double& gamma, long& factorDim, long& learnDim, double& eta) {
+void GD::stepMLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& lambda, double& gamma, double& eta) {
 	double* grad = new double[factorDim]();
 
 	for(int j = 0; j < learnDim; ++j) {
@@ -165,7 +164,7 @@ void SGD::stepMLGD(double*& wData, double*& vData, long**& xyData, double& gamma
 	}
 }
 
-void SGD::stepNLGD(double*& wData, double*& vData, long**& xyData, double& gamma, long& factorDim, long& learnDim, double& eta) {
+void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& lambda, double& gamma, double& eta) {
 	double* grad = new double[factorDim]();
 
 	for(int j = 0; j < learnDim; ++j) {
@@ -183,7 +182,7 @@ void SGD::stepNLGD(double*& wData, double*& vData, long**& xyData, double& gamma
 	}
 }
 
-double* SGD::waverage(double**& wData, long& wBatch, long& factorDim) {
+double* GD::waverage(double**& wData, long& factorDim, long& wBatch) {
 	double* w = new double[factorDim];
 
 	for (long i = 0; i < factorDim; ++i) {
@@ -195,7 +194,7 @@ double* SGD::waverage(double**& wData, long& wBatch, long& factorDim) {
 	return w;
 }
 
-void SGD::check(double*& w, long**& xyData, long& factorDim, long& sampleDim) {
+void GD::check(long**& xyData, double*& w, long& factorDim, long& sampleDim) {
 	cout << "w:";
 	for (long i = 0; i < factorDim; ++i) {
 		cout << w[i] << ",";
@@ -210,7 +209,7 @@ void SGD::check(double*& w, long**& xyData, long& factorDim, long& sampleDim) {
 
 }
 
-void SGD::debugcheck(string prefix, double*& w, long& factorDim) {
+void GD::debugcheck(string prefix, double*& w, long& factorDim) {
 	cout << prefix;
 	for (long i = 0; i < factorDim; ++i) {
 		cout << w[i] << ",";
@@ -218,7 +217,7 @@ void SGD::debugcheck(string prefix, double*& w, long& factorDim) {
 	cout << endl;
 }
 
-void SGD:: debugcheck(string prefix, long*& xy, long& factorDim) {
+void GD:: debugcheck(string prefix, long*& xy, long& factorDim) {
 	cout << prefix;
 	for (long i = 0; i < factorDim; ++i) {
 		cout << xy[i] << ",";
