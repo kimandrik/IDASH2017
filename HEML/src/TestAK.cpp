@@ -48,8 +48,8 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	long ldimBits = (long)ceil(log2(learnDim)); //11
 	long learnDimPo2 = (1 << ldimBits); // 2048
 
-	long slots =  (1 << (logN-1)); // 2^15
-	long wBatch = slots / sampleDimPo2; // 16
+	long slots =  (1 << (logN-1)); // 2^11 = 2048
+	long wBatch = slots / learnDimPo2; // 1
 
 	cout << "factorDim: " << factorDim << endl;
 	cout << "factorDimPo2: " << factorDimPo2 << endl;
@@ -63,13 +63,12 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	cout << "slots: " << slots << endl;
 	cout << "wBatch: " << wBatch << endl;
 
-	double** vData = new double*[wBatch];
-	double** wData = new double*[wBatch];
+	double** vData = new double*[wBatch]; // wBatch x factorDim
+	double** wData = new double*[wBatch]; // wBatch x factorDim
 	for (long l = 0; l < wBatch; ++l) {
 		wData[l] = new double[factorDim];
 		vData[l] = new double[factorDim];
 		for (long i = 0; i < factorDim; ++i) {
-//			double tmp = (1.0 - 2.0 * (double)rand() / RAND_MAX) / 64.0; // take small initial values
 			double tmp = 0.0;
 			wData[l][i] = tmp;
 			vData[l][i] = tmp;
@@ -77,15 +76,16 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	}
 
 	long iter = 0;
-	long enciteradded = 5;
+	long enciteradded = 10;
 	long totaliter = iter + enciteradded;
 
-	double* alpha = new double[totaliter + 2];
+	double* alpha = new double[totaliter + 2]; // just constansts for Nesterov GD
 	alpha[0] = 0.0;
 	for (long i = 1; i < totaliter + 2; ++i) {
 		alpha[i] = (1. + sqrt(1. + 4.0 * alpha[i-1] * alpha[i-1])) / 2.0;
 	}
 
+	cout << "iterations: " << iter << endl;
 	timeutils.start("sgd");
 	for (long k = 0; k < iter; ++k) {
 
@@ -100,7 +100,7 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	}
 	timeutils.stop("sgd");
 
-	double* w = sgd.waverage(wData, factorDim, wBatch);
+	double* w = sgd.wsum(wData, factorDim, wBatch);
 
 	sgd.check(xyData, w, factorDim, sampleDim);
 
@@ -140,7 +140,7 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	}
 
 	timeutils.start("Enc w out");
-	Cipher* cw = csgd.encwaverage(cwData, factorDim, wBatch);
+	Cipher* cw = csgd.encwsum(cwData, factorDim, wBatch);
 	timeutils.stop("Enc w out");
 
 	timeutils.start("Dec w");

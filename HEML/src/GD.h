@@ -32,7 +32,7 @@ public:
 	void stepMLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& lambda, double& gamma, double& eta);
 	void stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& lambda, double& gamma, double& eta);
 
-	double* waverage(double**& wdata, long& factorDim, long& wBatch);
+	double* wsum(double**& wdata, long& factorDim, long& wBatch);
 
 	void check(long**& xyData, double*& w, long& factorDim, long& sampleDim);
 

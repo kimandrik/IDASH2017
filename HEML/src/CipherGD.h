@@ -24,7 +24,7 @@ public:
 	void encStepMLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& lambda, double& gamma, double& eta);
 	void encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& lambda, double& gamma, double& eta);
 
-	Cipher* encwaverage(Cipher*& cwData, long& factorDim, long& wBatch);
+	Cipher* encwsum(Cipher*& cwData, long& factorDim, long& wBatch);
 	double* decw(SecKey& secretKey, Cipher*& cw, long& factorDim);
 
 	ZZ pmult(RR val);

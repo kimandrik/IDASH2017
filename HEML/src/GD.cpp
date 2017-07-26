@@ -192,6 +192,7 @@ void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 		}
 	}
 
+	// Nesterov steps
 	for (int i = 0; i < factorDim; ++i) {
 		double tmpv = wData[i] - gamma * grad[i];
 		wData[i] = (1.0 - eta) * tmpv + eta * vData[i];
@@ -199,7 +200,7 @@ void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 	}
 }
 
-double* GD::waverage(double**& wData, long& factorDim, long& wBatch) {
+double* GD::wsum(double**& wData, long& factorDim, long& wBatch) {
 	double* w = new double[factorDim];
 
 	for (long i = 0; i < factorDim; ++i) {

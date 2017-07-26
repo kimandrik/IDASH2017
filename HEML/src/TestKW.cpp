@@ -100,7 +100,7 @@ void TestKW::testKW(long logN, long logl, long logp, long L) {
 	}
 	timeutils.stop("sgd");
 
-	double* w = sgd.waverage(wData, factorDim, wBatch);
+	double* w = sgd.wsum(wData, factorDim, wBatch);
 
 	sgd.check(xyData, w, factorDim, sampleDim);
 
@@ -135,7 +135,7 @@ void TestKW::testKW(long logN, long logl, long logp, long L) {
 	}
 
 	timeutils.start("Enc w out");
-	Cipher* cw = csgd.encwaverage(cwData, factorDim, wBatch);
+	Cipher* cw = csgd.encwsum(cwData, factorDim, wBatch);
 	timeutils.stop("Enc w out");
 
 	timeutils.start("Dec w");

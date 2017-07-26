@@ -319,11 +319,11 @@ void CipherGD::encStepMLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, l
 
 void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& lambda, double& gamma, double& eta) {
 
-	long dimcheck = 5;
-	long slotscheck = 10;
-	debugcheck("c xyData: ", secretKey, cxyData, dimcheck, slotscheck);
+//	long dimcheck = 5;
+//	long slotscheck = 10;
+//	debugcheck("c xyData: ", secretKey, cxyData, dimcheck, slotscheck);
 
-	debugcheck("c wData: ", secretKey, cwData, dimcheck, slotscheck);
+//	debugcheck("c wData: ", secretKey, cwData, dimcheck, slotscheck);
 
 	Cipher* cprod = new Cipher[factorDim];
 
@@ -338,25 +338,13 @@ void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, l
 
 	scheme.modSwitchOneAndEqual(cip); // cip (-1)
 
-	debugcheck("c inner prod:", secretKey, cip, slotscheck);
-
-	RR cnst;
-	ZZ pcnst;
-
-//	RR cnst = 1.0 - to_RR(gamma) * lambda; // 1 - gamma * lambda
-//	ZZ pcnst = pmult(cnst); // p * (1 - gamma * lambda)
-//
-//	for (long i = 0; i < factorDim; ++i) {
-//		scheme.multByConstAndEqual(cwData[i], pcnst); // (1 - gamma * lambda) * w
-//		scheme.modSwitchOneAndEqual(cwData[i]); // (1 - gamma * lambda) * w  (-1)
-//	}
-//	debugcheck("c (1-gamma * lambda) * wdata: ", secretKey, cwData, dimcheck, slotscheck);
+//	debugcheck("c inner prod:", secretKey, cip, slotscheck);
 
 	double* coeffs = scheme.aux.taylorCoeffsMap.at(SIGMOIDPRIMEGOOD);
 	Cipher* cpows = algo.powerOf2Extended(cip, 2); // ip (-1), ip^2 (-2), ip^4 (-3)
 
-	cnst = to_RR(gamma) * coeffs[0]; // gamma * coeff_0
-	pcnst = pmult(cnst); // p * gamma * coeff_0
+	RR cnst = to_RR(gamma) * coeffs[0]; // gamma * coeff_0
+	ZZ pcnst = pmult(cnst); // p * gamma * coeff_0
 
 	Cipher* cgrad = new Cipher[factorDim];
 	NTL_EXEC_RANGE(factorDim, first, last);
@@ -392,7 +380,7 @@ void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, l
 		NTL_EXEC_RANGE_END;
 	}
 
-	debugcheck("c grad: ", secretKey, cgrad, dimcheck, 20);
+//	debugcheck("c grad: ", secretKey, cgrad, dimcheck, slotscheck);
 
 	long logslots = log2(slots);
 	long logwnum = log2(wBatch);
@@ -422,14 +410,12 @@ void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, l
 	}
 	NTL_EXEC_RANGE_END;
 
-	debugcheck("c grad: ", secretKey, cgrad, dimcheck, slotscheck);
+//	debugcheck("c grad: ", secretKey, cgrad, dimcheck, slotscheck);
 
-	debugcheck("c wData: ", secretKey, cwData, dimcheck, slotscheck);
-
-	//TODO: kimandrik
+//	debugcheck("c wData: ", secretKey, cwData, dimcheck, slotscheck);
 }
 
-Cipher* CipherGD::encwaverage(Cipher*& cwData, long& factorDim, long& wBatch) {
+Cipher* CipherGD::encwsum(Cipher*& cwData, long& factorDim, long& wBatch) {
 	Cipher* cw = new Cipher[factorDim];
 	for (long i = 0; i < factorDim; ++i) {
 		cw[i] = algo.partialSlotsSum(cwData[i], wBatch);
