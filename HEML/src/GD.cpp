@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-long** GD::xyDataFromFile(string& path, long& factorDim, long& sampleDim) {
+long** GD::xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool isfirst) {
 	vector<vector<long>> xdata;
 	vector<long> ydata;
 	factorDim = 0; 		// dimension of x
@@ -20,34 +20,65 @@ long** GD::xyDataFromFile(string& path, long& factorDim, long& sampleDim) {
 		string line;
 		getline(openFile, line);
 		for(long i = 0; i < line.length(); ++i) if(line[i] == ',' ) factorDim++;
-		while(getline(openFile, line)){
-			if(line.length() != 2 * factorDim + 1 ) {
-				cout << "Error: data format" << endl;
-				break;
-			}
-			if(line[0] == '0') {
-				ydata.push_back(-1);
-			} else if(line[0] == '1') {
-				ydata.push_back(1);
-			} else {
-				cout << "Error: data value" << endl;
-				break;
-			}
-			vector<long> vecline;
-			for(long i = 2; i < 2 * factorDim + 1; i += 2) {
-				if(line[i] == '0') {
-					vecline.push_back(0);
-				} else if(line[i] == '1') {
-					vecline.push_back(1);
-				} else{
+		if(isfirst) {
+			while(getline(openFile, line)){
+				if(line.length() != 2 * factorDim + 1 ) {
+					cout << "Error: data format" << endl;
+					break;
+				}
+				if(line[0] == '0') {
+					ydata.push_back(-1);
+				} else if(line[0] == '1') {
+					ydata.push_back(1);
+				} else {
 					cout << "Error: data value" << endl;
 					break;
 				}
+				vector<long> vecline;
+				for(long i = 2; i < 2 * factorDim + 1; i += 2) {
+					if(line[i] == '0') {
+						vecline.push_back(0);
+					} else if(line[i] == '1') {
+						vecline.push_back(1);
+					} else{
+						cout << "Error: data value" << endl;
+						break;
+					}
+				}
+				xdata.push_back(vecline);
+				sampleDim++;
 			}
-			xdata.push_back(vecline);
-			sampleDim++;
+			openFile.close();
+		} else {
+			while(getline(openFile, line)){
+				if(line.length() != 2 * factorDim + 1 ) {
+					cout << "Error: data format" << endl;
+					break;
+				}
+				if(line[2 * factorDim] == '0') {
+					ydata.push_back(-1);
+				} else if(line[2 * factorDim] == '1') {
+					ydata.push_back(1);
+				} else {
+					cout << "Error: data value" << endl;
+					break;
+				}
+				vector<long> vecline;
+				for(long i = 0; i < 2 * factorDim; i += 2) {
+					if(line[i] == '0') {
+						vecline.push_back(0);
+					} else if(line[i] == '1') {
+						vecline.push_back(1);
+					} else{
+						cout << "Error: data value" << endl;
+						break;
+					}
+				}
+				xdata.push_back(vecline);
+				sampleDim++;
+			}
+			openFile.close();
 		}
-		openFile.close();
 	} else {
 		cout << "Error: cannot read file" << endl;
 	}

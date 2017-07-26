@@ -28,15 +28,15 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	//-----------------------------------------
 	GD sgd;
 
-	string filename = "data103x1579.txt";
-//	string filename = "data15x1500.txt";
+//	string filename = "data103x1579.txt";
+	string filename = "data15x1500.txt";
 //	string filename = "data5x500.txt";
 //	string filename = "data9x1253.txt";
 
 	long factorDim = 0;
 	long sampleDim = 0;
 
-	long** xyData = sgd.xyDataFromFile(filename, factorDim, sampleDim); // factorDim=103, sampleDim=1579
+	long** xyData = sgd.xyDataFromFile(filename, factorDim, sampleDim, false); // factorDim=103, sampleDim=1579
 
 	long sdimBits = (long)ceil(log2(sampleDim)); // 11
 	long sampleDimPo2 = (1 << sdimBits); // 2048
@@ -48,8 +48,8 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	long ldimBits = (long)ceil(log2(learnDim)); //11
 	long learnDimPo2 = (1 << ldimBits); // 2048
 
-	long slots =  (1 << (logN-1)); // 2^11 = 2048
-	long wBatch = slots / learnDimPo2; // 1
+	long wBatch = 1; // 1
+	long slots =  learnDimPo2; // 2^11 = 2048
 
 	cout << "factorDim: " << factorDim << endl;
 	cout << "factorDimPo2: " << factorDimPo2 << endl;
@@ -75,7 +75,7 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 		}
 	}
 
-	long iter = 0;
+	long iter = 10;
 	long enciteradded = 5;
 	long totaliter = iter + enciteradded;
 
@@ -90,7 +90,8 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	for (long k = 0; k < iter; ++k) {
 
 		double lambda = 0.0;
-		double gamma = 0.001 / (1.0 + k);
+//		double gamma = 0.001 / (1.0 + k);
+		double gamma = 0.01 / (1.0 + k);
 		double eta = (1. - alpha[k+1]) / alpha[k+2];
 
 		for (long l = 0; l < wBatch; ++l) {

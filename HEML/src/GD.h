@@ -17,7 +17,7 @@ public:
 
 	//-----------------------------------------
 
-	long** xyDataFromFile(string& path, long& factorDim, long& sampleDim); // returns x_ij * y_i
+	long** xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool isfirst = true); // returns x_ij * y_i
 
 	//-----------------------------------------
 

@@ -320,10 +320,9 @@ void CipherGD::encStepMLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, l
 
 void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& lambda, double& gamma, double& eta) {
 
-	long dimcheck = 5;
+	long dimcheck = 3;
 	long slotscheck = 10;
 	debugcheck("c xyData: ", secretKey, cxyData, dimcheck, slotscheck);
-
 	debugcheck("c wData: ", secretKey, cwData, dimcheck, slotscheck);
 
 	Cipher* cprod = new Cipher[factorDim];
@@ -338,8 +337,6 @@ void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, l
 	Cipher cip = algo.sum(cprod, factorDim);
 
 	scheme.modSwitchOneAndEqual(cip); // cip (-1)
-
-	debugcheck("c inner prod:", secretKey, cip, slotscheck);
 
 	double* coeffs = scheme.aux.taylorCoeffsMap.at(SIGMOIDPRIMEGOOD);
 	Cipher* cpows = algo.powerOf2Extended(cip, 2); // ip (-1), ip^2 (-2), ip^4 (-3)
@@ -381,8 +378,6 @@ void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, l
 		NTL_EXEC_RANGE_END;
 	}
 
-	debugcheck("c grad: ", secretKey, cgrad, dimcheck, slotscheck);
-
 	long logslots = log2(slots);
 	long logwnum = log2(wBatch);
 
@@ -398,9 +393,6 @@ void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, l
 	cnst = to_RR(eta);
 	pcnst = pmult(cnst);
 
-	cout << cnst << endl;
-	cout << pcnst << endl;
-
 	NTL_EXEC_RANGE(factorDim, first, last);
 	for (long i = first; i < last; ++i) {
 		scheme.modEmbedAndEqual(cwData[i], cgrad[i].level);
@@ -413,8 +405,6 @@ void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, l
 		scheme.addAndEqual(cwData[i], cvData[i]); //  w = tmp + eta * (v - tmp) (-5)
 	}
 	NTL_EXEC_RANGE_END;
-
-	debugcheck("c grad: ", secretKey, cgrad, dimcheck, slotscheck);
 
 	debugcheck("c wData: ", secretKey, cwData, dimcheck, slotscheck);
 }
