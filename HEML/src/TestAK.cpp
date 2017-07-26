@@ -91,7 +91,7 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 
 		double lambda = 0.0;
 //		double gamma = 0.001 / (1.0 + k);
-		double gamma = 0.005 / (1.0 + k);
+		double gamma = 2.0 / learnDim / (1.0 + k);
 		double eta = (1. - alpha[k+1]) / alpha[k+2];
 
 		for (long l = 0; l < wBatch; ++l) {
@@ -132,7 +132,7 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	for (long k = iter; k < totaliter; ++k) {
 
 		double lambda = 0.0;
-		double gamma = 0.005 / (1.0 + k);
+		double gamma = 2.0 / learnDim / (1.0 + k);
 		double eta = (1. - alpha[k+1]) / alpha[k+2];
 
 		timeutils.start("Enc sgd step");
