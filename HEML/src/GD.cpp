@@ -201,7 +201,7 @@ void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 }
 
 double* GD::wsum(double**& wData, long& factorDim, long& wBatch) {
-	double* w = new double[factorDim];
+	double* w = new double[factorDim]();
 
 	for (long i = 0; i < factorDim; ++i) {
 		for (int l = 0; l < wBatch; ++l) {

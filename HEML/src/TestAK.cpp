@@ -69,18 +69,18 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 		wData[l] = new double[factorDim];
 		vData[l] = new double[factorDim];
 		for (long i = 0; i < factorDim; ++i) {
-			double tmp = 0.0;
+			double tmp = 0;
 			wData[l][i] = tmp;
 			vData[l][i] = tmp;
 		}
 	}
 
 	long iter = 0;
-	long enciteradded = 10;
+	long enciteradded = 5;
 	long totaliter = iter + enciteradded;
 
 	double* alpha = new double[totaliter + 2]; // just constansts for Nesterov GD
-	alpha[0] = 0.0;
+	alpha[0] = 0.1;
 	for (long i = 1; i < totaliter + 2; ++i) {
 		alpha[i] = (1. + sqrt(1. + 4.0 * alpha[i-1] * alpha[i-1])) / 2.0;
 	}
@@ -139,12 +139,12 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 		timeutils.stop("Enc sgd step");
 	}
 
-	timeutils.start("Enc w out");
-	Cipher* cw = csgd.encwsum(cwData, factorDim, wBatch);
-	timeutils.stop("Enc w out");
+//	timeutils.start("Enc w out");
+//	Cipher* cw = csgd.encwsum(cwData, factorDim, wBatch);
+//	timeutils.stop("Enc w out");
 
 	timeutils.start("Dec w");
-	double* dw = csgd.decw(secretKey, cw, factorDim);
+	double* dw = csgd.decw(secretKey, cwData, factorDim);
 	timeutils.stop("Dec w");
 
 	sgd.check(xyData, dw, factorDim, sampleDim);

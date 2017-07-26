@@ -41,13 +41,14 @@ int main() {
 	//18, 0, 35, 144
 	//18, 40, 40, 125
 
-	TestAK::testAK(12, 60, 30, 30);
+//	TestAK::testAK(12, 60, 40, 20);
 //	TestCH::testJH(16, 60, 30, 40);
 //	TestKW::testKW(16, 60, 30, 40);
 
 //	TestScheme::testEncodeBatch(13, 5, 30, 5, 12);
 //	TestScheme::testExponentBatch(13, 5, 30, 5, 7, 12);
 //	TestScheme::testSlotsSum(13, 5, 50, 5, 12);
+//	TestScheme::testInverseBatch(13, 5, 30, 5, 4, 3);
 
 	//-----------------------------------------
 
