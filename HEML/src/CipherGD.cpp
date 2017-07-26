@@ -322,8 +322,6 @@ void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, l
 
 	long dimcheck = 3;
 	long slotscheck = 10;
-	debugcheck("c xyData: ", secretKey, cxyData, dimcheck, slotscheck);
-	debugcheck("c wData: ", secretKey, cwData, dimcheck, slotscheck);
 
 	Cipher* cprod = new Cipher[factorDim];
 

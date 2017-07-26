@@ -44,7 +44,7 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	long fdimBits = (long)ceil(log2(factorDim)); // 7
 	long factorDimPo2 = (1 << fdimBits); // 128
 
-	long learnDim = sampleDim; // 1579
+	long learnDim = 1500; // 1579
 	long ldimBits = (long)ceil(log2(learnDim)); //11
 	long learnDimPo2 = (1 << ldimBits); // 2048
 
@@ -75,7 +75,7 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 		}
 	}
 
-	long iter = 10;
+	long iter = 0;
 	long enciteradded = 5;
 	long totaliter = iter + enciteradded;
 
@@ -91,7 +91,7 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 
 		double lambda = 0.0;
 //		double gamma = 0.001 / (1.0 + k);
-		double gamma = 0.01 / (1.0 + k);
+		double gamma = 0.005 / (1.0 + k);
 		double eta = (1. - alpha[k+1]) / alpha[k+2];
 
 		for (long l = 0; l < wBatch; ++l) {
@@ -132,7 +132,7 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	for (long k = iter; k < totaliter; ++k) {
 
 		double lambda = 0.0;
-		double gamma = 0.001 / (1.0 + k);
+		double gamma = 0.005 / (1.0 + k);
 		double eta = (1. - alpha[k+1]) / alpha[k+2];
 
 		timeutils.start("Enc sgd step");
