@@ -28,14 +28,15 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	//-----------------------------------------
 	GD sgd;
 
-//	string filename = "data103x1579.txt"; // true
-//	string filename = "data15x1500.txt"; // false
 //	string filename = "data5x500.txt"; // false
-//	string filename = "data9x1253.txt";
+//	string filename = "data9x1253.txt"; // false
+//	string filename = "data15x1500.txt"; // false
 //	string filename = "data16x101.txt";// false
-//	string filename = "data27x148.txt";// false
+	string filename = "data27x148.txt";// false
 //	string filename = "data43x3247.txt";// false
 //	string filename = "data45x296.txt";// false
+//	string filename = "data51x653.txt";// false
+//	string filename = "data103x1579.txt"; // true
 
 	long factorDim = 0;
 	long sampleDim = 0;
@@ -76,7 +77,7 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 
 	bool encrypted = false;
 	long iter = fdimBits;
-//	long iter = 50;
+//	long iter = 5000;
 	double* alpha = new double[iter + 2]; // just constansts for Nesterov GD
 	alpha[0] = 0.1;
 	for (long i = 1; i < iter + 2; ++i) {
