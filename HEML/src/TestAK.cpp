@@ -90,14 +90,13 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	for (long k = 0; k < iter; ++k) {
 
 		double lambda = 0.0;
-//		double gamma = 0.001 / (1.0 + k);
 		double gamma = 2.0 / learnDim / (1.0 + k);
 		double eta = (1. - alpha[k+1]) / alpha[k+2];
 
 		for (long l = 0; l < wBatch; ++l) {
 //			sgd.stepLGD(xyData, wData[l], factorDim, learnDim, lambda, gamma);
-//			sgd.stepNLGD(xyData, wData[l], vData[l], factorDim, learnDim, lambda, gamma, eta);
-			sgd.decStepNLGD(xyData, wData[l], vData[l], factorDim, learnDim, lambda, gamma, eta);
+			sgd.stepNLGD(xyData, wData[l], vData[l], factorDim, learnDim, lambda, gamma, eta);
+//			sgd.decStepNLGD(xyData, wData[l], vData[l], factorDim, learnDim, lambda, gamma, eta);
 		}
 	}
 	timeutils.stop("sgd");
@@ -139,8 +138,6 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 		timeutils.start("Enc sgd step");
 		csgd.encStepNLGD(cxyData, cwData, cvData, slots, factorDim, learnDim, wBatch, lambda, gamma, eta);
 		timeutils.stop("Enc sgd step");
-
-		csgd.debugcheck("c wData: ", secretKey, cwData, 3, 10);
 	}
 
 //	timeutils.start("Enc w out");

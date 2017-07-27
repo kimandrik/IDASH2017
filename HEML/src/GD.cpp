@@ -215,6 +215,7 @@ void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 		wData[i] = (1.0 - eta) * tmpv + eta * vData[i];
 		vData[i] = tmpv;
 	}
+	debugcheck("d wData: ", wData, 5);
 }
 
 void GD::decStepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& lambda, double& gamma, double& eta) {
@@ -230,16 +231,12 @@ void GD::decStepNLGD(long**& xyData, double*& wData, double*& vData, long& facto
 		}
 	}
 
-	debugcheck("d prod: ", dprod, 5, 7);
-
 	double* dip = new double[learnDim]();
 	for (long j = 0; j < learnDim; ++j) {
 		for (long i = 0; i < factorDim; ++i) {
 			dip[j] += dprod[j][i];
 		}
 	}
-
-	debugcheck("d ip: ", dip, 7);
 
 	double** dpows = new double*[3];
 	for (long l = 0; l < 3; ++l) {
@@ -257,8 +254,6 @@ void GD::decStepNLGD(long**& xyData, double*& wData, double*& vData, long& facto
 			dgrad[j][i] = xyData[j][i] * gamma * coeffs[0];
 		}
 	}
-
-	debugcheck("d grad: ", dgrad, 5, 7);
 
 	for (long t = 1; t < 8; t=t+2) {
 		for (long j = 0; j < learnDim; ++j) {
@@ -278,15 +273,12 @@ void GD::decStepNLGD(long**& xyData, double*& wData, double*& vData, long& facto
 		}
 	}
 
-	debugcheck("d grad: ", dgrad, 5, 7);
-
 	double* dgradsum = new double[factorDim]();
 	for (long j = 0; j < learnDim; ++j) {
 		for (long i = 0; i < factorDim; ++i) {
 			dgradsum[i] += dgrad[j][i];
 		}
 	}
-	debugcheck("d dgradsum: ", dgradsum, 5);
 
 
 	for (long i = 0; i < factorDim; ++i) {
@@ -297,8 +289,6 @@ void GD::decStepNLGD(long**& xyData, double*& wData, double*& vData, long& facto
 		wData[i] += vData[i];
 	}
 	debugcheck("d wData: ", wData, 5);
-	debugcheck("d vData: ", vData, 5);
-
 }
 
 
