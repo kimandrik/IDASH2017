@@ -28,9 +28,9 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	//-----------------------------------------
 	GD sgd;
 
-//	string filename = "data103x1579.txt";
-	string filename = "data15x1500.txt";
-//	string filename = "data5x500.txt";
+//	string filename = "data103x1579.txt"; // true
+//	string filename = "data15x1500.txt"; // false
+	string filename = "data5x500.txt"; // false
 //	string filename = "data9x1253.txt";
 
 	long factorDim = 0;
@@ -45,7 +45,7 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	long learnDim = sampleDim;
 	long ldimBits = (long)ceil(log2(learnDim));
 	long learnDimPo2 = (1 << ldimBits);
-	long wBatch = 2;
+	long wBatch = 1;
 	long slots =  learnDimPo2 * wBatch;
 
 	cout << "factorDim: " << factorDim << endl;
@@ -72,6 +72,7 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 
 	bool encrypted = true;
 	long iter = fdimBits;
+//	long iter = 50;
 	double* alpha = new double[iter + 2]; // just constansts for Nesterov GD
 	alpha[0] = 0.1;
 	for (long i = 1; i < iter + 2; ++i) {

@@ -19,19 +19,18 @@ int main() {
 
 //	test();
 
-	//logN, logl, logp, L (some secure parameter sets)
+	//logN, logl, logp, L
 
 	//15: logp * L + l <= 620 (secure parameters)
 	//16: logp * L + l <= 1241 (secure parameters)
 	//17: logp * L + l <= 2483 (secure parameters)
 
 	//Highest possible parameters for different number of itterations
+	// each iteration is about (factorDim * N / 3) ms
 
-	// 1 iteration about factorDim*36 seconds
+	// 2 iterations: L = 16 (15,04,56,11)
 	// 3 iterations: L = 16 (15,12,38,16)
-	// 4 iterations: L = 21 (15,11,29,21)
 
-	// 1 iteration about factorDim*36 seconds
 	// 4 iterations: L = 21 (16,02,59,21)
 	// 5 iterations: L = 26 (16,19,47,26)
 	// 6 iterations: L = 31 (16,01,40,31)
@@ -47,14 +46,11 @@ int main() {
 	//15 iterations: L = 76 (17,51,32,76)
 	//16 iterations: L = 76 (17,53,30,81)
 
-	TestAK::testAK(13,11,35,21);
+	TestAK::testAK(16,10,35,21);
 //	TestCH::testJH(16, 60, 30, 40);
 //	TestKW::testKW(16, 60, 30, 40);
 
-//	TestScheme::testEncodeBatch(13, 5, 30, 5, 12);
 //	TestScheme::testExponentBatch(13, 5, 30, 5, 7, 12);
-//	TestScheme::testSlotsSum(13, 5, 50, 5, 12);
-//	TestScheme::testInverseBatch(13, 5, 30, 5, 4, 3);
 
 	//-----------------------------------------
 
