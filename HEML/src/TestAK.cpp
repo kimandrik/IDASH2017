@@ -29,8 +29,8 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	GD sgd;
 
 //	string filename = "data103x1579.txt";
-	string filename = "data15x1500.txt";
-//	string filename = "data5x500.txt";
+//	string filename = "data15x1500.txt";
+	string filename = "data5x500.txt";
 //	string filename = "data9x1253.txt";
 
 	long factorDim = 0;
@@ -44,7 +44,7 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	long fdimBits = (long)ceil(log2(factorDim)); // 7
 	long factorDimPo2 = (1 << fdimBits); // 128
 
-	long learnDim = 1500; // 1579
+	long learnDim = sampleDim; // 1579
 	long ldimBits = (long)ceil(log2(learnDim)); //11
 	long learnDimPo2 = (1 << ldimBits); // 2048
 
@@ -96,7 +96,8 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 
 		for (long l = 0; l < wBatch; ++l) {
 //			sgd.stepLGD(xyData, wData[l], factorDim, learnDim, lambda, gamma);
-			sgd.stepNLGD(xyData, wData[l], vData[l], factorDim, learnDim, lambda, gamma, eta);
+//			sgd.stepNLGD(xyData, wData[l], vData[l], factorDim, learnDim, lambda, gamma, eta);
+			sgd.decStepNLGD(xyData, wData[l], vData[l], factorDim, learnDim, lambda, gamma, eta);
 		}
 	}
 	timeutils.stop("sgd");
@@ -138,6 +139,8 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 		timeutils.start("Enc sgd step");
 		csgd.encStepNLGD(cxyData, cwData, cvData, slots, factorDim, learnDim, wBatch, lambda, gamma, eta);
 		timeutils.stop("Enc sgd step");
+
+		csgd.debugcheck("c wData: ", secretKey, cwData, 3, 10);
 	}
 
 //	timeutils.start("Enc w out");

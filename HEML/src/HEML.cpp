@@ -41,7 +41,7 @@ int main() {
 	//18, 0, 35, 144
 	//18, 40, 40, 125
 
-	TestAK::testAK(12, 30, 40, 27);
+	TestAK::testAK(12, 30, 60, 27);
 //	TestCH::testJH(16, 60, 30, 40);
 //	TestKW::testKW(16, 60, 30, 40);
 

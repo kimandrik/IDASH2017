@@ -32,12 +32,13 @@ public:
 	void stepMLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& lambda, double& gamma, double& eta);
 	void stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& lambda, double& gamma, double& eta);
 
+	void decStepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& lambda, double& gamma, double& eta);
 	double* wsum(double**& wdata, long& factorDim, long& wBatch);
 
 	void check(long**& xyData, double*& w, long& factorDim, long& sampleDim);
 
-	void debugcheck(string prefix, double*& w, long& factorDim);
-	void debugcheck(string prefix, long*& z, long& factorDim);
+	void debugcheck(string prefix, double*& w, long factorCheck);
+	void debugcheck(string prefix, double**& w, long factorCheck, long slotCheck);
 	//-----------------------------------------
 
 };

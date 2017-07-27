@@ -320,9 +320,6 @@ void CipherGD::encStepMLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, l
 
 void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& lambda, double& gamma, double& eta) {
 
-	long dimcheck = 3;
-	long slotscheck = 10;
-
 	Cipher* cprod = new Cipher[factorDim];
 
 	NTL_EXEC_RANGE(factorDim, first, last);
@@ -332,9 +329,13 @@ void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, l
 	}
 	NTL_EXEC_RANGE_END;
 
+	debugcheck("c prod: ", secretKey, cprod, 5, 7);
+
 	Cipher cip = algo.sum(cprod, factorDim);
 
+
 	scheme.modSwitchOneAndEqual(cip); // cip (-1)
+	debugcheck("c ip: ", secretKey, cip, 7);
 
 	double* coeffs = scheme.aux.taylorCoeffsMap.at(SIGMOIDPRIMEGOOD);
 	Cipher* cpows = algo.powerOf2Extended(cip, 2); // ip (-1), ip^2 (-2), ip^4 (-3)
@@ -350,9 +351,11 @@ void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, l
 	}
 	NTL_EXEC_RANGE_END;
 
+	debugcheck("c grad: ", secretKey, cgrad, 5, 7);
+
 	for (long t = 1; t < 8; t=t+2) {
-		cnst = to_RR(gamma) * coeffs[t]; // gamma * coeff_0
-		pcnst = pmult(cnst); // p * gamma * coeff_0
+		cnst = to_RR(gamma) * coeffs[t]; // gamma * coeff_t
+		pcnst = pmult(cnst); // p * gamma * coeff_t
 
 		NTL_EXEC_RANGE(factorDim, first, last);
 		for (long i = first; i < last; ++i) {
@@ -376,6 +379,8 @@ void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, l
 		NTL_EXEC_RANGE_END;
 	}
 
+	debugcheck("c grad: ", secretKey, cgrad, 5, 7);
+
 	long logslots = log2(slots);
 	long logwnum = log2(wBatch);
 
@@ -387,6 +392,8 @@ void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, l
 		}
 	}
 	NTL_EXEC_RANGE_END;
+
+	debugcheck("c grad: ", secretKey, cgrad, 5, 7);
 
 	cnst = to_RR(eta);
 	pcnst = pmult(cnst);
@@ -403,8 +410,8 @@ void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, l
 		scheme.addAndEqual(cwData[i], cvData[i]); //  w = tmp + eta * (v - tmp) (-5)
 	}
 	NTL_EXEC_RANGE_END;
-
-	debugcheck("c wData: ", secretKey, cwData, dimcheck, slotscheck);
+	debugcheck("c wData: ", secretKey, cwData, 5, 1);
+	debugcheck("c vData: ", secretKey, cvData, 5, 1);
 }
 
 Cipher* CipherGD::encwsum(Cipher*& cwData, long& factorDim, long& wBatch) {

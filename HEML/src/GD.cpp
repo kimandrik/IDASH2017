@@ -199,24 +199,10 @@ void GD::stepMLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 }
 
 void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& lambda, double& gamma, double& eta) {
-	double* grad = new double[factorDim];
-	for(int i = 0; i < factorDim; ++i) {
-		grad[i] = lambda * wData[i];
-	}
+	double* grad = new double[factorDim]();
 
 	for(int j = 0; j < learnDim; ++j) {
 		double ip = innerprod(wData, xyData[j], factorDim);
-//		double tmp = 0;
-//		if(ip > 5) {
-//			cout << ip << endl;
-//			tmp = 0.0;
-//		} else if(tmp < -5)	{
-//			cout << ip << endl;
-//			tmp = -1.0;
-//		} else {
-//			tmp = - 1. / (1. + exp(ip));
-//		}
-
 		double tmp = (ip > 15.0) ? 0 : (ip < -15.0) ? -1.0 : - 1. / (1. + exp(ip));
 		for(int i = 0; i < factorDim; ++i) {
 			grad[i] += tmp * (double) xyData[j][i];
@@ -230,6 +216,91 @@ void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 		vData[i] = tmpv;
 	}
 }
+
+void GD::decStepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& lambda, double& gamma, double& eta) {
+
+	double** dprod = new double*[learnDim];
+	for (long j = 0; j < learnDim; ++j) {
+		dprod[j] = new double[factorDim];
+	}
+
+	for (long j = 0; j < learnDim; ++j) {
+		for (long i = 0; i < factorDim; ++i) {
+			dprod[j][i] = xyData[j][i] * wData[i];
+		}
+	}
+
+	debugcheck("d prod: ", dprod, 5, 7);
+
+	double* dip = new double[learnDim]();
+	for (long j = 0; j < learnDim; ++j) {
+		for (long i = 0; i < factorDim; ++i) {
+			dip[j] += dprod[j][i];
+		}
+	}
+
+	debugcheck("d ip: ", dip, 7);
+
+	double** dpows = new double*[3];
+	for (long l = 0; l < 3; ++l) {
+		dpows[l] = new double[learnDim];
+		for (long j = 0; j < learnDim; ++j) {
+			dpows[l][j] = pow(dip[j], (double)(1<<l));
+		}
+	}
+	double* coeffs = new double[8]{-0.5,0.216884,0,0.00819276,0,0.000165861,0,-0.00000119581};
+
+	double** dgrad = new double*[learnDim];
+	for (long j = 0; j < learnDim; ++j) {
+		dgrad[j] = new double[factorDim];
+		for (long i = 0; i < factorDim; ++i) {
+			dgrad[j][i] = xyData[j][i] * gamma * coeffs[0];
+		}
+	}
+
+	debugcheck("d grad: ", dgrad, 5, 7);
+
+	for (long t = 1; t < 8; t=t+2) {
+		for (long j = 0; j < learnDim; ++j) {
+			for (long i = 0; i < factorDim; ++i) {
+				double dgradit = xyData[j][i] * gamma * coeffs[t];
+				if(bit(t, 0)) {
+					dgradit *= dpows[0][j];
+				}
+				if(bit(t, 1)) {
+					dgradit *= dpows[1][j];
+				}
+				if(bit(t, 2)) {
+					dgradit *= dpows[2][j];
+				}
+				dgrad[j][i] += dgradit;
+			}
+		}
+	}
+
+	debugcheck("d grad: ", dgrad, 5, 7);
+
+	double* dgradsum = new double[factorDim]();
+	for (long j = 0; j < learnDim; ++j) {
+		for (long i = 0; i < factorDim; ++i) {
+			dgradsum[i] += dgrad[j][i];
+		}
+	}
+	debugcheck("d dgradsum: ", dgradsum, 5);
+
+
+	for (long i = 0; i < factorDim; ++i) {
+		dgradsum[i] = vData[i] - dgradsum[i];
+		wData[i] = vData[i] - dgradsum[i];
+		wData[i] *= eta;
+		vData[i] = dgradsum[i];
+		wData[i] += vData[i];
+	}
+	debugcheck("d wData: ", wData, 5);
+	debugcheck("d vData: ", vData, 5);
+
+}
+
 
 double* GD::wsum(double**& wData, long& factorDim, long& wBatch) {
 	double* w = new double[factorDim]();
@@ -257,18 +328,21 @@ void GD::check(long**& xyData, double*& w, long& factorDim, long& sampleDim) {
 
 }
 
-void GD::debugcheck(string prefix, double*& w, long& factorDim) {
+void GD::debugcheck(string prefix, double*& w, long factorCheck) {
 	cout << prefix;
-	for (long i = 0; i < factorDim; ++i) {
+	for (long i = 0; i < factorCheck; ++i) {
 		cout << w[i] << ",";
 	}
 	cout << endl;
 }
 
-void GD:: debugcheck(string prefix, long*& xy, long& factorDim) {
+void GD:: debugcheck(string prefix, double**& w, long factorCheck, long slotCheck) {
 	cout << prefix;
-	for (long i = 0; i < factorDim; ++i) {
-		cout << xy[i] << ",";
+	for (long i = 0; i < factorCheck; ++i) {
+		for (long j = 0; j < slotCheck; ++j) {
+			cout << w[j][i] << ",";
+		}
+		cout << endl;
 	}
 	cout << endl;
 }
