@@ -28,7 +28,7 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	//-----------------------------------------
 	GD sgd;
 
-//	string filename = "data5x500.txt"; // false
+	string filename = "data5x500.txt"; // false
 //	string filename = "data9x1253.txt"; // false
 //	string filename = "data15x1500.txt"; // false
 //	string filename = "data16x101.txt";// false
@@ -36,7 +36,7 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 //	string filename = "data43x3247.txt";// false
 //	string filename = "data45x296.txt";// false
 //	string filename = "data51x653.txt";// false
-	string filename = "data67x216.txt";// false
+//	string filename = "data67x216.txt";// false
 //	string filename = "data103x1579.txt"; // true
 
 	long factorDim = 0;
@@ -51,15 +51,23 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	long learnDim = sampleDim;
 	long ldimBits = (long)ceil(log2(learnDim));
 	long learnDimPo2 = (1 << ldimBits);
-	long wBatch = 1;
-	long slots =  learnDimPo2 * wBatch;
 
 	cout << "factorDim: " << factorDim << endl;
+	cout << "fdimBits: " << fdimBits << endl;
 	cout << "factorDimPo2: " << factorDimPo2 << endl;
 	cout << "sampleDim: " << sampleDim << endl;
+	cout << "sdimBits: " << sdimBits << endl;
 	cout << "sampleDimPo2: " << sampleDimPo2 << endl;
 	cout << "learnDim: " << learnDim << endl;
+	cout << "ldimBits: " << ldimBits << endl;
 	cout << "learnDimPo2: " << learnDimPo2 << endl;
+
+	long wBatch = 1;
+	long iter = fdimBits;
+//	long iter = 200;
+	bool encrypted = true;
+	long slots =  learnDimPo2 * wBatch;
+
 	cout << "slots: " << slots << endl;
 	cout << "wBatch: " << wBatch << endl;
 
@@ -76,9 +84,6 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 		}
 	}
 
-	bool encrypted = false;
-	long iter = fdimBits;
-//	long iter = 200;
 	double* alpha = new double[iter + 2]; // just constansts for Nesterov GD
 	alpha[0] = 0.1;
 	for (long i = 1; i < iter + 2; ++i) {
@@ -132,11 +137,11 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 		}
 
 		timeutils.start("Enc w out");
-		Cipher* cw = csgd.encwsum(cwData, factorDim, wBatch);
+		csgd.encwsum(cwData, factorDim, wBatch);
 		timeutils.stop("Enc w out");
 
 		timeutils.start("Dec w");
-		double* dw = csgd.decw(secretKey, cw, factorDim);
+		double* dw = csgd.decw(secretKey, cwData, factorDim);
 		timeutils.stop("Dec w");
 
 		sgd.check(xyData, dw, factorDim, sampleDim);

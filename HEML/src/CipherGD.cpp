@@ -356,12 +356,10 @@ void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, l
 	NTL_EXEC_RANGE_END;
 }
 
-Cipher* CipherGD::encwsum(Cipher*& cwData, long& factorDim, long& wBatch) {
-	Cipher* cw = new Cipher[factorDim];
+void CipherGD::encwsum(Cipher*& cwData, long& factorDim, long& wBatch) {
 	for (long i = 0; i < factorDim; ++i) {
-		cw[i] = algo.partialSlotsSum(cwData[i], wBatch);
+		algo.partialSlotsSumAndEqual(cwData[i], wBatch);
 	}
-	return cw;
 }
 
 double* CipherGD::decw(SecKey& secretKey, Cipher*& cw, long& factorDim) {
