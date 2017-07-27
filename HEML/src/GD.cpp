@@ -198,7 +198,7 @@ void GD::stepMLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 	}
 }
 
-void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& lambda, double& gamma, double& eta) {
+void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta) {
 	double* grad = new double[factorDim]();
 
 	for(int j = 0; j < learnDim; ++j) {
@@ -218,7 +218,7 @@ void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 	debugcheck("d wData: ", wData, 5);
 }
 
-void GD::decStepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& lambda, double& gamma, double& eta) {
+void GD::decStepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta) {
 
 	double** dprod = new double*[learnDim];
 	for (long j = 0; j < learnDim; ++j) {
@@ -323,6 +323,7 @@ void GD::debugcheck(string prefix, double*& w, long factorCheck) {
 	for (long i = 0; i < factorCheck; ++i) {
 		cout << w[i] << ",";
 	}
+	cout << endl;
 	cout << endl;
 }
 

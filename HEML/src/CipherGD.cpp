@@ -272,7 +272,7 @@ void CipherGD::encStepMLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, l
 	//TODO: kimandrik
 }
 
-void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& lambda, double& gamma, double& eta) {
+void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& gamma, double& eta) {
 
 	Cipher* cprod = new Cipher[factorDim];
 
@@ -354,7 +354,6 @@ void CipherGD::encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, l
 		scheme.addAndEqual(cwData[i], cvData[i]); //  w = tmp + eta * (v - tmp) (-5)
 	}
 	NTL_EXEC_RANGE_END;
-	debugcheck("c wData: ", secretKey, cwData, 5, 1);
 }
 
 Cipher* CipherGD::encwsum(Cipher*& cwData, long& factorDim, long& wBatch) {
