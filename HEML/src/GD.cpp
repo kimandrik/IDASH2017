@@ -101,43 +101,6 @@ double GD::innerprod(double*& w, long*& xy, long& size){
 	return res;
 }
 
-void GD::stepQGD(long**& xyData, double*& wData, long& factorDim, long& learnDim, double& lambda, double& gamma) {
-	double* grad = new double[factorDim];
-	for(int i = 0; i < factorDim; ++i) {
-		grad[i] = lambda * wData[i];
-	}
-
-	for(int j = 0; j < learnDim; ++j) {
-		double ip = innerprod(wData, xyData[j], factorDim);
-		double tmp = 2.0 * (ip - 1.0) / learnDim;
-		for(int i = 0; i < factorDim; ++i) {
-			grad[i] += tmp * (double) xyData[j][i];
-		}
-	}
-	for (int i = 0; i < factorDim; ++i) {
-		wData[i] -= gamma * grad[i];
-	}
-}
-
-void GD::stepSQGD(long**& xyData, double*& wData, long& factorDim, long& learnDim, double& lambda, double& gamma, long& stochDim) {
-	double* grad = new double[factorDim];
-	for(int i = 0; i < factorDim; ++i) {
-		grad[i] = lambda * wData[i];
-	}
-
-	for(int j = 0; j < stochDim; ++j) {
-		long rnd = RandomBnd(learnDim);
-		double ip = innerprod(wData, xyData[rnd], factorDim);
-		double tmp = 2.0 * (ip - 1.0) / stochDim;
-		for(int i = 0; i < factorDim; ++i) {
-			grad[i] += tmp * (double) xyData[rnd][i];
-		}
-	}
-	for (int i = 0; i < factorDim; ++i) {
-		wData[i] -= gamma * grad[i];
-	}
-}
-
 void GD::stepLGD(long**& xyData, double*& wData, long& factorDim, long& learnDim, double& lambda, double& gamma) {
 	double* grad = new double[factorDim];
 	for(int i = 0; i < factorDim; ++i) {
@@ -174,27 +137,6 @@ void GD::stepSLGD(long**& xyData, double*& wData, long& factorDim, long& learnDi
 
 	for (int i = 0; i < factorDim; ++i) {
 		wData[i] -= gamma * grad[i];
-	}
-}
-
-void GD::stepMLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& lambda, double& gamma, double& eta) {
-	double* grad = new double[factorDim];
-	for(int i = 0; i < factorDim; ++i) {
-		grad[i] = lambda * wData[i];
-	}
-
-	for(int j = 0; j < learnDim; ++j) {
-		double ip = innerprod(wData, xyData[j], factorDim);
-		double tmp = (ip > 15.0) ? 0 : (ip < -15.0) ? -1.0 : - 1. / (1. + exp(ip));
-		for(int i = 0; i < factorDim; ++i) {
-			grad[i] += tmp * (double) xyData[j][i];
-		}
-	}
-
-	for (int i = 0; i < factorDim; ++i) {
-		vData[i] *= eta;
-		vData[i] += gamma * grad[i];
-		wData[i] -= vData[i];
 	}
 }
 

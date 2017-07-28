@@ -18,12 +18,10 @@ public:
 	Cipher* encxyData(long**& xyData, long& slots, long& factorDim, long& learnDim, long& wBatch);
 	Cipher* encwData(double**& wData, long& slots, long& factorDim, long& learnDim, long& wBatch);
 
-	void encStepQGD(Cipher*& cxyData, Cipher*& cwData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& lambda, double& gamma);
 	void encStepLGD(Cipher*& cxyData, Cipher*& cwData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& lambda, double& gamma);
 
-	void encStepMLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& lambda, double& gamma, double& eta);
-
 	void encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& gamma, double& eta);
+	void encStepNLGDnew(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& gamma, double& eta, double& peta);
 
 	void encwsum(Cipher*& cwData, long& factorDim, long& wBatch);
 	double* decw(SecKey& secretKey, Cipher*& cw, long& factorDim);

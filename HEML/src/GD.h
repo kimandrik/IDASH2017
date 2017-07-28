@@ -23,13 +23,8 @@ public:
 
 	double innerprod(double*& w, long*& xy, long& size);
 
-	void stepQGD(long**& xyData, double*& wData, long& factorDim, long& learnDim, double& lambda, double& gamma);
-	void stepSQGD(long**& xyData, double*& wData, long& factorDim, long& learnDim, double& lambda, double& gamma, long& stochDim);
-
 	void stepLGD(long**& xyData, double*& wData, long& factorDim, long& learnDim, double& lambda, double& gamma);
 	void stepSLGD(long**& xyData, double*& wData, long& factorDim, long& learnDim, double& lambda, double& gamma, long& stochDim);
-
-	void stepMLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& lambda, double& gamma, double& eta);
 
 	void stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta);
 	void decStepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta);
