@@ -20,5 +20,5 @@ using namespace NTL;
 
 //-----------------------------------------
 
-void TestKW::testKW(long logN, long logl, long logp, long L) {
+void TestKW::testKW() {
 }

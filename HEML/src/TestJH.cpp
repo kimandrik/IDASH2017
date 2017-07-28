@@ -20,5 +20,5 @@ using namespace NTL;
 
 //-----------------------------------------
 
-void TestJH::testJH(long logN, long logl, long logp, long L) {
+void TestJH::testJH() {
 }

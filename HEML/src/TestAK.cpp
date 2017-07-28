@@ -20,7 +20,7 @@ using namespace NTL;
 
 //-----------------------------------------
 
-void TestAK::testAK(long logN, long logl, long logp, long L) {
+void TestAK::testAK() {
 	cout << "!!! START TEST SGD !!!" << endl;
 	//-----------------------------------------
 	TimeUtils timeutils;
@@ -28,16 +28,16 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 	//-----------------------------------------
 	GD sgd;
 
-	string filename = "data5x500.txt"; // false
-//	string filename = "data9x1253.txt"; // false
-//	string filename = "data15x1500.txt"; // false
-//	string filename = "data16x101.txt";// false
-//	string filename = "data27x148.txt";// false
-//	string filename = "data43x3247.txt";// false
-//	string filename = "data45x296.txt";// false
-//	string filename = "data51x653.txt";// false
-//	string filename = "data67x216.txt";// false
-//	string filename = "data103x1579.txt"; // true
+	string filename = "data/data5x500.txt";     // false   415/500
+//	string filename = "data/data9x1253.txt";    // false   775/1253
+//	string filename = "data/data15x1500.txt";   // false   1270/1500
+//	string filename = "data/data16x101.txt";    // false   101/101
+//	string filename = "data/data27x148.txt";    // false   132/148
+//	string filename = "data/data43x3247.txt";   // false   3182/3247
+//	string filename = "data/data45x296.txt";    // false   257/296
+//	string filename = "data/data51x653.txt";    // false   587/653
+//	string filename = "data/data67x216.txt";    // false   216/216
+//	string filename = "data/data103x1579.txt";  // true    1086/1579
 
 	long factorDim = 0;
 	long sampleDim = 0;
@@ -64,10 +64,18 @@ void TestAK::testAK(long logN, long logl, long logp, long L) {
 
 	long wBatch = 1;
 	long iter = fdimBits;
-//	long iter = 200;
+	long logl = 10;
+	long logp = 35;
+	long L = 5 * iter + 1;
+//	long logN = Params::suggestlogN(80, logl, logp, L);
+	long logN = max(12, ldimBits);
 	bool encrypted = true;
 	long slots =  learnDimPo2 * wBatch;
 
+	cout << "logl: " << logl << endl;
+	cout << "logp: " << logp << endl;
+	cout << "L: " << L << endl;
+	cout << "logN: " << logN << endl;
 	cout << "slots: " << slots << endl;
 	cout << "wBatch: " << wBatch << endl;
 

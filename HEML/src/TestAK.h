@@ -7,7 +7,7 @@ using namespace std;
 
 class TestAK {
 public:
-	static void testAK(long logN, long logl, long logp, long L);
+	static void testAK();
 };
 
 #endif /* TEST_TESTSGD_H_ */

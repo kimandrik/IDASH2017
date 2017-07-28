@@ -7,7 +7,7 @@ using namespace std;
 
 class TestJH {
 public:
-	static void testJH(long logN, long logl, long logp, long L);
+	static void testJH();
 };
 
 #endif /* TEST_TESTSGD_H_ */
