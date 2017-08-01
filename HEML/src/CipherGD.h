@@ -15,16 +15,21 @@ public:
 
 	CipherGD(Scheme& scheme, SchemeAlgo& algo, SecKey& secretKey) : scheme(scheme), algo(algo), secretKey(secretKey) {}
 
-	Cipher* encxyData(long**& xyData, long& slots, long& factorDim, long& learnDim, long& wBatch);
-	Cipher* encwData(double**& wData, long& slots, long& factorDim, long& learnDim, long& wBatch);
+	Cipher* encxyDataWB(long**& xyData, long& slots, long& factorDim, long& learnDim, long& wBatch);
+	Cipher* encwDataWB(double**& wData, long& slots, long& factorDim, long& learnDim, long& wBatch);
 
-	void encStepLGD(Cipher*& cxyData, Cipher*& cwData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& lambda, double& gamma);
+	Cipher* encxyDataXYB(long**& xyData, long& slots, long& learnDim, long& learnDimPo2, long& xyBatch, long& cnum);
+	Cipher* encwDataXYB(double*& wData, long& slots, long& learnDim, long& learnDimPo2, long& xyBatch, long& cnum);
 
-	void encStepNLGD(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& gamma, double& eta);
-	void encStepNLGDnew(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& gamma, double& eta, double& peta);
+	void encwsumWB(Cipher*& cwData, long& factorDim, long& wBatch);
 
-	void encwsum(Cipher*& cwData, long& factorDim, long& wBatch);
-	double* decw(SecKey& secretKey, Cipher*& cw, long& factorDim);
+	void encStepLGDWB(Cipher*& cxyData, Cipher*& cwData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& lambda, double& gamma);
+
+	void encStepNLGDWB(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& gamma, double& eta);
+	void encStepNLGDXYB(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& kkk, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta);
+
+	double* decWB(SecKey& secretKey, Cipher*& cw, long& factorDim);
+	double* decXYB(SecKey& secretKey, Cipher*& cw, long& factorDim, long& xyBatch, long& cnum);
 
 	ZZ pmult(RR val);
 

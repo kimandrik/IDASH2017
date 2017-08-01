@@ -18,7 +18,7 @@ void test() {
 int main() {
 
 //	test();
-	TestAK::testAK();
+	TestAK::testNLGDWB();
 //	TestJH::testJH();
 //	TestKW::testKW();
 
