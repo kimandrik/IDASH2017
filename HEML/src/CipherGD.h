@@ -18,8 +18,8 @@ public:
 	Cipher* encxyDataWB(long**& xyData, long& slots, long& factorDim, long& learnDim, long& wBatch);
 	Cipher* encwDataWB(double**& wData, long& slots, long& factorDim, long& learnDim, long& wBatch);
 
-	Cipher* encxyDataXYB(long**& xyData, long& slots, long& learnDim, long& learnDimPo2, long& xyBatch, long& cnum);
-	Cipher* encwDataXYB(double*& wData, long& slots, long& learnDim, long& learnDimPo2, long& xyBatch, long& cnum);
+	Cipher* encxyDataXYB(long**& xyData, long& slots, long& factorDim, long& learnDim, long& learnDimPo2, long& xyBatch, long& cnum);
+	Cipher* encwDataXYB(double*& wData, long& slots, long& factorDim, long& learnDim, long& learnDimPo2, long& xyBatch, long& cnum);
 
 	void encwsumWB(Cipher*& cwData, long& factorDim, long& wBatch);
 

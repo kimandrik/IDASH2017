@@ -18,12 +18,12 @@ void test() {
 int main() {
 
 //	test();
-	TestAK::testNLGDWB();
+//	TestAK::testNLGDWB();
+	TestAK::testNLGDXYB();
 //	TestJH::testJH();
 //	TestKW::testKW();
 
 //	TestScheme::testExponentBatch(13, 5, 30, 5, 7, 12);
-
 	//-----------------------------------------
 
 	return 0;
