@@ -2,32 +2,57 @@
 
 UNENCRYPTED ITERATIONS
 
-wData: 0.37789,-0.177966,-0.584779,0.408266,-0.201724,
-wData: 0.489157,-0.245611,-0.810409,0.551501,-0.274362,
-wData: 0.568204,-0.288068,-0.961641,0.655451,-0.321298,
-wData: 0.630604,-0.320594,-1.08211,0.739327,-0.358019,
+wData: 0.37789,-0.177966,-0.584779,0.408266,-0.201724
+wData: 0.489157,-0.245611,-0.810409,0.551501,-0.274362
+wData: 0.568204,-0.288068,-0.961641,0.655451,-0.321298
+wData: 0.630604,-0.320594,-1.08211,0.739327,-0.358019
 
 Correctness: 100/101
 
 //-----------------------------------------
 
-ENCRYPTED INTERATIONS (16,5,32,21)
+WB ENCRYPTED INTERATIONS (16,5,32,21)
 
 Enc xyData time = 6259.89 ms
 Enc wData time = 5552.56 ms
-1 Enc sgd step time = 305979 ms
-2 Enc sgd step time = 267615 ms
-3 Enc sgd step time = 240139 ms
-4 Enc sgd step time = 204482 ms
-total Enc sgd time = 16.97 mins
+
+1 Enc nlgd step time = 305979 ms
+2 Enc nlgd step time = 267615 ms
+3 Enc nlgd step time = 240139 ms
+4 Enc nlgd step time = 204482 ms
+--------------------------------
+total Enc nlgd time = 16.97 mins
+
 Dec w time = 3011.64 ms
 
-c wData:0.378152,-0.177695,-0.584662,0.408617,-0.201653,
-c wData:0.489262,-0.24596,-0.816987,0.552422,-0.27492,
-c wData:0.562084,-0.280158,-0.959658,0.650803,-0.314471,
+c wData:0.378152,-0.177695,-0.584662,0.408617,-0.201653
+c wData:0.489262,-0.24596,-0.816987,0.552422,-0.27492
+c wData:0.562084,-0.280158,-0.959658,0.650803,-0.314471
 
+Correctness: 100/101
 
-Correctness: 1101/1500
+//-----------------------------------------
+
+XYB ENCRYPTED INTERATIONS (16,5,32,25) XYB = 4
+
+Enc xyData time = 638.308 ms
+Enc wData time = 625.983 ms
+
+1 Enc nlgd step time = 50845 ms
+2 Enc nlgd step time = 44793.3 ms
+3 Enc nlgd step time = 38126.3 ms
+4 Enc nlgd step time = 32531.6 ms
+--------------------------------
+total Enc nlgd time = 2.77 mins
+
+Dec w time = 209.685 ms
+
+c wData:0.377582,-0.17772,-0.584791,0.408494,-0.201634   Correctness: 101/101
+c wData:0.487382,-0.246444,-0.817251,0.552642,-0.274949  Correctness: 100/101
+c wData:0.558679,-0.282696,-0.960642,0.651607,-0.31328   Correctness: 100/101
+c wData:0.601391,-0.303767,-1.06328,0.724563,-0.334267   Correctness: 100/101
+
+Correctness: 100/101
 
 //-----------------------------------------
 

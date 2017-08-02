@@ -167,10 +167,10 @@ void TestAK::testNLGDXYB() {
 	//-----------------------------------------
 	GD sgd;
 
-	string filename = "data/data5x500.txt";     // false   415/500
+//	string filename = "data/data5x500.txt";     // false   415/500
 //	string filename = "data/data9x1253.txt";    // false   775/1253
 //	string filename = "data/data15x1500.txt";   // false   1270/1500
-//	string filename = "data/data16x101.txt";    // false   101/101
+	string filename = "data/data16x101.txt";    // false   101/101
 //	string filename = "data/data27x148.txt";    // false   132/148
 //	string filename = "data/data43x3247.txt";   // false   3182/3247
 //	string filename = "data/data45x296.txt";    // false   257/296
@@ -210,7 +210,7 @@ void TestAK::testNLGDXYB() {
 //	long logN = max(12, ldimBits);
 	bool encrypted = true;
 
-	long xybatchBits = 2; // logN - 1 - ldimBits
+	long xybatchBits = 4; // logN - 1 - ldimBits
 	long xyBatch = (1 << xybatchBits);
 	long slots =  learnDimPo2 * xyBatch;
 	long cnum = factorDimPo2 / xyBatch;
@@ -268,11 +268,11 @@ void TestAK::testNLGDXYB() {
 		CZZ* pdvals = scheme.groupidx(pvals, slots);
 		Message msg = scheme.encode(pdvals, slots);
 
-		timeutils.start("Enc xyData");
+		timeutils.start("Enc xyData XYB");
 		Cipher* cxyData = csgd.encxyDataXYB(xyData, slots, factorDim, learnDim, learnDimPo2, xyBatch, cnum);
 		timeutils.stop("Enc xyData");
 
-		timeutils.start("Enc wData");
+		timeutils.start("Enc wData XYB");
 		Cipher* cwData = csgd.encwDataXYB(wData, slots, factorDim, learnDim, learnDimPo2, xyBatch, cnum);
 		timeutils.stop("Enc wData");
 
@@ -283,10 +283,11 @@ void TestAK::testNLGDXYB() {
 			double gamma = 2.0 / learnDim / (1.0 + k);
 			double eta = (1. - alpha[k+1]) / alpha[k+2];
 
-			timeutils.start("Enc sgd step");
+			timeutils.start("Enc nlgd step");
 			csgd.encStepNLGDXYB(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma, eta);
-			timeutils.stop("Enc sgd step");
-			csgd.debugcheck("c wData: ", secretKey, cwData, cnum, xyBatch);
+			timeutils.stop("Enc nlgd step");
+			double* dw = csgd.decXYB(secretKey,cwData, factorDim, xyBatch, cnum);
+			sgd.check(xyData, dw, factorDim, sampleDim);
 		}
 
 		timeutils.start("Dec w");
