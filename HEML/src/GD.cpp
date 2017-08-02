@@ -146,6 +146,11 @@ void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 	for(int j = 0; j < learnDim; ++j) {
 		double ip = innerprod(wData, xyData[j], factorDim);
 		double tmp = (ip > 15.0) ? 0 : (ip < -15.0) ? -1.0 : - 1. / (1. + exp(ip));
+		if(ip > 5) {
+			cout << "too big ip: " << ip << endl;
+		} else if(ip < -5) {
+			cout << "too small ip: " << ip << endl;
+		}
 		for(int i = 0; i < factorDim; ++i) {
 			grad[i] += tmp * (double) xyData[j][i];
 		}

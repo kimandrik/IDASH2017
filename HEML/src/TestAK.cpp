@@ -28,7 +28,7 @@ void TestAK::testNLGDWB() {
 	//-----------------------------------------
 	GD sgd;
 
-	string filename = "data/data5x500.txt";     // false   415/500
+//	string filename = "data/data5x500.txt";     // false   415/500
 //	string filename = "data/data9x1253.txt";    // false   775/1253
 //	string filename = "data/data15x1500.txt";   // false   1270/1500
 //	string filename = "data/data16x101.txt";    // false   101/101
@@ -37,7 +37,7 @@ void TestAK::testNLGDWB() {
 //	string filename = "data/data45x296.txt";    // false   257/296
 //	string filename = "data/data51x653.txt";    // false   587/653
 //	string filename = "data/data67x216.txt";    // false   216/216
-//	string filename = "data/data103x1579.txt";  // true    1086/1579
+	string filename = "data/data103x1579.txt";  // true    1086/1579
 
 	long factorDim = 0;
 	long sampleDim = 0;
@@ -176,7 +176,7 @@ void TestAK::testNLGDXYB() {
 //	string filename = "data/data45x296.txt";    // false   257/296
 //	string filename = "data/data51x653.txt";    // false   587/653
 //	string filename = "data/data67x216.txt";    // false   216/216
-//	string filename = "data/data103x1579.txt";  // true    1086/1579
+	string filename = "data/data103x1579.txt";  // true    1086/1579
 
 	long factorDim = 0;
 	long sampleDim = 0;
@@ -187,7 +187,7 @@ void TestAK::testNLGDXYB() {
 	long sampleDimPo2 = (1 << sdimBits);
 	long fdimBits = (long)ceil(log2(factorDim));
 	long factorDimPo2 = (1 << fdimBits);
-	long learnDim = sampleDim;
+	long learnDim = (1 << (sdimBits - 1));
 	long ldimBits = (long)ceil(log2(learnDim));
 	long learnDimPo2 = (1 << ldimBits);
 
@@ -201,6 +201,7 @@ void TestAK::testNLGDXYB() {
 	cout << "ldimBits: " << ldimBits << endl;
 	cout << "learnDimPo2: " << learnDimPo2 << endl;
 
+	bool encrypted = true;
 	long iter = fdimBits;
 //	long iter = 5000;
 	long logl = 5;
@@ -208,9 +209,8 @@ void TestAK::testNLGDXYB() {
 	long L = 6 * iter + 1;
 	long logN = Params::suggestlogN(80, logl, logp, L);
 //	long logN = max(12, ldimBits);
-	bool encrypted = true;
 
-	long xybatchBits = 4; // logN - 1 - ldimBits
+	long xybatchBits = 6; // logN - 1 - ldimBits
 	long xyBatch = (1 << xybatchBits);
 	long slots =  learnDimPo2 * xyBatch;
 	long cnum = factorDimPo2 / xyBatch;
@@ -227,7 +227,8 @@ void TestAK::testNLGDXYB() {
 	double* vData = new double[factorDim];
 	double* wData = new double[factorDim];
 	for (long i = 0; i < factorDim; ++i) {
-		double tmp = (0.5 - 1.0 * (double)rand() / RAND_MAX) / factorDim;
+//		double tmp = (0.5 - 1.0 * (double)rand() / RAND_MAX) / factorDim;
+		double tmp = 0.0;
 		wData[i] = tmp;
 		vData[i] = tmp;
 	}
@@ -242,7 +243,7 @@ void TestAK::testNLGDXYB() {
 		timeutils.start("sgd");
 		for (long k = 0; k < iter; ++k) {
 
-			double gamma = 2.0 / learnDim / (1.0 + k);
+			double gamma = 1.0 / learnDim / (1.0 + k);
 			double eta = (1. - alpha[k+1]) / alpha[k+2];
 
 			sgd.stepNLGD(xyData, wData, vData, factorDim, learnDim, gamma, eta);
@@ -280,7 +281,7 @@ void TestAK::testNLGDXYB() {
 		for (long i = 0; i < cnum; ++i) {cvData[i] = cwData[i];}
 
 		for (long k = 0; k < iter; ++k) {
-			double gamma = 2.0 / learnDim / (1.0 + k);
+			double gamma = 1.0 / learnDim / (1.0 + k);
 			double eta = (1. - alpha[k+1]) / alpha[k+2];
 
 			timeutils.start("Enc nlgd step");
