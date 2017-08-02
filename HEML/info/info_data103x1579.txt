@@ -1,0 +1,37 @@
+//-----------------------------------------
+
+UNENCRYPTED ITERATIONS
+
+1 step wData: 
+2 step wData: 
+3 step wData: 
+4 step wData: 
+5 step wData: 
+
+Correctness: 
+
+//-----------------------------------------
+
+XYB ENCRYPTED INTERATIONS () XYB = 
+
+Enc xyData time = ms
+Enc wData time = ms
+
+1 Enc nlgd step time = ms
+2 Enc nlgd step time = ms
+3 Enc nlgd step time = ms
+4 Enc nlgd step time = ms
+--------------------------------
+total Enc nlgd time = 
+
+Dec w time = ms
+
+1 step cwData:   Correctness:
+2 step cwData:   Correctness:
+3 step cwData:   Correctness:
+4 step cwData:   Correctness:
+
+Correctness:
+
+//-----------------------------------------
+
