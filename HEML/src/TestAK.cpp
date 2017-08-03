@@ -28,16 +28,16 @@ void TestAK::testNLGDWB() {
 	//-----------------------------------------
 	GD sgd;
 
-//	string filename = "data/data5x500.txt";     // false   415/500
-//	string filename = "data/data9x1253.txt";    // false   775/1253
-//	string filename = "data/data15x1500.txt";   // false   1270/1500
-//	string filename = "data/data16x101.txt";    // false   101/101
-//	string filename = "data/data27x148.txt";    // false   132/148
+//	string filename = "data/data5x500.txt";     // false   415/500 done
+//	string filename = "data/data9x1253.txt";    // false   775/1253 unclear
+//	string filename = "data/data15x1500.txt";   // false   1270/1500 done
+//	string filename = "data/data16x101.txt";    // false   101/101 done
+//	string filename = "data/data27x148.txt";    // false   132/148 done
 //	string filename = "data/data43x3247.txt";   // false   3182/3247
 //	string filename = "data/data45x296.txt";    // false   257/296
 //	string filename = "data/data51x653.txt";    // false   587/653
 //	string filename = "data/data67x216.txt";    // false   216/216
-	string filename = "data/data103x1579.txt";  // true    1086/1579
+//	string filename = "data/data103x1579.txt";  // true    1086/1579
 
 	long factorDim = 0;
 	long sampleDim = 0;
@@ -203,7 +203,6 @@ void TestAK::testNLGDXYB() {
 
 	bool encrypted = true;
 	long iter = fdimBits;
-//	long iter = 5000;
 	long logl = 5;
 	long logp = 32;
 	long L = 6 * iter + 1;
@@ -243,7 +242,7 @@ void TestAK::testNLGDXYB() {
 		timeutils.start("sgd");
 		for (long k = 0; k < iter; ++k) {
 
-			double gamma = 1.0 / learnDim / (2.0 + k);
+			double gamma = 1.0 / learnDim / (2 << k);
 			double eta = (1. - alpha[k+1]) / alpha[k+2];
 
 			sgd.stepNLGD(xyData, wData, vData, factorDim, learnDim, gamma, eta);
@@ -281,7 +280,7 @@ void TestAK::testNLGDXYB() {
 		for (long i = 0; i < cnum; ++i) {cvData[i] = cwData[i];}
 
 		for (long k = 0; k < iter; ++k) {
-			double gamma = 1.0 / learnDim / (2.0 + k);
+			double gamma = 1.0 / learnDim / (2 << k);
 			double eta = (1. - alpha[k+1]) / alpha[k+2];
 
 			timeutils.start("Enc nlgd step");
