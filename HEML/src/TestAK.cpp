@@ -243,7 +243,7 @@ void TestAK::testNLGDXYB() {
 		timeutils.start("sgd");
 		for (long k = 0; k < iter; ++k) {
 
-			double gamma = 1.0 / learnDim / (1.0 + k);
+			double gamma = 1.0 / learnDim / (2.0 + k);
 			double eta = (1. - alpha[k+1]) / alpha[k+2];
 
 			sgd.stepNLGD(xyData, wData, vData, factorDim, learnDim, gamma, eta);
@@ -281,7 +281,7 @@ void TestAK::testNLGDXYB() {
 		for (long i = 0; i < cnum; ++i) {cvData[i] = cwData[i];}
 
 		for (long k = 0; k < iter; ++k) {
-			double gamma = 1.0 / learnDim / (1.0 + k);
+			double gamma = 1.0 / learnDim / (2.0 + k);
 			double eta = (1. - alpha[k+1]) / alpha[k+2];
 
 			timeutils.start("Enc nlgd step");
