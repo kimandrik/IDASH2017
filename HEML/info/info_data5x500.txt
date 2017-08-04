@@ -54,8 +54,8 @@ Correctness: 415/500
 
 XYB ENCRYPTED ITERATIONS (15, 5, 32, 13) XYB = 3
 
-Enc xyData time = 397.984 ms
-Enc wData time = 364.87 ms
+Enc xyData time = 396.049 ms
+Enc wData time = 239.837 ms
 
 1 Enc nlgd step time = 17135.1 ms
 2 Enc nlgd step time = 13700.8 ms

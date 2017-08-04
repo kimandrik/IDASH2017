@@ -100,7 +100,6 @@ void TestAK::testNLGDWB() {
 	}
 
 	if(!encrypted) {
-		timeutils.start("sgd");
 		for (long k = 0; k < iter; ++k) {
 
 			double gamma = 2.0 / learnDim / (1.0 + k);
@@ -108,11 +107,10 @@ void TestAK::testNLGDWB() {
 
 			for (long l = 0; l < wBatch; ++l) {
 				sgd.stepNLGD(xyData, wData[l], vData[l], factorDim, learnDim, gamma, eta);
+				double* w = sgd.wsum(wData, factorDim, wBatch);
+				sgd.check(xyData, w, factorDim, sampleDim);
 			}
 		}
-		timeutils.stop("sgd");
-		double* w = sgd.wsum(wData, factorDim, wBatch);
-		sgd.check(xyData, w, factorDim, sampleDim);
 	} else {
 		//-----------------------------------------
 		Params params(logN, logl, logp, L);
@@ -169,12 +167,12 @@ void TestAK::testNLGDXYB() {
 
 //	string filename = "data/data5x500.txt";     // false   415/500
 //	string filename = "data/data9x1253.txt";    // false   775/1253
-//	string filename = "data/data15x1500.txt";   // false   1270/1500
+	string filename = "data/data15x1500.txt";   // false   1270/1500
 //	string filename = "data/data16x101.txt";    // false   101/101
 //	string filename = "data/data27x148.txt";    // false   132/148
 //	string filename = "data/data43x3247.txt";   // false   3182/3247
 //	string filename = "data/data45x296.txt";    // false   257/296
-	string filename = "data/data51x653.txt";    // false   587/653
+//	string filename = "data/data51x653.txt";    // false   587/653
 //	string filename = "data/data67x216.txt";    // false   216/216
 //	string filename = "data/data103x1579.txt";  // true    1086/1579
 
@@ -185,42 +183,50 @@ void TestAK::testNLGDXYB() {
 
 	long sdimBits = (long)ceil(log2(sampleDim));
 	long sampleDimPo2 = (1 << sdimBits);
-	long fdimBits = (long)ceil(log2(factorDim));
-	long factorDimPo2 = (1 << fdimBits);
-	long learnDim = (1 << (sdimBits - 1));
-	long ldimBits = (long)ceil(log2(learnDim));
-	long learnDimPo2 = (1 << ldimBits);
-
-	cout << "factorDim: " << factorDim << endl;
-	cout << "fdimBits: " << fdimBits << endl;
-	cout << "factorDimPo2: " << factorDimPo2 << endl;
 	cout << "sampleDim: " << sampleDim << endl;
 	cout << "sdimBits: " << sdimBits << endl;
 	cout << "sampleDimPo2: " << sampleDimPo2 << endl;
+
+	long fdimBits = (long)ceil(log2(factorDim));
+	long factorDimPo2 = (1 << fdimBits);
+	cout << "factorDim: " << factorDim << endl;
+	cout << "fdimBits: " << fdimBits << endl;
+	cout << "factorDimPo2: " << factorDimPo2 << endl;
+
+//	long learnDim = (1 << (sdimBits - 1));
+	long learnDim = sampleDim;
+	long ldimBits = (long)ceil(log2(learnDim));
+	long learnDimPo2 = (1 << ldimBits);
 	cout << "learnDim: " << learnDim << endl;
 	cout << "ldimBits: " << ldimBits << endl;
 	cout << "learnDimPo2: " << learnDimPo2 << endl;
 
-	bool encrypted = true;
-	long iter = fdimBits;
+
+	bool encrypted = false;
+//	long iter = fdimBits;
+	long iter = 5;
+//	long iter = 100;
+	cout << "encrypted: " << encrypted << endl;
+	cout << "iter: " << iter << endl;
+
 	long logl = 5;
 	long logp = 32;
 	long L = 6 * iter + 1;
-	long logN = Params::suggestlogN(80, logl, logp, L) + 1;
-
-	long xybatchBits = min(logN - 1 - ldimBits, fdimBits);
-	long xyBatch = (1 << xybatchBits);
-	long slots =  learnDimPo2 * xyBatch;
-	long cnum = factorDimPo2 / xyBatch;
-
+	long logN = Params::suggestlogN(80, logl, logp, L);
 	cout << "logl: " << logl << endl;
 	cout << "logp: " << logp << endl;
 	cout << "L: " << L << endl;
 	cout << "logN: " << logN << endl;
-	cout << "slots: " << slots << endl;
-	cout << "xyBatch: " << xyBatch << endl;
-	cout << "cnum: " << cnum << endl;
 
+	long xybatchBits = min(logN - 1 - ldimBits, fdimBits);
+	long xyBatch = (1 << xybatchBits);
+	cout << "xyBatchBits: " << xybatchBits << endl;
+	cout << "xyBatch: " << xyBatch << endl;
+
+	long slots =  learnDimPo2 * xyBatch;
+	long cnum = factorDimPo2 / xyBatch;
+	cout << "slots: " << slots << endl;
+	cout << "cnum: " << cnum << endl;
 
 	double* vData = new double[factorDim];
 	double* wData = new double[factorDim];
@@ -231,23 +237,21 @@ void TestAK::testNLGDXYB() {
 		vData[i] = tmp;
 	}
 
-	double* alpha = new double[iter + 2]; // just constansts for Nesterov GD
-	alpha[0] = 0.1;
+	double* alpha = new double[iter + 2];
+	alpha[0] = 0.01;
 	for (long i = 1; i < iter + 2; ++i) {
 		alpha[i] = (1. + sqrt(1. + 4.0 * alpha[i-1] * alpha[i-1])) / 2.0;
 	}
 
 	if(!encrypted) {
-		timeutils.start("sgd");
 		for (long k = 0; k < iter; ++k) {
 
-			double gamma = 1.0 / learnDim / (2 << k);
+			double gamma = 1.0 / learnDim / (3.0 + k);
 			double eta = (1. - alpha[k+1]) / alpha[k+2];
 
 			sgd.stepNLGD(xyData, wData, vData, factorDim, learnDim, gamma, eta);
+			sgd.check(xyData, wData, factorDim, sampleDim);
 		}
-		timeutils.stop("sgd");
-		sgd.check(xyData, wData, factorDim, sampleDim);
 	} else {
 		//-----------------------------------------
 		Params params(logN, logl, logp, L);
@@ -263,7 +267,6 @@ void TestAK::testNLGDXYB() {
 		for (long j = 0; j < learnDim; ++j) {
 			pvals[xyBatch * j] = CZZ(params.p);
 		}
-
 		CZZ* pdvals = scheme.groupidx(pvals, slots);
 		Message msg = scheme.encode(pdvals, slots);
 
@@ -279,7 +282,7 @@ void TestAK::testNLGDXYB() {
 		for (long i = 0; i < cnum; ++i) {cvData[i] = cwData[i];}
 
 		for (long k = 0; k < iter; ++k) {
-			double gamma = 1.0 / learnDim / (2 << k);
+			double gamma = 1.0 / learnDim / 3.0;
 			double eta = (1. - alpha[k+1]) / alpha[k+2];
 
 			timeutils.start("Enc nlgd step");

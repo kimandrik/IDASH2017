@@ -162,7 +162,6 @@ void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 		wData[i] = (1.0 - eta) * tmpv + eta * vData[i];
 		vData[i] = tmpv;
 	}
-	debugcheck("d wData: ", wData, 5);
 }
 
 void GD::decStepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta) {

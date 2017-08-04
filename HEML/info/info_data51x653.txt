@@ -1,0 +1,42 @@
+//-----------------------------------------
+
+UNENCRYPTED ITERATIONS
+
+1 step wData:-0.000982506,0.00393002,0.000491253,-0.00491253,-0.00638629   Correctness: 522/653
+2 step wData:0.00180129,0.0185341,0.0107585,-0.00150359,-0.00498858        Correctness: 537/653
+3 step wData:0.000452351,0.0208877,0.0109154,-0.00618226,-0.00871171       Correctness: 539/653
+4 step wData:0.00231806,0.0319514,0.0195739,-0.00296567,-0.00465267        Correctness: 541/653
+5 step wData:0.000155244,0.0310586,0.0185747,-0.00712892,-0.00513206       Correctness: 542/653
+6 step wData:0.000284866,0.0365106,0.0239978,-0.00506989,0.000499135       Correctness: 545/653
+7 step wData:-0.00193198,0.0350722,0.0241886,-0.00664751,0.00429021        Correctness: 552/653
+8 step wData:-0.003572,0.035234,0.026576,-0.0056345,0.0110008              Correctness: 556/653
+9 step wData:-0.00598841,0.033139,0.0277439,-0.00497239,0.0181971          Correctness: 556/653
+
+Actuall Correctness: 587/653
+
+//-----------------------------------------
+
+XYB ENCRYPTED INTERATIONS (16,5,32,37) XYB = 6
+
+Enc xyData time = 2854.57 ms
+Enc wData time = 1122.46 ms
+
+1 Enc nlgd step time = 100779 ms
+2 Enc nlgd step time = 86435.2 ms
+3 Enc nlgd step time = 78178.8 ms
+4 Enc nlgd step time = 68029.9 ms
+5 Enc nlgd step time =  ms
+6 Enc nlgd step time =  ms
+--------------------------------
+total Enc nlgd time =  mins
+
+Dec w time =  ms
+
+1 step cwData:0.0093275,0.00795373,0.000484221,-0.00443361,-0.00593572   Correctness: 523/653
+2 step cwData:0.0261166,0.0254349,0.00957177,-0.000570873,-0.00401151    Correctness: 536/653
+3 step cwData:0.0435329,0.0356859,0.0150685,-0.00246727,-0.00709493      Correctness: 539/653
+4 step cwData:0.0684309,0.0674401,0.018587,0.00443861,-0.00145148        Correctness: 543/653
+
+
+//-----------------------------------------
+
