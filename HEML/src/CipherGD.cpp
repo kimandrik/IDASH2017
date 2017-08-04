@@ -292,7 +292,6 @@ void CipherGD::encStepNLGDXYB(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData
 	}
 	NTL_EXEC_RANGE_END;
 	Cipher cip = algo.sum(cprod, cnum);
-
 	scheme.modSwitchOneAndEqual(cip);
 
 	scheme.multByPolyAndEqual(cip, poly);

@@ -28,7 +28,7 @@ void TestAK::testNLGDWB() {
 	//-----------------------------------------
 	GD sgd;
 
-//	string filename = "data/data5x500.txt";     // false   415/500 done
+	string filename = "data/data5x500.txt";     // false   415/500 done
 //	string filename = "data/data9x1253.txt";    // false   775/1253 unclear
 //	string filename = "data/data15x1500.txt";   // false   1270/1500 done
 //	string filename = "data/data16x101.txt";    // false   101/101 done
@@ -174,9 +174,9 @@ void TestAK::testNLGDXYB() {
 //	string filename = "data/data27x148.txt";    // false   132/148
 //	string filename = "data/data43x3247.txt";   // false   3182/3247
 //	string filename = "data/data45x296.txt";    // false   257/296
-//	string filename = "data/data51x653.txt";    // false   587/653
+	string filename = "data/data51x653.txt";    // false   587/653
 //	string filename = "data/data67x216.txt";    // false   216/216
-	string filename = "data/data103x1579.txt";  // true    1086/1579
+//	string filename = "data/data103x1579.txt";  // true    1086/1579
 
 	long factorDim = 0;
 	long sampleDim = 0;
@@ -206,10 +206,9 @@ void TestAK::testNLGDXYB() {
 	long logl = 5;
 	long logp = 32;
 	long L = 6 * iter + 1;
-	long logN = Params::suggestlogN(80, logl, logp, L);
-//	long logN = max(12, ldimBits);
+	long logN = Params::suggestlogN(80, logl, logp, L) + 1;
 
-	long xybatchBits = 6; // logN - 1 - ldimBits
+	long xybatchBits = min(logN - 1 - ldimBits, fdimBits);
 	long xyBatch = (1 << xybatchBits);
 	long slots =  learnDimPo2 * xyBatch;
 	long cnum = factorDimPo2 / xyBatch;
