@@ -138,7 +138,7 @@ void TestAK::testNLGDWB() {
 			double eta = (1. - alpha[k+1]) / alpha[k+2];
 
 			timeutils.start("Enc sgd step");
-			csgd.encStepNLGDWB(cxyData, cwData, cvData, slots, factorDim, learnDim, wBatch, gamma, eta);
+			csgd.encStepNLGD7WB(cxyData, cwData, cvData, slots, factorDim, learnDim, wBatch, gamma, eta);
 			timeutils.stop("Enc sgd step");
 			csgd.debugcheck("c wData: ", secretKey, cwData, 5, wBatch);
 		}
@@ -290,11 +290,11 @@ void TestAK::testNLGDXYB() {
 
 			if(is5) {
 				timeutils.start("Enc nlgd step");
-				csgd.encStepNLGDXYB5(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma, eta, etaprev);
+				csgd.encStepNLGD7XYB5(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma, eta, etaprev);
 				timeutils.stop("Enc nlgd step");
 			} else {
 				timeutils.start("Enc nlgd step");
-				csgd.encStepNLGDXYB(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma, eta);
+				csgd.encStepNLGD7XYB6(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma, eta);
 				timeutils.stop("Enc nlgd step");
 			}
 			double* dw = csgd.decXYB(secretKey,cwData, factorDim, xyBatch, cnum);
