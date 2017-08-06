@@ -164,6 +164,38 @@ void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 	}
 }
 
+void GD::stepNLGD5(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta, double& etaprev) {
+	double* grad = new double[factorDim]();
+
+	for(int j = 0; j < learnDim; ++j) {
+		double ip = innerprod(wData, xyData[j], factorDim);
+		double tmp = (ip > 15.0) ? 0 : (ip < -15.0) ? -1.0 : - 1. / (1. + exp(ip));
+		if(ip > 5) {
+			cout << "too big ip: " << ip << endl;
+		} else if(ip < -5) {
+			cout << "too small ip: " << ip << endl;
+		}
+		for(int i = 0; i < factorDim; ++i) {
+			grad[i] += tmp * (double) xyData[j][i];
+		}
+	}
+
+	// Nesterov steps
+	if(etaprev < 0) {
+		for (int i = 0; i < factorDim; ++i) {
+			double tmpv = (1 - eta) * wData[i] - (1 - eta) * gamma * grad[i];
+			wData[i] = tmpv + eta / (1 - etaprev) * vData[i];
+			vData[i] = tmpv;
+		}
+	} else {
+		for (int i = 0; i < factorDim; ++i) {
+			double tmpv = (1 - eta) * wData[i] - (1 - eta) * gamma * grad[i];
+			wData[i] = wData[i] - (1 - eta) * gamma * grad[i];
+			vData[i] = tmpv;
+		}
+	}
+}
+
 void GD::decStepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta) {
 
 	double** dprod = new double*[learnDim];

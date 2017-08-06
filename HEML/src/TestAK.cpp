@@ -202,16 +202,15 @@ void TestAK::testNLGDXYB() {
 	cout << "learnDimPo2: " << learnDimPo2 << endl;
 
 
-	bool encrypted = false;
-//	long iter = fdimBits;
-	long iter = 5;
-//	long iter = 100;
+	bool encrypted = true;
+	bool is5 = true;
+	long iter = fdimBits;
 	cout << "encrypted: " << encrypted << endl;
 	cout << "iter: " << iter << endl;
 
 	long logl = 5;
 	long logp = 32;
-	long L = 6 * iter + 1;
+	long L = is5 ? 5 * iter + 1 : 6 * iter + 1;
 	long logN = Params::suggestlogN(80, logl, logp, L);
 	cout << "logl: " << logl << endl;
 	cout << "logp: " << logp << endl;
@@ -245,11 +244,14 @@ void TestAK::testNLGDXYB() {
 
 	if(!encrypted) {
 		for (long k = 0; k < iter; ++k) {
-
-			double gamma = 1.0 / learnDim / (3.0 + k);
+			double gamma = 1.0 / learnDim;
 			double eta = (1. - alpha[k+1]) / alpha[k+2];
-
-			sgd.stepNLGD(xyData, wData, vData, factorDim, learnDim, gamma, eta);
+			double etaprev = (1. - alpha[k]) / alpha[k+1];
+			if(is5) {
+				sgd.stepNLGD5(xyData, wData, vData, factorDim, learnDim, gamma, eta, etaprev);
+			} else {
+				sgd.stepNLGD(xyData, wData, vData, factorDim, learnDim, gamma, eta);
+			}
 			sgd.check(xyData, wData, factorDim, sampleDim);
 		}
 	} else {
@@ -282,12 +284,19 @@ void TestAK::testNLGDXYB() {
 		for (long i = 0; i < cnum; ++i) {cvData[i] = cwData[i];}
 
 		for (long k = 0; k < iter; ++k) {
-			double gamma = 1.0 / learnDim / 3.0;
+			double gamma = 1.0 / learnDim;
 			double eta = (1. - alpha[k+1]) / alpha[k+2];
+			double etaprev = (1. - alpha[k]) / alpha[k+1];
 
-			timeutils.start("Enc nlgd step");
-			csgd.encStepNLGDXYB(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma, eta);
-			timeutils.stop("Enc nlgd step");
+			if(is5) {
+				timeutils.start("Enc nlgd step");
+				csgd.encStepNLGDXYB5(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma, eta, etaprev);
+				timeutils.stop("Enc nlgd step");
+			} else {
+				timeutils.start("Enc nlgd step");
+				csgd.encStepNLGDXYB(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma, eta);
+				timeutils.stop("Enc nlgd step");
+			}
 			double* dw = csgd.decXYB(secretKey,cwData, factorDim, xyBatch, cnum);
 			sgd.check(xyData, dw, factorDim, sampleDim);
 		}

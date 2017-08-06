@@ -27,6 +27,8 @@ public:
 	void stepSLGD(long**& xyData, double*& wData, long& factorDim, long& learnDim, double& lambda, double& gamma, long& stochDim);
 
 	void stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta);
+	void stepNLGD5(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta, double& etaprev);
+
 	void decStepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta);
 
 	double* wsum(double**& wdata, long& factorDim, long& wBatch);

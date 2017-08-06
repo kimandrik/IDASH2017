@@ -52,7 +52,7 @@ Correctness: 415/500
 
 //-----------------------------------------
 
-XYB ENCRYPTED ITERATIONS (15, 5, 32, 13) XYB = 3
+XYB ENCRYPTED ITERATIONS (15, 5, 32, 19) XYB = 3
 
 Enc xyData time = 396.049 ms
 Enc wData time = 239.837 ms

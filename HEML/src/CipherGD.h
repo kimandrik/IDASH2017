@@ -28,6 +28,8 @@ public:
 	void encStepNLGDWB(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& gamma, double& eta);
 	void encStepNLGDXYB(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& kkk, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta);
 
+	void encStepNLGDXYB5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta, double& etaprev);
+
 	double* decWB(SecKey& secretKey, Cipher*& cw, long& factorDim);
 	double* decXYB(SecKey& secretKey, Cipher*& cw, long& factorDim, long& xyBatch, long& cnum);
 
