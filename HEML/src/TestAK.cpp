@@ -167,14 +167,14 @@ void TestAK::testNLGDXYB() {
 
 //	string filename = "data/data5x500.txt";     // false   415/500
 //	string filename = "data/data9x1253.txt";    // false   775/1253
-	string filename = "data/data15x1500.txt";   // false   1270/1500
+//	string filename = "data/data15x1500.txt";   // false   1270/1500
 //	string filename = "data/data16x101.txt";    // false   101/101
 //	string filename = "data/data27x148.txt";    // false   132/148
 //	string filename = "data/data43x3247.txt";   // false   3182/3247
 //	string filename = "data/data45x296.txt";    // false   257/296
 //	string filename = "data/data51x653.txt";    // false   587/653
 //	string filename = "data/data67x216.txt";    // false   216/216
-//	string filename = "data/data103x1579.txt";  // true    1086/1579
+	string filename = "data/data103x1579.txt";  // true    1086/1579
 
 	long factorDim = 0;
 	long sampleDim = 0;
@@ -209,7 +209,7 @@ void TestAK::testNLGDXYB() {
 	cout << "learnDimPo2: " << learnDimPo2 << endl;
 
 	long logl = 10;
-	long logp = 30;
+	long logp = 32;
 	long L = is3approx & isFast ? 4 * iter + 1 : !is3approx & !isFast ? 6 * iter + 1 : 5 * iter + 1;
 	long logN = Params::suggestlogN(80, logl, logp, L);
 	cout << "logl: " << logl << endl;
@@ -246,7 +246,7 @@ void TestAK::testNLGDXYB() {
 	}
 	double* gamma = new double[iter];
 	for (long i = 0; i < iter; ++i) {
-		gamma[i] = 1. / learnDim;
+		gamma[i] = 1. / learnDim / 3.;
 	}
 
 	if(!isEncrypted) {
