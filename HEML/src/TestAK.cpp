@@ -208,8 +208,8 @@ void TestAK::testNLGDXYB() {
 	cout << "ldimBits: " << ldimBits << endl;
 	cout << "learnDimPo2: " << learnDimPo2 << endl;
 
-	long logl = 5;
-	long logp = 32;
+	long logl = 10;
+	long logp = 30;
 	long L = is3approx & isFast ? 4 * iter + 1 : !is3approx & !isFast ? 6 * iter + 1 : 5 * iter + 1;
 	long logN = Params::suggestlogN(80, logl, logp, L);
 	cout << "logl: " << logl << endl;
@@ -251,11 +251,7 @@ void TestAK::testNLGDXYB() {
 
 	if(!isEncrypted) {
 		for (long k = 0; k < iter; ++k) {
-			if(isFast) {
-				gd.stepNLGD5(xyData, wData, vData, factorDim, learnDim, gamma[k], eta[k+1], eta[k]);
-			} else {
-				gd.stepNLGD(xyData, wData, vData, factorDim, learnDim, gamma[k], eta[k+1]);
-			}
+			gd.stepNLGD(xyData, wData, vData, factorDim, learnDim, gamma[k], eta[k+1]);
 			gd.check(xyData, wData, factorDim, sampleDim);
 		}
 	} else {
