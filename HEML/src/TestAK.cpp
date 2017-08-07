@@ -163,7 +163,7 @@ void TestAK::testNLGDXYB() {
 	TimeUtils timeutils;
 	SetNumThreads(8);
 	//-----------------------------------------
-	GD sgd;
+	GD gd;
 
 //	string filename = "data/data5x500.txt";     // false   415/500
 //	string filename = "data/data9x1253.txt";    // false   775/1253
@@ -179,7 +179,7 @@ void TestAK::testNLGDXYB() {
 	long factorDim = 0;
 	long sampleDim = 0;
 
-	long** xyData = sgd.xyDataFromFile(filename, factorDim, sampleDim, false);
+	long** xyData = gd.xyDataFromFile(filename, factorDim, sampleDim, false);
 
 	long sdimBits = (long)ceil(log2(sampleDim));
 	long sampleDimPo2 = (1 << sdimBits);
@@ -193,24 +193,24 @@ void TestAK::testNLGDXYB() {
 	cout << "fdimBits: " << fdimBits << endl;
 	cout << "factorDimPo2: " << factorDimPo2 << endl;
 
-//	long learnDim = (1 << (sdimBits - 1));
-	long learnDim = sampleDim;
+	//-----------------------------------------
+	bool isAllsample = true;
+	bool is3approx = true;
+	bool isEncrypted = true;
+	bool isFast = true;
+	long iter = fdimBits;
+	//-----------------------------------------
+
+	long learnDim = isAllSample ? sampleDim : (1 << (sdimBits - 1));
 	long ldimBits = (long)ceil(log2(learnDim));
 	long learnDimPo2 = (1 << ldimBits);
 	cout << "learnDim: " << learnDim << endl;
 	cout << "ldimBits: " << ldimBits << endl;
 	cout << "learnDimPo2: " << learnDimPo2 << endl;
 
-
-	bool encrypted = true;
-	bool is5 = true;
-	long iter = fdimBits;
-	cout << "encrypted: " << encrypted << endl;
-	cout << "iter: " << iter << endl;
-
 	long logl = 5;
 	long logp = 32;
-	long L = is5 ? 5 * iter + 1 : 6 * iter + 1;
+	long L = is3approx & isFast ? 4 * iter + 1 : !is3approx & !isFast ? 6 * iter + 1 : 5 * iter + 1;
 	long logN = Params::suggestlogN(80, logl, logp, L);
 	cout << "logl: " << logl << endl;
 	cout << "logp: " << logp << endl;
@@ -230,7 +230,6 @@ void TestAK::testNLGDXYB() {
 	double* vData = new double[factorDim];
 	double* wData = new double[factorDim];
 	for (long i = 0; i < factorDim; ++i) {
-//		double tmp = (0.5 - 1.0 * (double)rand() / RAND_MAX) / factorDim;
 		double tmp = 0.0;
 		wData[i] = tmp;
 		vData[i] = tmp;
@@ -241,71 +240,85 @@ void TestAK::testNLGDXYB() {
 	for (long i = 1; i < iter + 2; ++i) {
 		alpha[i] = (1. + sqrt(1. + 4.0 * alpha[i-1] * alpha[i-1])) / 2.0;
 	}
+	double* eta = new double[iter + 1];
+	for (long i = 0; i < iter + 1; ++i) {
+		eta[i] = (1. - alpha[i]) / alpha[i+1];
+	}
+	double* gamma = new double[iter];
+	for (long i = 0; i < iter; ++i) {
+		gamma[i] = 1. / learnDim;
+	}
 
-	if(!encrypted) {
+	if(!isEncrypted) {
 		for (long k = 0; k < iter; ++k) {
-			double gamma = 1.0 / learnDim;
-			double eta = (1. - alpha[k+1]) / alpha[k+2];
-			double etaprev = (1. - alpha[k]) / alpha[k+1];
-			if(is5) {
-				sgd.stepNLGD5(xyData, wData, vData, factorDim, learnDim, gamma, eta, etaprev);
+			if(isFast) {
+				gd.stepNLGD5(xyData, wData, vData, factorDim, learnDim, gamma[k], eta[k+1], eta[k]);
 			} else {
-				sgd.stepNLGD(xyData, wData, vData, factorDim, learnDim, gamma, eta);
+				gd.stepNLGD(xyData, wData, vData, factorDim, learnDim, gamma[k], eta);
 			}
-			sgd.check(xyData, wData, factorDim, sampleDim);
+			gd.check(xyData, wData, factorDim, sampleDim);
 		}
 	} else {
-		//-----------------------------------------
+		timeutils.start("Scheme generating...");
 		Params params(logN, logl, logp, L);
 		SecKey secretKey(params);
 		PubKey publicKey(params, secretKey);
 		SchemeAux schemeaux(params);
 		Scheme scheme(params, publicKey, schemeaux);
 		SchemeAlgo algo(scheme);
-		CipherGD csgd(scheme, algo, secretKey);
-		//-----------------------------------------
+		CipherGD cipherGD(scheme, algo, secretKey);
+		timeutils.stop("Scheme generated");
 
+		timeutils.start("Polynomial generating...");
 		CZZ* pvals = new CZZ[slots];
 		for (long j = 0; j < learnDim; ++j) {
 			pvals[xyBatch * j] = CZZ(params.p);
 		}
 		CZZ* pdvals = scheme.groupidx(pvals, slots);
 		Message msg = scheme.encode(pdvals, slots);
+		timeutils.stop("Polynomial generated");
 
-		timeutils.start("Enc xyData XYB");
-		Cipher* cxyData = csgd.encxyDataXYB(xyData, slots, factorDim, learnDim, learnDimPo2, xyBatch, cnum);
-		timeutils.stop("Enc xyData");
+		timeutils.start("Encrypting xyData XYB...");
+		Cipher* cxyData = cipherGD.encxyDataXYB(xyData, slots, factorDim, learnDim, learnDimPo2, xyBatch, cnum);
+		timeutils.stop("xyData encrypted");
 
-		timeutils.start("Enc wData XYB");
-		Cipher* cwData = csgd.encwDataXYB(wData, slots, factorDim, learnDim, learnDimPo2, xyBatch, cnum);
-		timeutils.stop("Enc wData");
-
+		timeutils.start("Encrypting wData and vData XYB...");
+		Cipher* cwData = cipherGD.encwDataXYB(wData, slots, factorDim, learnDim, learnDimPo2, xyBatch, cnum);
 		Cipher* cvData = new Cipher[cnum];
-		for (long i = 0; i < cnum; ++i) {cvData[i] = cwData[i];}
+		for (long i = 0; i < cnum; ++i) {
+			cvData[i] = cwData[i];
+		}
+		timeutils.stop("wData and vData encrypted");
 
 		for (long k = 0; k < iter; ++k) {
-			double gamma = 1.0 / learnDim;
-			double eta = (1. - alpha[k+1]) / alpha[k+2];
-			double etaprev = (1. - alpha[k]) / alpha[k+1];
-
-			if(is5) {
-				timeutils.start("Enc nlgd step");
-				csgd.encStepNLGD7XYB5(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma, eta, etaprev);
-				timeutils.stop("Enc nlgd step");
+			if(isFast) {
+				if(is3approx) {
+					timeutils.start("Encrypting NLGD step with 3 approx, 4 levels...");
+					cipherGD.encStepNLGD3XYBfast4(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma[k], eta[k+1], eta[k]);
+					timeutils.stop("NLGD step with 3 approx, 4 levels finished");
+				} else {
+					timeutils.start("Encrypting NLGD step with 7 approx, 5 levels...");
+					cipherGD.encStepNLGD7XYBfast5(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma[k], eta[k+1], eta[k]);
+					timeutils.stop("NLGD step with 7 approx, 5 levels finished");
+				}
 			} else {
-				timeutils.start("Enc nlgd step");
-				csgd.encStepNLGD7XYB6(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma, eta);
-				timeutils.stop("Enc nlgd step");
+				if(is3approx) {
+					timeutils.start("Encrypting NLGD step with 3 approx, 5 levels...");
+					cipherGD.encStepNLGD3XYB5(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma[k], eta[k+1]);
+					timeutils.stop("NLGD step with 3 approx, 5 levels finished");
+				} else {
+					timeutils.start("Encrypting NLGD step with 7 approx, 6 levels...");
+					cipherGD.encStepNLGD7XYB6(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma[k], eta[k+1]);
+					timeutils.stop("NLGD step with 7 approx, 6 levels finished");
+				}
 			}
-			double* dw = csgd.decXYB(secretKey,cwData, factorDim, xyBatch, cnum);
-			sgd.check(xyData, dw, factorDim, sampleDim);
+
+			timeutils.start("Decrypting wData");
+			double* dw = cipherGD.decXYB(secretKey,cwData, factorDim, xyBatch, cnum);
+			timeutils.stop("wData decrypted");
+
+			gd.check(xyData, dw, factorDim, sampleDim);
 		}
-
-		timeutils.start("Dec w");
-		double* dw = csgd.decXYB(secretKey,cwData, factorDim, xyBatch, cnum);
-		timeutils.stop("Dec w");
-
-		sgd.check(xyData, dw, factorDim, sampleDim);
 	}
 	//-----------------------------------------
 	cout << "!!! END TEST NLGD XYB !!!" << endl;

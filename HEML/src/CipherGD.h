@@ -28,10 +28,10 @@ public:
 	void encStepNLGD7WB(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& gamma, double& eta);
 
 	void encStepNLGD7XYB6(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& kkk, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta);
+	void encStepNLGD3XYB5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& kkk, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta);
 
-	void encStepNLGD7XYB5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta, double& etaprev);
-	void encStepNLGD3XYB4(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta, double& etaprev);
-	void encStepNLGD1XYB3(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta, double& etaprev);
+	void encStepNLGD7XYBfast5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta, double& etaprev);
+	void encStepNLGD3XYBfast4(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta, double& etaprev);
 
 	double* decWB(SecKey& secretKey, Cipher*& cw, long& factorDim);
 	double* decXYB(SecKey& secretKey, Cipher*& cw, long& factorDim, long& xyBatch, long& cnum);
