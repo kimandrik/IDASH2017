@@ -24,8 +24,8 @@ public:
 	void encwsumWB(Cipher*& cwData, long& factorDim, long& wBatch);
 
 	void encStepLGDWB(Cipher*& cxyData, Cipher*& cwData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& lambda, double& gamma);
-
 	void encStepNLGD7WB(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& gamma, double& eta);
+
 
 	void encStepNLGD7XYB6(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& kkk, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta);
 	void encStepNLGD3XYB5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& kkk, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta);

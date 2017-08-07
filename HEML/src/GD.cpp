@@ -196,7 +196,7 @@ void GD::stepNLGD5(long**& xyData, double*& wData, double*& vData, long& factorD
 	}
 }
 
-void GD::decStepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta) {
+void GD::decStepNLGD7(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta) {
 
 	double** dprod = new double*[learnDim];
 	for (long j = 0; j < learnDim; ++j) {
