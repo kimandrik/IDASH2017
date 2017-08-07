@@ -33,7 +33,7 @@ Correctness: 100/101
 
 //-----------------------------------------
 
-XYB ENCRYPTED INTERATIONS (16,5,32,25) XYB = 4
+XYB ENCRYPTED INTERATIONS (16,5,32,25) XYB = 4 (6 levels in one iter) (5 levels) (4 levels with degree 3)
 
 Enc xyData time = 638.308 ms
 Enc wData time = 625.983 ms

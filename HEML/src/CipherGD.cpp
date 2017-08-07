@@ -583,6 +583,7 @@ void CipherGD::encStepNLGD3XYBfast4(Cipher*& cxyData, Cipher*& cwData, Cipher*& 
 		}
 	}
 	NTL_EXEC_RANGE_END;
+
 	Cipher cip = algo.sum(cprod, cnum);
 	scheme.modSwitchOneAndEqual(cip);
 
@@ -640,6 +641,7 @@ void CipherGD::encStepNLGD3XYBfast4(Cipher*& cxyData, Cipher*& cwData, Cipher*& 
 		}
 	}
 	NTL_EXEC_RANGE_END;
+
 	cnst = to_RR(1. - eta);
 	pcnst = pmult(cnst);
 	if(etaprev < 0) {
