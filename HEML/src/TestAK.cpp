@@ -157,7 +157,7 @@ void TestAK::testNLGDWB() {
 	cout << "!!! END TEST NLGD WB !!!" << endl;
 }
 
-void TestAK::testNLGDXYB() {
+void TestAK::testNLGDXYB(string filename, long iter, long logl, long logp, double gammaCnst, bool is3approx, bool isAllsample, bool isEncrypted) {
 	cout << "!!! START TEST NLGD XYB !!!" << endl;
 	//-----------------------------------------
 	TimeUtils timeutils;
@@ -165,51 +165,34 @@ void TestAK::testNLGDXYB() {
 	//-----------------------------------------
 	GD gd;
 
-//	string filename = "data/data5x500.txt";     // false   415/500
-//	string filename = "data/data9x1253.txt";    // false   775/1253 not good results
-//	string filename = "data/data15x1500.txt";   // false   1270/1500
-//	string filename = "data/data16x101.txt";    // false   101/101
-//	string filename = "data/data27x148.txt";    // false   132/148
-//	string filename = "data/data43x3247.txt";   // false   3182/3247
-//	string filename = "data/data45x296.txt";    // false   257/296
-//	string filename = "data/data51x653.txt";    // false   587/653
-//	string filename = "data/data67x216.txt";    // false   216/216 slow convergence
-	string filename = "data/data103x1579.txt";  // true    1086/1579 has many troubles with ip
-
-	long factorDim = 0; // 103
-	long sampleDim = 0; // 1579
+	long factorDim = 0;
+	long sampleDim = 0;
 
 	long** xyData = gd.xyDataFromFile(filename, factorDim, sampleDim, false);
 
-	long sdimBits = (long)ceil(log2(sampleDim)); // 11
-	long sampleDimPo2 = (1 << sdimBits); // 2048
+	long sdimBits = (long)ceil(log2(sampleDim));
+	long sampleDimPo2 = (1 << sdimBits);
 	cout << "sampleDim: " << sampleDim << endl;
 	cout << "sdimBits: " << sdimBits << endl;
 	cout << "sampleDimPo2: " << sampleDimPo2 << endl;
 
-	long fdimBits = (long)ceil(log2(factorDim));  // 7
-	long factorDimPo2 = (1 << fdimBits); // 128
+	long fdimBits = (long)ceil(log2(factorDim));
+	long factorDimPo2 = (1 << fdimBits);
 	cout << "factorDim: " << factorDim << endl;
 	cout << "fdimBits: " << fdimBits << endl;
 	cout << "factorDimPo2: " << factorDimPo2 << endl;
 
 	//-----------------------------------------
-	bool isEncrypted = true;
-	bool isAllsample = true;
-	bool is3approx = true; // 3 approx, 7 approx
-	bool isFast = true; // always true
-	long iter = fdimBits; // 7
+	bool isFast = true;
 	//-----------------------------------------
 
-	long learnDim = isAllsample ? sampleDim : (1 << (sdimBits - 1)); // 1579
-	long ldimBits = (long)ceil(log2(learnDim)); // 11
-	long learnDimPo2 = (1 << ldimBits); // 2048
+	long learnDim = isAllsample ? sampleDim : (1 << (sdimBits - 1));
+	long ldimBits = (long)ceil(log2(learnDim));
+	long learnDimPo2 = (1 << ldimBits);
 	cout << "learnDim: " << learnDim << endl;
 	cout << "ldimBits: " << ldimBits << endl;
 	cout << "learnDimPo2: " << learnDimPo2 << endl;
 
-	long logl = 10;
-	long logp = 32;
 	long L = is3approx & isFast ? 4 * iter + 1 : !is3approx & !isFast ? 6 * iter + 1 : 5 * iter + 1;
 	long logN = Params::suggestlogN(80, logl, logp, L);
 	cout << "logl: " << logl << endl;
@@ -231,6 +214,10 @@ void TestAK::testNLGDXYB() {
 	double* wData = new double[factorDim];
 	for (long i = 0; i < factorDim; ++i) {
 		double tmp = 0.0; // averages
+		for (int j = 0; j < sampleDim; ++j) {
+			tmp += xyData[j][i];
+		}
+		tmp /= sampleDim;
 		wData[i] = tmp;
 		vData[i] = tmp;
 	}
@@ -247,10 +234,14 @@ void TestAK::testNLGDXYB() {
 	}
 
 	double* gamma = new double[iter];
-	for (long i = 0; i < iter; ++i) {
-		gamma[i] = 1. / learnDim / 3.;
-//		gamma[i] = 1. / learnDim / (1. + k);
-//		gamma[i] = 1. / learnDim / (2. + k);
+	if(gammaCnst > 0) {
+		for (long i = 0; i < iter; ++i) {
+			gamma[i] = 1. / learnDim / gammaCnst;
+		}
+	} else {
+		for (long i = 0; i < iter; ++i) {
+			gamma[i] = 1. / learnDim / (i - gammaCnst);
+		}
 	}
 
 	if(!isEncrypted) {
