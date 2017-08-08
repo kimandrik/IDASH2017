@@ -157,7 +157,7 @@ void TestAK::testNLGDWB() {
 	cout << "!!! END TEST NLGD WB !!!" << endl;
 }
 
-void TestAK::testNLGDXYB(string filename, long iter, long logl, long logp, double gammaCnst, bool is3approx, bool isAllsample, bool isEncrypted) {
+void TestAK::testNLGDXYB(string filename, long iter, long logl, long logp, double gammaCnst, bool is3approx, bool isAllsample, bool isEncrypted, bool isYfirst) {
 	cout << "!!! START TEST NLGD XYB !!!" << endl;
 	//-----------------------------------------
 	TimeUtils timeutils;
@@ -168,7 +168,7 @@ void TestAK::testNLGDXYB(string filename, long iter, long logl, long logp, doubl
 	long factorDim = 0;
 	long sampleDim = 0;
 
-	long** xyData = gd.xyDataFromFile(filename, factorDim, sampleDim, false);
+	long** xyData = gd.xyDataFromFile(filename, factorDim, sampleDim, isYfirst);
 
 	long sdimBits = (long)ceil(log2(sampleDim));
 	long sampleDimPo2 = (1 << sdimBits);

@@ -8,7 +8,7 @@ using namespace std;
 class TestAK {
 public:
 	static void testNLGDWB();
-	static void testNLGDXYB(string filename, long iter, long logl, long logp, double gammaCnst, bool is3approx, bool isAllsample, bool isEncrypted);
+	static void testNLGDXYB(string filename, long iter, long logl, long logp, double gammaCnst, bool is3approx, bool isAllsample, bool isEncrypted, bool isYfirst);
 };
 
 #endif /* TEST_TESTSGD_H_ */
