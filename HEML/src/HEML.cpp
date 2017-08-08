@@ -35,10 +35,10 @@ int main() {
 	long iter = 10;
 	long logl = 10;
 	long logp = 32;
-	double gammaCnst = 2.;
-	bool is3approx = false;
-	bool isAllsample = true;
-	bool isEncrypted = true;
+	double gammaCnst = 2.; // if gammaCnst > 0 then 1 / learndim / gammaCnst, else 1 / learndim / (|gammaCnst| + i)
+	bool is3approx = false; // if true then 3 degree approximation, else 7 degree approximation
+	bool isAllsample = true; // if true then all sample is learned, else log2(sample) is learned
+	bool isEncrypted = true; // if true then encrypted learn, else unecnrypted (for testing)
 
 	TestAK::testNLGDXYB(filename, iter, logl, logp, gammaCnst, is3approx, isAllsample, isEncrypted);
 

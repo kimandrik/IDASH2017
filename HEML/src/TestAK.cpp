@@ -193,6 +193,11 @@ void TestAK::testNLGDXYB(string filename, long iter, long logl, long logp, doubl
 	cout << "ldimBits: " << ldimBits << endl;
 	cout << "learnDimPo2: " << learnDimPo2 << endl;
 
+	cout << "iter: " << iter << endl;
+	cout << "isEncrypted: " << isEncrypted << endl;
+	cout << "is3approx: " << is3approx << endl;
+	cout << "isAllsample: " << isAllsample << endl;
+	cout << "gammaCnst: " << gammaCnst << endl;
 	long L = is3approx & isFast ? 4 * iter + 1 : !is3approx & !isFast ? 6 * iter + 1 : 5 * iter + 1;
 	long logN = Params::suggestlogN(80, logl, logp, L);
 	cout << "logl: " << logl << endl;
