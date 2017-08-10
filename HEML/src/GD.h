@@ -17,27 +17,17 @@ public:
 
 	//-----------------------------------------
 
-	long** xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool isfirst = true); // returns x_ij * y_i
-
-	//-----------------------------------------
+	long** xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool isfirst = true);
 
 	double innerprod(double*& w, long*& xy, long& size);
 
 	void stepLGD(long**& xyData, double*& wData, long& factorDim, long& learnDim, double& lambda, double& gamma);
-	void stepSLGD(long**& xyData, double*& wData, long& factorDim, long& learnDim, double& lambda, double& gamma, long& stochDim);
 
 	void stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta);
-	void stepNLGD5(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta, double& etaprev);
-
-	void decStepNLGD7(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta);
 
 	double* wsum(double**& wdata, long& factorDim, long& wBatch);
 
 	void check(long**& xyData, double*& w, long& factorDim, long& sampleDim);
-
-	void debugcheck(string prefix, double*& w, long factorCheck);
-	void debugcheck(string prefix, double**& w, long factorCheck, long slotCheck);
-	//-----------------------------------------
 
 };
 

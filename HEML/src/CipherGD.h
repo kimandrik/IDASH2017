@@ -15,28 +15,14 @@ public:
 
 	CipherGD(Scheme& scheme, SchemeAlgo& algo, SecKey& secretKey) : scheme(scheme), algo(algo), secretKey(secretKey) {}
 
-	Cipher* encxyDataWB(long**& xyData, long& slots, long& factorDim, long& learnDim, long& wBatch);
-	Cipher* encwDataWB(double**& wData, long& slots, long& factorDim, long& learnDim, long& wBatch);
+	Cipher* encxyData(long**& xyData, long& slots, long& factorDim, long& learnDim, long& learnDimPo2, long& xyBatch, long& cnum, long& xyBits);
+	Cipher* encwData(double*& wData, long& slots, long& factorDim, long& learnDim, long& learnDimPo2, long& xyBatch, long& cnum, long& wBits);
 
-	Cipher* encxyDataXYB(long**& xyData, long& slots, long& factorDim, long& learnDim, long& learnDimPo2, long& xyBatch, long& cnum);
-	Cipher* encwDataXYB(double*& wData, long& slots, long& factorDim, long& learnDim, long& learnDimPo2, long& xyBatch, long& cnum);
+	void encStepNLGD5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta, double& etaprev, long& xyBits, long& wBits, long& pBits);
 
-	void encwsumWB(Cipher*& cwData, long& factorDim, long& wBatch);
+	void encStepNLGD3(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta, double& etaprev, long& xyBits, long& wBits, long& pBits);
 
-	void encStepLGDWB(Cipher*& cxyData, Cipher*& cwData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& lambda, double& gamma);
-	void encStepNLGD7WB(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, long& slots, long& factorDim, long& learnDim, long& wBatch, double& gamma, double& eta);
-
-
-	void encStepNLGD7XYB6(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& kkk, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta);
-	void encStepNLGD3XYB5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& kkk, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta);
-
-	void encStepNLGD7XYBfast5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta, double& etaprev);
-	void encStepNLGD3XYBfast4(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta, double& etaprev);
-
-	double* decWB(SecKey& secretKey, Cipher*& cw, long& factorDim);
-	double* decXYB(SecKey& secretKey, Cipher*& cw, long& factorDim, long& xyBatch, long& cnum);
-
-	ZZ pmult(RR val);
+	double* decwData(SecKey& secretKey, Cipher*& cw, long& factorDim, long& xyBatch, long& cnum, long& wBits);
 
 	void debugcheck(string prefix, SecKey& secretKey, Cipher*& ciphers, long factorCheck, long slotCheck);
 	void debugcheck(string prefix, SecKey& secretKey, Cipher& cipher, long slotCheck);
