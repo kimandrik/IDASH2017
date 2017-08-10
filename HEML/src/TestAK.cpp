@@ -43,10 +43,6 @@ void TestAK::testNLGD(string filename, long iter, long logq, double gammaCnst, b
 	cout << "fdimBits: " << fdimBits << endl;
 	cout << "factorDimPo2: " << factorDimPo2 << endl;
 
-	//-----------------------------------------
-	bool isFast = true;
-	//-----------------------------------------
-
 	long learnDim = isAllsample ? sampleDim : (1 << (sdimBits - 1));
 	long ldimBits = (long)ceil(log2(learnDim));
 	long learnDimPo2 = (1 << ldimBits);
@@ -143,11 +139,11 @@ void TestAK::testNLGD(string filename, long iter, long logq, double gammaCnst, b
 		for (long k = 0; k < iter; ++k) {
 			if(is3approx) {
 				timeutils.start("Encrypting NLGD step with 3 approx, 5 levels...");
-				cipherGD.encStepNLGD3(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma[k], eta[k+1], xyBits, wBits, pBits);
+				cipherGD.encStepNLGD3(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma[k], eta[k+1], eta[k], xyBits, wBits, pBits);
 				timeutils.stop("NLGD step with 3 approx, 5 levels finished");
 			} else {
 				timeutils.start("Encrypting NLGD step with 7 approx, 6 levels...");
-				cipherGD.encStepNLGD5(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma[k], eta[k+1], xyBits, wBits, pBits);
+				cipherGD.encStepNLGD5(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma[k], eta[k+1], eta[k], xyBits, wBits, pBits);
 				timeutils.stop("NLGD step with 7 approx, 6 levels finished");
 			}
 
