@@ -171,7 +171,7 @@ void CipherGD::encStepNLGD5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, 
 			scheme.modSwitchAndEqual(cvData[i], wBits);
 			scheme.modEmbedAndEqual(cvData[i], xyBits + pBits + 2 * wBits);
 
-			cwData[i] = scheme.add(cvData[i], cgrad[i]);
+			cwData[i] = scheme.add(cvData[i], cx	grad[i]);
 			cvData[i] = cgrad[i];
 		}
 		NTL_EXEC_RANGE_END;

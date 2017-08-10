@@ -38,7 +38,7 @@ int main() {
 	long xyBits = 32;
 	long pBits = 20;
 
-	long logq = 650;
+	long logq = 1000;
 	double gammaCnst = 2.; // if gammaCnst > 0 then 1 / learndim / gammaCnst, else 1 / learndim / (|gammaCnst| + i)
 	bool isYfirst = false;
 	bool is3approx = false; // if true then 3 degree approximation, else 7 degree approximation
