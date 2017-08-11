@@ -18,7 +18,7 @@
 
 using namespace NTL;
 
-void TestAK::testNLGD(string filename, long iter, long logq, double gammaCnst, bool is3approx, bool isAllsample, bool isEncrypted, bool isYfirst, long xyBits, long wBits, long pBits) {
+void TestAK::testNLGD(string filename, long iter, double gammaCnst, bool is3approx, bool isAllsample, bool isEncrypted, bool isYfirst, long xyBits, long wBits, long pBits, long lBits) {
 	cout << "!!! START TEST NLGD !!!" << endl;
 	//-----------------------------------------
 	TimeUtils timeutils;
@@ -55,8 +55,12 @@ void TestAK::testNLGD(string filename, long iter, long logq, double gammaCnst, b
 	cout << "is3approx: " << is3approx << endl;
 	cout << "isAllsample: " << isAllsample << endl;
 	cout << "gammaCnst: " << gammaCnst << endl;
+	long logq = is3approx ? iter * (2 * wBits + xyBits + pBits) + lBits + ldimBits + xyBits - wBits
+			: iter * (3 * wBits + xyBits + pBits) + lBits + ldimBits + xyBits - wBits;
+
 	long logN = Params::suggestlogN(80, logq);
 	cout << "logq: " << logq << endl;
+	cout << "logN: " << logN << endl;
 
 	long xybatchBits = min(logN - 1 - ldimBits, fdimBits);
 	long xyBatch = 1 << xybatchBits;
@@ -129,11 +133,11 @@ void TestAK::testNLGD(string filename, long iter, long logq, double gammaCnst, b
 		Message msg = scheme.encode(pdvals, slots);
 		timeutils.stop("Polynomial generated");
 
-		timeutils.start("Encrypting xyData XYB...");
+		timeutils.start("Encrypting xyData...");
 		Cipher* cxyData = cipherGD.encxyData(xyData, slots, factorDim, learnDim, learnDimPo2, xyBatch, cnum, xyBits);
 		timeutils.stop("xyData encrypted");
 
-		timeutils.start("Encrypting wData and vData XYB...");
+		timeutils.start("Encrypting wData and vData...");
 		Cipher* cwData = cipherGD.encwData(cxyData, slotBits, ldimBits, xybatchBits, cnum, xyBits, wBits);
 		Cipher* cvData = new Cipher[cnum];
 		for (long i = 0; i < cnum; ++i) {
@@ -143,13 +147,13 @@ void TestAK::testNLGD(string filename, long iter, long logq, double gammaCnst, b
 
 		for (long k = 0; k < iter; ++k) {
 			if(is3approx) {
-				timeutils.start("Encrypting NLGD step with 3 approx, 5 levels...");
+				timeutils.start("Encrypting NLGD step with 3 approx, 4 levels...");
 				cipherGD.encStepNLGD3(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma[k], eta[k+1], eta[k], xyBits, wBits, pBits);
-				timeutils.stop("NLGD step with 3 approx, 5 levels finished");
+				timeutils.stop("NLGD step with 3 approx, 4 levels finished");
 			} else {
-				timeutils.start("Encrypting NLGD step with 7 approx, 6 levels...");
+				timeutils.start("Encrypting NLGD step with 5 approx, 5 levels...");
 				cipherGD.encStepNLGD5(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma[k], eta[k+1], eta[k], xyBits, wBits, pBits);
-				timeutils.stop("NLGD step with 7 approx, 6 levels finished");
+				timeutils.stop("NLGD step with 7 approx, 5 levels finished");
 			}
 
 			timeutils.start("Decrypting wData");
