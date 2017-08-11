@@ -31,6 +31,10 @@ void TestAK::testNLGD(string filename, long iter, double gammaCnst, double gamma
 	cout << "is3approx: " << is3approx << endl;
 	cout << "gammaCnst: " << gammaCnst << endl;
 	cout << "gammaUpCnst: " << gammaUpCnst << endl;
+	cout << "xyBits: " << xyBits << endl;
+	cout << "wBits: " << wBits << endl;
+	cout << "pBits: " << pBits << endl;
+	cout << "lBits: " << lBits << endl;
 
 	long factorDim = 0;
 	long sampleDim = 0;
