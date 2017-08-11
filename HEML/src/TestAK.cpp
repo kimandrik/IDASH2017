@@ -55,6 +55,7 @@ void TestAK::testNLGD(string filename, long iter, double gammaCnst, double gamma
 	cout << "is3approx: " << is3approx << endl;
 	cout << "isAllsample: " << isAllsample << endl;
 	cout << "gammaCnst: " << gammaCnst << endl;
+	cout << "gammaUpCnst: " << gammaUpCnst << endl;
 	long logq = is3approx ? iter * (2 * wBits + xyBits + pBits) + lBits + ldimBits + xyBits - wBits
 			: iter * (3 * wBits + xyBits + pBits) + lBits + ldimBits + xyBits - wBits;
 
