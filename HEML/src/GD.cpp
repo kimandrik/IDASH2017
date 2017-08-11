@@ -106,13 +106,11 @@ long** GD::pickxyDataLearn(long**& xyData, long& learnDim, long& sampleDim, long
 			r = RandomBnd(sampleDim);
 		} while(notTaken[r]);
 		notTaken[r] = true;
-		cout << r << endl;
 	}
 	long idx = 0;
 	for (long i = 0; i < sampleDim; ++i) {
 		if(!notTaken[i]) {
-			res[idx] = xyData[i];
-			idx++;
+			res[idx++] = xyData[i];
 		}
 	}
 	return res;
