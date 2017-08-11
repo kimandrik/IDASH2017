@@ -18,7 +18,7 @@
 
 using namespace NTL;
 
-void TestAK::testNLGD(string filename, long iter, double gammaCnst, bool is3approx, bool isAllsample, bool isEncrypted, bool isYfirst, long xyBits, long wBits, long pBits, long lBits) {
+void TestAK::testNLGD(string filename, long iter, double gammaCnst, double gammaUpCnst, bool is3approx, bool isAllsample, bool isEncrypted, bool isYfirst, long xyBits, long wBits, long pBits, long lBits) {
 	cout << "!!! START TEST NLGD !!!" << endl;
 	//-----------------------------------------
 	TimeUtils timeutils;
@@ -99,11 +99,11 @@ void TestAK::testNLGD(string filename, long iter, double gammaCnst, bool is3appr
 	double* gamma = new double[iter];
 	if(gammaCnst > 0) {
 		for (long i = 0; i < iter; ++i) {
-			gamma[i] = 1. / learnDim / gammaCnst;
+			gamma[i] = gammaUpCnst / learnDim / gammaCnst;
 		}
 	} else {
 		for (long i = 0; i < iter; ++i) {
-			gamma[i] = 1. / learnDim / (i - gammaCnst);
+			gamma[i] = gammaUpCnst / learnDim / (i - gammaCnst);
 		}
 	}
 
