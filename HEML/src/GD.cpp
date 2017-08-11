@@ -95,6 +95,29 @@ long** GD::xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool i
 	return xyData;
 }
 
+long** GD::pickxyDataLearn(long**& xyData, long& learnDim, long& sampleDim, long& factorDim) {
+	long** res = new long*[learnDim];
+
+	bool* notTaken = new bool[sampleDim];
+	fill_n(notTaken, sampleDim, false);
+	long r;
+	for (long i = 0; i < sampleDim - learnDim; ++i) {
+		do {
+			r = RandomBnd(sampleDim);
+		} while(notTaken[r]);
+		notTaken[r] = true;
+		cout << r << endl;
+	}
+	long idx = 0;
+	for (long i = 0; i < sampleDim; ++i) {
+		if(!notTaken[i]) {
+			res[idx] = xyData[i];
+			idx++;
+		}
+	}
+	return res;
+}
+
 double GD::innerprod(double*& w, long*& xy, long& size){
 	double res = 0.0;
 	for(int i = 0; i < size; ++i) {

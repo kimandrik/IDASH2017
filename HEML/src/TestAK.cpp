@@ -18,13 +18,19 @@
 
 using namespace NTL;
 
-void TestAK::testNLGD(string filename, long iter, double gammaCnst, double gammaUpCnst, bool is3approx, bool isAllsample, bool isEncrypted, bool isYfirst, long xyBits, long wBits, long pBits, long lBits) {
+void TestAK::testNLGD(string filename, long iter, double gammaCnst, double gammaUpCnst, double learnPortion, bool is3approx, bool isEncrypted, bool isYfirst, long xyBits, long wBits, long pBits, long lBits) {
 	cout << "!!! START TEST NLGD !!!" << endl;
 	//-----------------------------------------
 	TimeUtils timeutils;
 	SetNumThreads(8);
 	//-----------------------------------------
 	GD gd;
+
+	cout << "iter: " << iter << endl;
+	cout << "isEncrypted: " << isEncrypted << endl;
+	cout << "is3approx: " << is3approx << endl;
+	cout << "gammaCnst: " << gammaCnst << endl;
+	cout << "gammaUpCnst: " << gammaUpCnst << endl;
 
 	long factorDim = 0;
 	long sampleDim = 0;
@@ -43,19 +49,15 @@ void TestAK::testNLGD(string filename, long iter, double gammaCnst, double gamma
 	cout << "fdimBits: " << fdimBits << endl;
 	cout << "factorDimPo2: " << factorDimPo2 << endl;
 
-	long learnDim = isAllsample ? sampleDim : (1 << (sdimBits - 1));
+	long learnDim = (long)((double)sampleDim * learnPortion);
 	long ldimBits = (long)ceil(log2(learnDim));
 	long learnDimPo2 = (1 << ldimBits);
 	cout << "learnDim: " << learnDim << endl;
 	cout << "ldimBits: " << ldimBits << endl;
 	cout << "learnDimPo2: " << learnDimPo2 << endl;
 
-	cout << "iter: " << iter << endl;
-	cout << "isEncrypted: " << isEncrypted << endl;
-	cout << "is3approx: " << is3approx << endl;
-	cout << "isAllsample: " << isAllsample << endl;
-	cout << "gammaCnst: " << gammaCnst << endl;
-	cout << "gammaUpCnst: " << gammaUpCnst << endl;
+	long** xyDataLearn = gd.pickxyDataLearn(xyData, learnDim, sampleDim, factorDim);
+
 	long logq = is3approx ? iter * (2 * wBits + xyBits + pBits) + lBits + ldimBits + xyBits - wBits
 			: iter * (3 * wBits + xyBits + pBits) + lBits + ldimBits + xyBits - wBits;
 
@@ -79,7 +81,7 @@ void TestAK::testNLGD(string filename, long iter, double gammaCnst, double gamma
 	for (long i = 0; i < factorDim; ++i) {
 		double tmp = 0.0;
 		for (long j = 0; j < learnDim; ++j) {
-			tmp += xyData[j][i];
+			tmp += xyDataLearn[j][i];
 		}
 		tmp /= learnDim;
 		wData[i] = tmp;
@@ -110,7 +112,7 @@ void TestAK::testNLGD(string filename, long iter, double gammaCnst, double gamma
 
 	if(!isEncrypted) {
 		for (long k = 0; k < iter; ++k) {
-			gd.stepNLGD(xyData, wData, vData, factorDim, learnDim, gamma[k], eta[k+1]);
+			gd.stepNLGD(xyDataLearn, wData, vData, factorDim, learnDim, gamma[k], eta[k+1]);
 			gd.check(xyData, wData, factorDim, sampleDim);
 		}
 	} else {
@@ -135,7 +137,7 @@ void TestAK::testNLGD(string filename, long iter, double gammaCnst, double gamma
 		timeutils.stop("Polynomial generated");
 
 		timeutils.start("Encrypting xyData...");
-		Cipher* cxyData = cipherGD.encxyData(xyData, slots, factorDim, learnDim, learnDimPo2, xyBatch, cnum, xyBits);
+		Cipher* cxyData = cipherGD.encxyData(xyDataLearn, slots, factorDim, learnDim, learnDimPo2, xyBatch, cnum, xyBits);
 		timeutils.stop("xyData encrypted");
 
 		timeutils.start("Encrypting wData and vData...");
@@ -148,13 +150,13 @@ void TestAK::testNLGD(string filename, long iter, double gammaCnst, double gamma
 
 		for (long k = 0; k < iter; ++k) {
 			if(is3approx) {
-				timeutils.start("Encrypting NLGD step with 3 approx, 4 levels...");
+				timeutils.start("Encrypting NLGD step with degree 3 approx...");
 				cipherGD.encStepNLGD3(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma[k], eta[k+1], eta[k], xyBits, wBits, pBits);
-				timeutils.stop("NLGD step with 3 approx, 4 levels finished");
+				timeutils.stop("NLGD step with degree 3 approx, finished");
 			} else {
-				timeutils.start("Encrypting NLGD step with 5 approx, 5 levels...");
+				timeutils.start("Encrypting NLGD step with degree 5 approx...");
 				cipherGD.encStepNLGD5(cxyData, cwData, cvData, msg.mx, slots, learnDim, learnDimPo2, xybatchBits, xyBatch, cnum, gamma[k], eta[k+1], eta[k], xyBits, wBits, pBits);
-				timeutils.stop("NLGD step with 7 approx, 5 levels finished");
+				timeutils.stop("NLGD step with degree 5 approx finished");
 			}
 
 			timeutils.start("Decrypting wData");
