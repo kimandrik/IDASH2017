@@ -59,11 +59,12 @@ void TestAK::testNLGD(string filename, long iter, long logq, double gammaCnst, b
 	cout << "logq: " << logq << endl;
 
 	long xybatchBits = min(logN - 1 - ldimBits, fdimBits);
-	long xyBatch = (1 << xybatchBits);
+	long xyBatch = 1 << xybatchBits;
 	cout << "xyBatchBits: " << xybatchBits << endl;
 	cout << "xyBatch: " << xyBatch << endl;
 
-	long slots =  learnDimPo2 * xyBatch;
+	long slotBits = ldimBits + xybatchBits;
+	long slots =  1 << slotBits;
 	long cnum = factorDimPo2 / xyBatch;
 	cout << "slots: " << slots << endl;
 	cout << "cnum: " << cnum << endl;
@@ -72,6 +73,10 @@ void TestAK::testNLGD(string filename, long iter, long logq, double gammaCnst, b
 	double* wData = new double[factorDim];
 	for (long i = 0; i < factorDim; ++i) {
 		double tmp = 0.0;
+		for (long j = 0; j < learnDim; ++j) {
+			tmp += xyData[j][i];
+		}
+		tmp /= learnDim;
 		wData[i] = tmp;
 		vData[i] = tmp;
 	}
@@ -129,7 +134,7 @@ void TestAK::testNLGD(string filename, long iter, long logq, double gammaCnst, b
 		timeutils.stop("xyData encrypted");
 
 		timeutils.start("Encrypting wData and vData XYB...");
-		Cipher* cwData = cipherGD.encwData(wData, slots, factorDim, learnDim, learnDimPo2, xyBatch, cnum, wBits);
+		Cipher* cwData = cipherGD.encwData(cxyData, slotBits, ldimBits, xybatchBits, cnum, xyBits, wBits);
 		Cipher* cvData = new Cipher[cnum];
 		for (long i = 0; i < cnum; ++i) {
 			cvData[i] = cwData[i];
