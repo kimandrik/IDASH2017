@@ -18,7 +18,7 @@
 
 using namespace NTL;
 
-void TestAK::testNLGD(string filename, long iter, double gammaCnst, double gammaUpCnst, double learnPortion, bool is3approx, bool isEncrypted, bool isYfirst, long xyBits, long wBits, long pBits, long lBits) {
+void TestAK::testNLGD(string filename, long iter, double gammaDownCnst, double gammaUpCnst, double learnPortion, bool is3approx, bool isEncrypted, bool isYfirst) {
 	cout << "!!! START TEST NLGD !!!" << endl;
 	//-----------------------------------------
 	TimeUtils timeutils;
@@ -29,12 +29,8 @@ void TestAK::testNLGD(string filename, long iter, double gammaCnst, double gamma
 	cout << "iter: " << iter << endl;
 	cout << "isEncrypted: " << isEncrypted << endl;
 	cout << "is3approx: " << is3approx << endl;
-	cout << "gammaCnst: " << gammaCnst << endl;
+	cout << "gammaDownCnst: " << gammaDownCnst << endl;
 	cout << "gammaUpCnst: " << gammaUpCnst << endl;
-	cout << "xyBits: " << xyBits << endl;
-	cout << "wBits: " << wBits << endl;
-	cout << "pBits: " << pBits << endl;
-	cout << "lBits: " << lBits << endl;
 
 	long factorDim = 0;
 	long sampleDim = 0;
@@ -61,6 +57,11 @@ void TestAK::testNLGD(string filename, long iter, double gammaCnst, double gamma
 	cout << "learnDimPo2: " << learnDimPo2 << endl;
 
 	long** xyDataLearn = gd.pickxyDataLearn(xyData, learnDim, sampleDim, factorDim);
+
+	long xyBits = fdimBits + ldimBits + 20;
+	long wBits = fdimBits + ldimBits + 18;
+	long pBits = 16;
+	long lBits = wBits + 5;
 
 	long logq = is3approx ? iter * (2 * wBits + xyBits + pBits) + lBits + ldimBits + xyBits - wBits
 			: iter * (3 * wBits + xyBits + pBits) + lBits + ldimBits + xyBits - wBits;
@@ -104,13 +105,13 @@ void TestAK::testNLGD(string filename, long iter, double gammaCnst, double gamma
 	}
 
 	double* gamma = new double[iter];
-	if(gammaCnst > 0) {
+	if(gammaDownCnst > 0) {
 		for (long i = 0; i < iter; ++i) {
-			gamma[i] = gammaUpCnst / learnDim / gammaCnst;
+			gamma[i] = gammaUpCnst / gammaDownCnst / learnDim;
 		}
 	} else {
 		for (long i = 0; i < iter; ++i) {
-			gamma[i] = gammaUpCnst / learnDim / (i - gammaCnst);
+			gamma[i] = gammaUpCnst / (i - gammaDownCnst) / learnDim;
 		}
 	}
 
