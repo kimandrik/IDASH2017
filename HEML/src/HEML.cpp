@@ -19,7 +19,7 @@
 using namespace std;
 
 void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, double learnPortion, bool is3approx, bool isEncrypted, bool isYfirst) {
-	cout << "!!! START TEST NLGD !!!" << endl;
+	cout << "!!! START NLGD !!!" << endl;
 	//-----------------------------------------
 	TimeUtils timeutils;
 	SetNumThreads(8);
@@ -50,18 +50,18 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 
 	long** xyDataLearn = gd.RandomxyDataLearn(xyData, learnDim, sampleDim, factorDim);
 
-	long xyBits = fdimBits + ldimBits + 20;
-	long wBits = fdimBits + ldimBits + 18;
+	long wBits = max(fdimBits + ldimBits + 18, 28);
+	long xyBits = wBits + 2;
 	long pBits = 16;
-	long lBits = wBits + 5;
+	long lBits = 5;
 	cout << "xyBits: " << xyBits << endl;
 	cout << "wBits: " << wBits << endl;
 	cout << "pBits: " << pBits << endl;
 	cout << "lBits: " << lBits << endl;
 
 
-	long logq = is3approx ? iter * (2 * wBits + xyBits + pBits) + lBits + ldimBits + xyBits - wBits
-			: iter * (3 * wBits + xyBits + pBits) + lBits + ldimBits + xyBits - wBits;
+	long logq = is3approx ? (ldimBits + xyBits) + iter * (2 * wBits + xyBits + pBits) + lBits
+			: (ldimBits + xyBits) + iter * (3 * wBits + xyBits + pBits) + lBits;
 
 	long logN = Params::suggestlogN(80, logq);
 	cout << "logq: " << logq << endl;
@@ -121,10 +121,9 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 		Params params(logN, logq);
 		SecKey secretKey(params);
 		PubKey publicKey(params, secretKey);
-		SchemeAux schemeaux(params, wBits);
+		SchemeAux schemeaux(logN);
 		Scheme scheme(params, publicKey, schemeaux);
-		SchemeAlgo algo(scheme);
-		CipherGD cipherGD(scheme, algo, secretKey);
+		CipherGD cipherGD(scheme, secretKey);
 		timeutils.stop("Scheme generated");
 
 		timeutils.start("Polynomial generating...");
@@ -135,15 +134,21 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 		}
 		CZZ* pdvals = scheme.groupidx(pvals, slots);
 		Message msg = scheme.encode(pdvals, slots);
+
+		delete[] pvals;
+		delete[] pdvals;
+
 		timeutils.stop("Polynomial generated");
 
+		Cipher* cxyData = new Cipher[cnum];
 		timeutils.start("Encrypting xyData...");
-		Cipher* cxyData = cipherGD.encxyData(xyDataLearn, slots, factorDim, learnDim, xyBatch, cnum, xyBits);
+		cipherGD.encxyData(cxyData, xyDataLearn, slots, factorDim, learnDim, xyBatch, cnum, xyBits);
 		timeutils.stop("xyData encrypted");
 
-		timeutils.start("Encrypting wData and vData...");
-		Cipher* cwData = cipherGD.encwData(cxyData, slotBits, ldimBits, xybatchBits, cnum, xyBits, wBits);
+		Cipher* cwData = new Cipher[cnum];
 		Cipher* cvData = new Cipher[cnum];
+		timeutils.start("Encrypting wData and vData...");
+		cipherGD.encwData(cwData, cxyData, slotBits, ldimBits, xybatchBits, cnum, xyBits, wBits);
 		for (long i = 0; i < cnum; ++i) {
 			cvData[i] = cwData[i];
 		}
@@ -165,10 +170,11 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 			timeutils.stop("wData decrypted");
 
 			gd.check(xyData, dw, factorDim, sampleDim);
+			delete[] dw;
 		}
 	}
 	//-----------------------------------------
-	cout << "!!! END TEST NLGD !!!" << endl;
+	cout << "!!! END NLGD !!!" << endl;
 }
 
 int main() {
@@ -184,7 +190,7 @@ int main() {
 //	string filename = "data/data67x216.txt";   bool isYfirst = false; //  216/216
 //	string filename = "data/data103x1579.txt"; bool isYfirst = true;  //  1086/1579
 
-	long iter = 7;
+	long iter = 3;
 
 	/*
 	 * gammaDownCnst > 0 : gamma = gammaUpCnst / gammaDownCnst / learnDim - constant gamma

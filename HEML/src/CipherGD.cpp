@@ -9,8 +9,7 @@
 #include <SchemeAux.h>
 #include <cmath>
 
-Cipher* CipherGD::encxyData(long**& xyData, long& slots, long& factorDim, long& learnDim, long& xyBatch, long& cnum, long& xyBits) {
-	Cipher* cxyData = new Cipher[cnum];
+void CipherGD::encxyData(Cipher*& cxyData, long**& xyData, long& slots, long& factorDim, long& learnDim, long& xyBatch, long& cnum, long& xyBits) {
 	ZZ precision = power2_ZZ(xyBits);
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
@@ -38,14 +37,12 @@ Cipher* CipherGD::encxyData(long**& xyData, long& slots, long& factorDim, long& 
 			}
 		}
 		cxyData[i] = scheme.encrypt(pxyData, slots);
+		delete[] pxyData;
 	}
 	NTL_EXEC_INDEX_END;
-
-	return cxyData;
 }
 
-Cipher* CipherGD::encwData(Cipher*& cxyData, long& slotBits, long& ldimBits, long& xyBatchBits, long& cnum, long& xyBits, long& wBits) {
-	Cipher* cwData = new Cipher[cnum];
+void CipherGD::encwData(Cipher*& cwData, Cipher*& cxyData, long& slotBits, long& ldimBits, long& xyBatchBits, long& cnum, long& xyBits, long& wBits) {
 	long downBits = ldimBits + xyBits - wBits;
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
@@ -57,14 +54,12 @@ Cipher* CipherGD::encwData(Cipher*& cxyData, long& slotBits, long& ldimBits, lon
 		scheme.modSwitchAndEqual(cwData[i], downBits);
 	}
 	NTL_EXEC_RANGE_END;
-	return cwData;
 }
 
 void CipherGD::encStepNLGD5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slots, long& learnDim, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta, double& etaprev, long& xyBits, long& wBits, long& pBits) {
-
 	Cipher* cprod = new Cipher[cnum];
-	long bitsDown = cxyData[0].cbits - cwData[0].cbits;
 
+	long bitsDown = cxyData[0].cbits - cwData[0].cbits;
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
 		scheme.modEmbedAndEqual(cxyData[i], bitsDown);
@@ -75,7 +70,11 @@ void CipherGD::encStepNLGD5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, 
 		}
 	}
 	NTL_EXEC_RANGE_END;
-	Cipher cip = algo.sum(cprod, cnum);
+
+	Cipher cip = cprod[0];
+	for (long i = 1; i < cnum; ++i) {
+		scheme.addAndEqual(cip, cprod[i]);
+	}
 	scheme.modSwitchAndEqual(cip, xyBits);
 
 	scheme.multByPolyAndEqual(cip, poly);
@@ -140,20 +139,20 @@ void CipherGD::encStepNLGD5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, 
 
 	RR cnst = to_RR(1. - eta);
 	ZZ pcnst = EvaluatorUtils::evaluateVal(cnst, wBits);
+	bitsDown = xyBits + pBits + 2 * wBits;
 	if(etaprev < 0) {
 		RR cnst2 = to_RR(eta) / (1 - etaprev);
 		ZZ pcnst2 = EvaluatorUtils::evaluateVal(cnst2, wBits);
-
 		NTL_EXEC_RANGE(cnum, first, last);
 		for (long i = first; i < last; ++i) {
 			scheme.multByConstAndEqual(cwData[i], pcnst);
 			scheme.modSwitchAndEqual(cwData[i], wBits);
-			scheme.modEmbedAndEqual(cwData[i], xyBits + pBits + 2 * wBits);
+			scheme.modEmbedAndEqual(cwData[i], bitsDown);
 			cgrad[i] = scheme.sub(cwData[i], cgrad[i]);
 
 			scheme.multByConstAndEqual(cvData[i], pcnst2);
 			scheme.modSwitchAndEqual(cvData[i], wBits);
-			scheme.modEmbedAndEqual(cvData[i], xyBits + pBits + 2 * wBits);
+			scheme.modEmbedAndEqual(cvData[i], bitsDown);
 
 			cwData[i] = scheme.add(cvData[i], cgrad[i]);
 			cvData[i] = cgrad[i];
@@ -164,13 +163,15 @@ void CipherGD::encStepNLGD5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, 
 		for (long i = first; i < last; ++i) {
 			cvData[i] = scheme.multByConst(cwData[i], pcnst);
 			scheme.modSwitchAndEqual(cvData[i], wBits);
-			scheme.modEmbedAndEqual(cvData[i], xyBits + pBits + 2 * wBits);
+			scheme.modEmbedAndEqual(cvData[i], bitsDown);
 			scheme.subAndEqual(cvData[i], cgrad[i]);
-			scheme.modEmbedAndEqual(cwData[i], xyBits + pBits + 3 * wBits);
+			scheme.modEmbedAndEqual(cwData[i], bitsDown + wBits);
 			scheme.subAndEqual(cwData[i], cgrad[i]);
 		}
 		NTL_EXEC_RANGE_END;
 	}
+	delete[] cprod;
+	delete[] cgrad;
 }
 
 void CipherGD::encStepNLGD3(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slots, long& learnDim, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta, double& etaprev, long& xyBits, long& wBits, long& pBits) {
@@ -188,7 +189,10 @@ void CipherGD::encStepNLGD3(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, 
 		}
 	}
 	NTL_EXEC_RANGE_END;
-	Cipher cip = algo.sum(cprod, cnum);
+	Cipher cip = cprod[0];
+	for (long i = 1; i < cnum; ++i) {
+		scheme.addAndEqual(cip, cprod[i]);
+	}
 	scheme.modSwitchAndEqual(cip, xyBits);
 
 	scheme.multByPolyAndEqual(cip, poly);
@@ -249,6 +253,7 @@ void CipherGD::encStepNLGD3(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, 
 
 	RR cnst = to_RR(1. - eta);
 	ZZ pcnst = EvaluatorUtils::evaluateVal(cnst, wBits);
+	bitsDown = xyBits + pBits + 1 * wBits;
 	if(etaprev < 0) {
 		RR cnst2 = to_RR(eta) / (1 - etaprev);
 		ZZ pcnst2 = EvaluatorUtils::evaluateVal(cnst2, wBits);
@@ -257,12 +262,12 @@ void CipherGD::encStepNLGD3(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, 
 		for (long i = first; i < last; ++i) {
 			scheme.multByConstAndEqual(cwData[i], pcnst);
 			scheme.modSwitchAndEqual(cwData[i], wBits);
-			scheme.modEmbedAndEqual(cwData[i], xyBits + pBits + 1 * wBits);
+			scheme.modEmbedAndEqual(cwData[i], bitsDown);
 			cgrad[i] = scheme.sub(cwData[i], cgrad[i]);
 
 			scheme.multByConstAndEqual(cvData[i], pcnst2);
 			scheme.modSwitchAndEqual(cvData[i], wBits);
-			scheme.modEmbedAndEqual(cvData[i], xyBits + pBits + 1 * wBits);
+			scheme.modEmbedAndEqual(cvData[i], bitsDown);
 
 			cwData[i] = scheme.add(cvData[i], cgrad[i]);
 			cvData[i] = cgrad[i];
@@ -273,13 +278,15 @@ void CipherGD::encStepNLGD3(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, 
 		for (long i = first; i < last; ++i) {
 			cvData[i] = scheme.multByConst(cwData[i], pcnst);
 			scheme.modSwitchAndEqual(cvData[i], wBits);
-			scheme.modEmbedAndEqual(cvData[i], xyBits + pBits + 2 * wBits);
+			scheme.modEmbedAndEqual(cvData[i], bitsDown);
 			scheme.subAndEqual(cvData[i], cgrad[i]);
-			scheme.modEmbedAndEqual(cwData[i], xyBits + pBits + 3 * wBits);
+			scheme.modEmbedAndEqual(cwData[i], bitsDown);
 			scheme.subAndEqual(cwData[i], cgrad[i]);
 		}
 		NTL_EXEC_RANGE_END;
 	}
+	delete[] cprod;
+	delete[] cgrad;
 }
 
 double* CipherGD::decwData(SecKey& secretKey, Cipher*& cw, long& factorDim, long& xyBatch, long& cnum, long& wBits) {
@@ -291,6 +298,7 @@ double* CipherGD::decwData(SecKey& secretKey, Cipher*& cw, long& factorDim, long
 			wi.e -= wBits;
 			w[xyBatch * i + l] = to_double(wi);
 		}
+		delete[] dcw;
 	}
 	CZZ* dcw = scheme.decrypt(secretKey, cw[cnum-1]);
 	long rest = factorDim - xyBatch * (cnum - 1);
@@ -299,5 +307,6 @@ double* CipherGD::decwData(SecKey& secretKey, Cipher*& cw, long& factorDim, long
 		wi.e -= wBits;
 		w[xyBatch * (cnum - 1) + l] = to_double(wi);
 	}
+	delete[] dcw;
 	return w;
 }
