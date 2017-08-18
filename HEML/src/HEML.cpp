@@ -1,3 +1,7 @@
+#include <NTL/BasicThreadPool.h>
+#include <Cipher.h>
+#include <CZZ.h>
+#include <Message.h>
 #include <Params.h>
 #include <PubKey.h>
 #include <Scheme.h>
@@ -5,18 +9,166 @@
 #include <SchemeAux.h>
 #include <SecKey.h>
 #include <TimeUtils.h>
-#include <TestScheme.h>
+#include <algorithm>
+#include <cmath>
+#include <iostream>
 
-#include "TestAK.h"
-#include "TestJH.h"
-#include "TestKW.h"
-
-#include <string>
+#include "CipherGD.h"
+#include "GD.h"
 
 using namespace std;
 
-void test() {
+void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, double learnPortion, bool is3approx, bool isEncrypted, bool isYfirst) {
+	cout << "!!! START TEST NLGD !!!" << endl;
+	//-----------------------------------------
+	TimeUtils timeutils;
+	SetNumThreads(8);
+	//-----------------------------------------
+	GD gd;
 
+	cout << "iter: " << iter << endl;
+	cout << "isEncrypted: " << isEncrypted << endl;
+	cout << "is3approx: " << is3approx << endl;
+	cout << "gammaDownCnst: " << gammaDownCnst << endl;
+	cout << "gammaUpCnst: " << gammaUpCnst << endl;
+
+	long factorDim = 0;
+	long sampleDim = 0;
+
+	long** xyData = gd.xyDataFromFile(filename, factorDim, sampleDim, isYfirst);
+	cout << "sampleDim: " << sampleDim << endl;
+	cout << "factorDim: " << factorDim << endl;
+
+	long fdimBits = (long)ceil(log2(factorDim));
+	cout << "fdimBits: " << fdimBits << endl;
+
+	long learnDim = (long)((double)sampleDim * learnPortion);
+	cout << "learnDim: " << learnDim << endl;
+
+	long ldimBits = (long)ceil(log2(learnDim));
+	cout << "ldimBits: " << ldimBits << endl;
+
+	long** xyDataLearn = gd.RandomxyDataLearn(xyData, learnDim, sampleDim, factorDim);
+
+	long xyBits = fdimBits + ldimBits + 20;
+	long wBits = fdimBits + ldimBits + 18;
+	long pBits = 16;
+	long lBits = wBits + 5;
+	cout << "xyBits: " << xyBits << endl;
+	cout << "wBits: " << wBits << endl;
+	cout << "pBits: " << pBits << endl;
+	cout << "lBits: " << lBits << endl;
+
+
+	long logq = is3approx ? iter * (2 * wBits + xyBits + pBits) + lBits + ldimBits + xyBits - wBits
+			: iter * (3 * wBits + xyBits + pBits) + lBits + ldimBits + xyBits - wBits;
+
+	long logN = Params::suggestlogN(80, logq);
+	cout << "logq: " << logq << endl;
+	cout << "logN: " << logN << endl;
+
+	long xybatchBits = min(logN - 1 - ldimBits, fdimBits);
+	long xyBatch = 1 << xybatchBits;
+	cout << "xyBatchBits: " << xybatchBits << endl;
+
+	long slotBits = ldimBits + xybatchBits;
+	long slots =  1 << slotBits;
+	long cnum = (long)ceil((double)factorDim / xyBatch);
+	cout << "slots: " << slots << endl;
+	cout << "cnum: " << cnum << endl;
+
+	double* vData = new double[factorDim];
+	double* wData = new double[factorDim];
+	for (long i = 0; i < factorDim; ++i) {
+		double tmp = 0.0;
+		for (long j = 0; j < learnDim; ++j) {
+			tmp += xyDataLearn[j][i];
+		}
+		tmp /= learnDim;
+		wData[i] = tmp;
+		vData[i] = tmp;
+	}
+
+	double* alpha = new double[iter + 2];
+	alpha[0] = 0.01;
+	for (long i = 1; i < iter + 2; ++i) {
+		alpha[i] = (1. + sqrt(1. + 4.0 * alpha[i-1] * alpha[i-1])) / 2.0;
+	}
+
+	double* eta = new double[iter + 1];
+	for (long i = 0; i < iter + 1; ++i) {
+		eta[i] = (1. - alpha[i]) / alpha[i+1];
+	}
+
+	double* gamma = new double[iter];
+	if(gammaDownCnst > 0) {
+		for (long i = 0; i < iter; ++i) {
+			gamma[i] = gammaUpCnst / gammaDownCnst / learnDim;
+		}
+	} else {
+		for (long i = 0; i < iter; ++i) {
+			gamma[i] = gammaUpCnst / (i - gammaDownCnst) / learnDim;
+		}
+	}
+
+	if(!isEncrypted) {
+		for (long k = 0; k < iter; ++k) {
+			gd.stepNLGD(xyDataLearn, wData, vData, factorDim, learnDim, gamma[k], eta[k+1]);
+			gd.check(xyData, wData, factorDim, sampleDim);
+		}
+	} else {
+		timeutils.start("Scheme generating...");
+		Params params(logN, logq);
+		SecKey secretKey(params);
+		PubKey publicKey(params, secretKey);
+		SchemeAux schemeaux(params, wBits);
+		Scheme scheme(params, publicKey, schemeaux);
+		SchemeAlgo algo(scheme);
+		CipherGD cipherGD(scheme, algo, secretKey);
+		timeutils.stop("Scheme generated");
+
+		timeutils.start("Polynomial generating...");
+		ZZ p = power2_ZZ(pBits);
+		CZZ* pvals = new CZZ[slots];
+		for (long j = 0; j < learnDim; ++j) {
+			pvals[xyBatch * j] = CZZ(p);
+		}
+		CZZ* pdvals = scheme.groupidx(pvals, slots);
+		Message msg = scheme.encode(pdvals, slots);
+		timeutils.stop("Polynomial generated");
+
+		timeutils.start("Encrypting xyData...");
+		Cipher* cxyData = cipherGD.encxyData(xyDataLearn, slots, factorDim, learnDim, xyBatch, cnum, xyBits);
+		timeutils.stop("xyData encrypted");
+
+		timeutils.start("Encrypting wData and vData...");
+		Cipher* cwData = cipherGD.encwData(cxyData, slotBits, ldimBits, xybatchBits, cnum, xyBits, wBits);
+		Cipher* cvData = new Cipher[cnum];
+		for (long i = 0; i < cnum; ++i) {
+			cvData[i] = cwData[i];
+		}
+		timeutils.stop("wData and vData encrypted");
+
+		for (long k = 0; k < iter; ++k) {
+			if(is3approx) {
+				timeutils.start("Encrypting NLGD step with degree 3 approx...");
+				cipherGD.encStepNLGD3(cxyData, cwData, cvData, msg.mx, slots, learnDim, xybatchBits, xyBatch, cnum, gamma[k], eta[k+1], eta[k], xyBits, wBits, pBits);
+				timeutils.stop("NLGD step with degree 3 approx, finished");
+			} else {
+				timeutils.start("Encrypting NLGD step with degree 5 approx...");
+				cipherGD.encStepNLGD5(cxyData, cwData, cvData, msg.mx, slots, learnDim, xybatchBits, xyBatch, cnum, gamma[k], eta[k+1], eta[k], xyBits, wBits, pBits);
+				timeutils.stop("NLGD step with degree 5 approx finished");
+			}
+
+			timeutils.start("Decrypting wData");
+			double* dw = cipherGD.decwData(secretKey,cwData, factorDim, xyBatch, cnum, wBits);
+			timeutils.stop("wData decrypted");
+
+			gd.check(xyData, dw, factorDim, sampleDim);
+		}
+	}
+	//-----------------------------------------
+	cout << "!!! END TEST NLGD !!!" << endl;
 }
 
 int main() {
@@ -32,22 +184,37 @@ int main() {
 //	string filename = "data/data67x216.txt";   bool isYfirst = false; //  216/216
 //	string filename = "data/data103x1579.txt"; bool isYfirst = true;  //  1086/1579
 
-//	13: logq <= 155 (secure parameters)
-//	14: logq <= 310 (secure parameters)
-//	15: logq <= 620 (secure parameters)
-//	16: logq <= 1241 (secure parameters)
-//	17: logq <= 2483 (secure parameters)
+	long iter = 7;
 
-	long iter = 5;
+	/*
+	 * gammaDownCnst > 0 : gamma = gammaUpCnst / gammaDownCnst / learnDim - constant gamma
+	 * gammaDownCnst < 0 : gamma = gammaUpCnst / (i + |gammaDownCnst|) / learnDim - decreasing gamma
+	 */
+	double gammaDownCnst = -3.;
+	double gammaUpCnst = 2.;
 
-	double gammaDownCnst = -3.; // if gammaCnst > 0 then gammaUpCnst / learndim / gammaCnst, else gammaUpCnst / learndim / (|gammaCnst| + i)
-	double gammaUpCnst = 2.; // gammaUpCnst / ...
+	/*
+	 * portion used in learning (randomly chosen from sample set)
+	 */
+	double learnPortion = 0.9;
 
-	double learnPortion = 0.9; // portion of learnPortion to be learned
-	bool is3approx = false; // if true then 3 degree approximation, else 7 degree approximation
-	bool isEncrypted = true; // if true then encrypted learn, else unecnrypted (for testing)
+	/*
+	 * false : use 5 degree polynomial approximation of sigmoid function
+	 * true  : use 3 degree polynomial approximation of sigmoid function
+	 */
+	bool is3approx = false;
+
+	/*
+	 * false : unencrypted Nesterov Logistic Gradient Descent
+	 * true  : encrypted Nesterov Logistic Gradient Descent
+	 */
+	bool isEncrypted = true;
 
 
-	TestAK::testNLGD(filename, iter, gammaDownCnst, gammaUpCnst, learnPortion, is3approx, isEncrypted, isYfirst);
+	run(filename, iter, gammaDownCnst, gammaUpCnst, learnPortion, is3approx, isEncrypted, isYfirst);
+
+
+//	TestScheme::testEncodeBatch(13, 155, 30, 7, 3);
+
 	return 0;
 }

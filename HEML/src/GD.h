@@ -19,7 +19,7 @@ public:
 
 	long** xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool isfirst = true);
 
-	long** pickxyDataLearn(long**& xyData, long& learnDim, long& sampleDim, long& factorDim);
+	long** RandomxyDataLearn(long**& xyData, long& learnDim, long& sampleDim, long& factorDim);
 
 	double innerprod(double*& w, long*& xy, long& size);
 

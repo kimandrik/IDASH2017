@@ -95,7 +95,7 @@ long** GD::xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool i
 	return xyData;
 }
 
-long** GD::pickxyDataLearn(long**& xyData, long& learnDim, long& sampleDim, long& factorDim) {
+long** GD::RandomxyDataLearn(long**& xyData, long& learnDim, long& sampleDim, long& factorDim) {
 	long** res = new long*[learnDim];
 
 	bool* notTaken = new bool[sampleDim];

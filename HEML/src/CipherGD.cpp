@@ -1,20 +1,15 @@
 #include "CipherGD.h"
 
-#include <NTL/ZZ.h>
-#include <NTL/BasicThreadPool.h>
-
-#include <Message.h>
 #include <Cipher.h>
 #include <CZZ.h>
 #include <EvaluatorUtils.h>
+#include <NTL/BasicThreadPool.h>
 #include <NTL/RR.h>
 #include <NTL/ZZ.h>
-#include <Params.h>
 #include <SchemeAux.h>
 #include <cmath>
-#include <map>
 
-Cipher* CipherGD::encxyData(long**& xyData, long& slots, long& factorDim, long& learnDim, long& learnDimPo2, long& xyBatch, long& cnum, long& xyBits) {
+Cipher* CipherGD::encxyData(long**& xyData, long& slots, long& factorDim, long& learnDim, long& xyBatch, long& cnum, long& xyBits) {
 	Cipher* cxyData = new Cipher[cnum];
 	ZZ precision = power2_ZZ(xyBits);
 	NTL_EXEC_RANGE(cnum, first, last);
@@ -65,7 +60,7 @@ Cipher* CipherGD::encwData(Cipher*& cxyData, long& slotBits, long& ldimBits, lon
 	return cwData;
 }
 
-void CipherGD::encStepNLGD5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta, double& etaprev, long& xyBits, long& wBits, long& pBits) {
+void CipherGD::encStepNLGD5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slots, long& learnDim, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta, double& etaprev, long& xyBits, long& wBits, long& pBits) {
 
 	Cipher* cprod = new Cipher[cnum];
 	long bitsDown = cxyData[0].cbits - cwData[0].cbits;
@@ -178,7 +173,7 @@ void CipherGD::encStepNLGD5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, 
 	}
 }
 
-void CipherGD::encStepNLGD3(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slots, long& learnDim, long learnDimPo2, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta, double& etaprev, long& xyBits, long& wBits, long& pBits) {
+void CipherGD::encStepNLGD3(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slots, long& learnDim, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta, double& etaprev, long& xyBits, long& wBits, long& pBits) {
 
 	Cipher* cprod = new Cipher[cnum];
 	long bitsDown = cxyData[0].cbits - cwData[0].cbits;
