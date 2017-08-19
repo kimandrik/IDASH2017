@@ -77,18 +77,6 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 	cout << "slots: " << slots << endl;
 	cout << "cnum: " << cnum << endl;
 
-	double* vData = new double[factorDim];
-	double* wData = new double[factorDim];
-	for (long i = 0; i < factorDim; ++i) {
-		double tmp = 0.0;
-		for (long j = 0; j < learnDim; ++j) {
-			tmp += xyDataLearn[j][i];
-		}
-		tmp /= learnDim;
-		wData[i] = tmp;
-		vData[i] = tmp;
-	}
-
 	double alpha0, alpha1, alpha2;
 	double eta0, eta1;
 	double gamma;
@@ -101,6 +89,18 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 	alpha2 = (1. + sqrt(1. + 4.0 * alpha1 * alpha1)) / 2.0;
 
 	if(!isEncrypted) {
+		double* vData = new double[factorDim];
+		double* wData = new double[factorDim];
+		for (long i = 0; i < factorDim; ++i) {
+			double tmp = 0.0;
+			for (long j = 0; j < learnDim; ++j) {
+				tmp += xyDataLearn[j][i];
+			}
+			tmp /= learnDim;
+			wData[i] = tmp;
+			vData[i] = tmp;
+		}
+
 		for (long k = 0; k < iter; ++k) {
 
 			eta1 = (1 - alpha1) / alpha2;
