@@ -31,6 +31,7 @@
 									<listOptionValue builtIn="false" value="/Users/kimandrik/git/heaan/HEAAN/Debug"/>
 									<listOptionValue builtIn="false" value="/usr/local/lib"/>
 								</option>
+								<option id="macosx.cpp.link.option.flags.1049376720" superClass="macosx.cpp.link.option.flags" useByScannerDiscovery="false" value="-pthread" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.macosx.cpp.linker.input.1377191732" superClass="cdt.managedbuild.tool.macosx.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -48,7 +49,7 @@
 									<listOptionValue builtIn="false" value="/usr/local/include"/>
 									<listOptionValue builtIn="false" value="/Users/kimandrik/git/heaan/HEAAN/src"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.other.other.1155359534" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-c -std=c++11 -pthread" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.1155359534" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-pthread -c -std=c++11" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.warnings.allwarn.1354421815" name="All warnings (-Wall)" superClass="gnu.cpp.compiler.option.warnings.allwarn" useByScannerDiscovery="false" value="false" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1109038716" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>

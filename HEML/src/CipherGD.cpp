@@ -289,8 +289,7 @@ void CipherGD::encStepNLGD3(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, 
 	delete[] cgrad;
 }
 
-double* CipherGD::decwData(SecKey& secretKey, Cipher*& cw, long& factorDim, long& xyBatch, long& cnum, long& wBits) {
-	double* w = new double[factorDim];
+void CipherGD::decwData(double*& w, Cipher*& cw, long& factorDim, long& xyBatch, long& cnum, long& wBits) {
 	for (long i = 0; i < (cnum - 1); ++i) {
 		CZZ* dcw = scheme.decrypt(secretKey, cw[i]);
 		for (long l = 0; l < xyBatch; ++l) {
@@ -308,5 +307,4 @@ double* CipherGD::decwData(SecKey& secretKey, Cipher*& cw, long& factorDim, long
 		w[xyBatch * (cnum - 1) + l] = to_double(wi);
 	}
 	delete[] dcw;
-	return w;
 }

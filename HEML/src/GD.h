@@ -9,27 +9,20 @@ using namespace std;
 using namespace NTL;
 
 class GD {
+
 public:
 
-	//-----------------------------------------
+	static long** xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool isfirst = true);
 
-	GD() {}
+	static long** RandomxyDataLearn(long**& xyData, long& learnDim, long& sampleDim, long& factorDim);
 
-	//-----------------------------------------
+	static double innerprod(double*& w, long*& xy, long& size);
 
-	long** xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool isfirst = true);
+	static void stepLGD(long**& xyData, double*& wData, long& factorDim, long& learnDim, double& lambda, double& gamma);
 
-	long** RandomxyDataLearn(long**& xyData, long& learnDim, long& sampleDim, long& factorDim);
+	static void stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta);
 
-	double innerprod(double*& w, long*& xy, long& size);
-
-	void stepLGD(long**& xyData, double*& wData, long& factorDim, long& learnDim, double& lambda, double& gamma);
-
-	void stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta);
-
-	double* wsum(double**& wdata, long& factorDim, long& wBatch);
-
-	void check(long**& xyData, double*& w, long& factorDim, long& sampleDim);
+	static void check(long**& xyData, double*& w, long& factorDim, long& sampleDim);
 
 };
 

@@ -89,32 +89,30 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 		vData[i] = tmp;
 	}
 
-	double* alpha = new double[iter + 2];
-	alpha[0] = 0.01;
-	for (long i = 1; i < iter + 2; ++i) {
-		alpha[i] = (1. + sqrt(1. + 4.0 * alpha[i-1] * alpha[i-1])) / 2.0;
-	}
+	double alpha0, alpha1, alpha2;
+	double eta0, eta1;
+	double gamma;
+	/*
+	 * starting with .01, but actually should start with 0
+	 */
+	alpha0 = 0.01;
 
-	double* eta = new double[iter + 1];
-	for (long i = 0; i < iter + 1; ++i) {
-		eta[i] = (1. - alpha[i]) / alpha[i+1];
-	}
-
-	double* gamma = new double[iter];
-	if(gammaDownCnst > 0) {
-		for (long i = 0; i < iter; ++i) {
-			gamma[i] = gammaUpCnst / gammaDownCnst / learnDim;
-		}
-	} else {
-		for (long i = 0; i < iter; ++i) {
-			gamma[i] = gammaUpCnst / (i - gammaDownCnst) / learnDim;
-		}
-	}
+	alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;
+	alpha2 = (1. + sqrt(1. + 4.0 * alpha1 * alpha1)) / 2.0;
 
 	if(!isEncrypted) {
 		for (long k = 0; k < iter; ++k) {
-			gd.stepNLGD(xyDataLearn, wData, vData, factorDim, learnDim, gamma[k], eta[k+1]);
+
+			eta1 = (1 - alpha1) / alpha2;
+			gamma = gammaDownCnst > 0 ? gammaUpCnst / gammaDownCnst / learnDim : gammaUpCnst / (k - gammaDownCnst) / learnDim;
+
+			gd.stepNLGD(xyDataLearn, wData, vData, factorDim, learnDim, gamma, eta1);
 			gd.check(xyData, wData, factorDim, sampleDim);
+
+			alpha0 = alpha1;
+			alpha1 = alpha2;
+			alpha2 = (1. + sqrt(1. + 4.0 * alpha1 * alpha1)) / 2.0;
+
 		}
 	} else {
 		timeutils.start("Scheme generating...");
@@ -154,23 +152,32 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 		}
 		timeutils.stop("wData and vData encrypted");
 
+		double* dw = new double[factorDim];
 		for (long k = 0; k < iter; ++k) {
+
+			eta0 = (1 - alpha0) / alpha1;
+			eta1 = (1 - alpha1) / alpha2;
+			gamma = gammaDownCnst > 0 ? gammaUpCnst / gammaDownCnst / learnDim : gammaUpCnst / (k - gammaDownCnst) / learnDim;
+
 			if(is3approx) {
 				timeutils.start("Encrypting NLGD step with degree 3 approx...");
-				cipherGD.encStepNLGD3(cxyData, cwData, cvData, msg.mx, slots, learnDim, xybatchBits, xyBatch, cnum, gamma[k], eta[k+1], eta[k], xyBits, wBits, pBits);
+				cipherGD.encStepNLGD3(cxyData, cwData, cvData, msg.mx, slots, learnDim, xybatchBits, xyBatch, cnum, gamma, eta1, eta0, xyBits, wBits, pBits);
 				timeutils.stop("NLGD step with degree 3 approx, finished");
 			} else {
 				timeutils.start("Encrypting NLGD step with degree 5 approx...");
-				cipherGD.encStepNLGD5(cxyData, cwData, cvData, msg.mx, slots, learnDim, xybatchBits, xyBatch, cnum, gamma[k], eta[k+1], eta[k], xyBits, wBits, pBits);
+				cipherGD.encStepNLGD5(cxyData, cwData, cvData, msg.mx, slots, learnDim, xybatchBits, xyBatch, cnum, gamma, eta1, eta0, xyBits, wBits, pBits);
 				timeutils.stop("NLGD step with degree 5 approx finished");
 			}
 
+			alpha0 = alpha1;
+			alpha1 = alpha2;
+			alpha2 = (1. + sqrt(1. + 4.0 * alpha1 * alpha1)) / 2.0;
+
 			timeutils.start("Decrypting wData");
-			double* dw = cipherGD.decwData(secretKey,cwData, factorDim, xyBatch, cnum, wBits);
+			cipherGD.decwData(dw, cwData, factorDim, xyBatch, cnum, wBits);
 			timeutils.stop("wData decrypted");
 
 			gd.check(xyData, dw, factorDim, sampleDim);
-			delete[] dw;
 		}
 	}
 	//-----------------------------------------
@@ -190,13 +197,13 @@ int main() {
 //	string filename = "data/data67x216.txt";   bool isYfirst = false; //  216/216
 //	string filename = "data/data103x1579.txt"; bool isYfirst = true;  //  1086/1579
 
-	long iter = 3;
+	long iter = 5;
 
 	/*
 	 * gammaDownCnst > 0 : gamma = gammaUpCnst / gammaDownCnst / learnDim - constant gamma
 	 * gammaDownCnst < 0 : gamma = gammaUpCnst / (i + |gammaDownCnst|) / learnDim - decreasing gamma
 	 */
-	double gammaDownCnst = -3.;
+	double gammaDownCnst = -2.;
 	double gammaUpCnst = 2.;
 
 	/*
