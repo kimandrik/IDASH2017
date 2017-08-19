@@ -113,6 +113,7 @@ long** GD::RandomxyDataLearn(long**& xyData, long& learnDim, long& sampleDim, lo
 			res[idx++] = xyData[i];
 		}
 	}
+	delete[] notTaken;
 	return res;
 }
 
@@ -141,6 +142,7 @@ void GD::stepLGD(long**& xyData, double*& wData, long& factorDim, long& learnDim
 	for (int i = 0; i < factorDim; ++i) {
 		wData[i] -= gamma * grad[i];
 	}
+	delete[] grad;
 }
 
 void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta) {
@@ -165,6 +167,7 @@ void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 		wData[i] = (1.0 - eta) * tmpv + eta * vData[i];
 		vData[i] = tmpv;
 	}
+	delete[] grad;
 }
 
 void GD::check(long**& xyData, double*& w, long& factorDim, long& sampleDim) {
