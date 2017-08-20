@@ -24,7 +24,6 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 	TimeUtils timeutils;
 	SetNumThreads(8);
 	//-----------------------------------------
-	GD gd;
 
 	cout << "iter: " << iter << endl;
 	cout << "isEncrypted: " << isEncrypted << endl;
@@ -35,7 +34,7 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 	long factorDim = 0;
 	long sampleDim = 0;
 
-	long** xyData = gd.xyDataFromFile(filename, factorDim, sampleDim, isYfirst);
+	long** xyData = GD::xyDataFromFile(filename, factorDim, sampleDim, isYfirst);
 	cout << "sampleDim: " << sampleDim << endl;
 	cout << "factorDim: " << factorDim << endl;
 
@@ -48,7 +47,7 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 	long ldimBits = (long)ceil(log2(learnDim));
 	cout << "ldimBits: " << ldimBits << endl;
 
-	long** xyDataLearn = gd.RandomxyDataLearn(xyData, learnDim, sampleDim, factorDim);
+	long** xyDataLearn = GD::RandomxyDataLearn(xyData, learnDim, sampleDim, factorDim);
 
 	long wBits = max(fdimBits + ldimBits + 18, 28);
 	long xyBits = wBits + 2;
@@ -58,7 +57,6 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 	cout << "wBits: " << wBits << endl;
 	cout << "pBits: " << pBits << endl;
 	cout << "lBits: " << lBits << endl;
-
 
 	long logq = is3approx ? (ldimBits + xyBits) + iter * (2 * wBits + xyBits + pBits) + lBits
 			: (ldimBits + xyBits) + iter * (3 * wBits + xyBits + pBits) + lBits;
@@ -80,9 +78,7 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 	double alpha0, alpha1, alpha2;
 	double eta0, eta1;
 	double gamma;
-	/*
-	 * starting with .01, but actually should start with 0
-	 */
+
 	alpha0 = 0.01;
 
 	alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;
@@ -106,8 +102,8 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 			eta1 = (1 - alpha1) / alpha2;
 			gamma = gammaDownCnst > 0 ? gammaUpCnst / gammaDownCnst / learnDim : gammaUpCnst / (k - gammaDownCnst) / learnDim;
 
-			gd.stepNLGD(xyDataLearn, wData, vData, factorDim, learnDim, gamma, eta1);
-			gd.check(xyData, wData, factorDim, sampleDim);
+			GD::stepNLGD(xyDataLearn, wData, vData, factorDim, learnDim, gamma, eta1);
+			GD::check(xyData, wData, factorDim, sampleDim);
 
 			alpha0 = alpha1;
 			alpha1 = alpha2;
@@ -152,7 +148,7 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 		}
 		timeutils.stop("wData and vData encrypted");
 
-		double* dw = new double[factorDim];
+		double* dwData = new double[factorDim];
 		for (long k = 0; k < iter; ++k) {
 
 			eta0 = (1 - alpha0) / alpha1;
@@ -161,11 +157,11 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 
 			if(is3approx) {
 				timeutils.start("Encrypting NLGD step with degree 3 approx...");
-				cipherGD.encStepNLGD3(cxyData, cwData, cvData, msg.mx, slots, learnDim, xybatchBits, xyBatch, cnum, gamma, eta1, eta0, xyBits, wBits, pBits);
+				cipherGD.encStepNLGD3(cxyData, cwData, cvData, msg.mx, slotBits, xybatchBits, cnum, gamma, eta1, eta0, xyBits, wBits, pBits);
 				timeutils.stop("NLGD step with degree 3 approx, finished");
 			} else {
 				timeutils.start("Encrypting NLGD step with degree 5 approx...");
-				cipherGD.encStepNLGD5(cxyData, cwData, cvData, msg.mx, slots, learnDim, xybatchBits, xyBatch, cnum, gamma, eta1, eta0, xyBits, wBits, pBits);
+				cipherGD.encStepNLGD5(cxyData, cwData, cvData, msg.mx, slotBits, xybatchBits, cnum, gamma, eta1, eta0, xyBits, wBits, pBits);
 				timeutils.stop("NLGD step with degree 5 approx finished");
 			}
 
@@ -174,10 +170,10 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 			alpha2 = (1. + sqrt(1. + 4.0 * alpha1 * alpha1)) / 2.0;
 
 			timeutils.start("Decrypting wData");
-			cipherGD.decwData(dw, cwData, factorDim, xyBatch, cnum, wBits);
+			cipherGD.decwData(dwData, cwData, factorDim, xyBatch, cnum, wBits);
 			timeutils.stop("wData decrypted");
 
-			gd.check(xyData, dw, factorDim, sampleDim);
+			GD::check(xyData, dwData, factorDim, sampleDim);
 		}
 	}
 	//-----------------------------------------
@@ -186,7 +182,7 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 
 int main() {
 
-	string filename = "data/data5x500.txt";    bool isYfirst = false; //  421/500
+//	string filename = "data/data5x500.txt";    bool isYfirst = false; //  421/500
 //	string filename = "data/data9x1253.txt";   bool isYfirst = false; //  1147/1253
 //	string filename = "data/data15x1500.txt";  bool isYfirst = false; //  1277/1500
 //	string filename = "data/data16x101.txt";   bool isYfirst = false; //  101/101
@@ -195,9 +191,9 @@ int main() {
 //	string filename = "data/data45x296.txt";   bool isYfirst = false; //  257/296
 //	string filename = "data/data51x653.txt";   bool isYfirst = false; //  590/653
 //	string filename = "data/data67x216.txt";   bool isYfirst = false; //  216/216
-//	string filename = "data/data103x1579.txt"; bool isYfirst = true;  //  1086/1579
+	string filename = "data/data103x1579.txt"; bool isYfirst = true;  //  1086/1579
 
-	long iter = 5;
+	long iter = 7;
 
 	/*
 	 * gammaDownCnst > 0 : gamma = gammaUpCnst / gammaDownCnst / learnDim - constant gamma
@@ -221,13 +217,9 @@ int main() {
 	 * false : unencrypted Nesterov Logistic Gradient Descent
 	 * true  : encrypted Nesterov Logistic Gradient Descent
 	 */
-	bool isEncrypted = true;
-
+	bool isEncrypted = false;
 
 	run(filename, iter, gammaDownCnst, gammaUpCnst, learnPortion, is3approx, isEncrypted, isYfirst);
-
-
-//	TestScheme::testEncodeBatch(13, 155, 30, 7, 3);
 
 	return 0;
 }

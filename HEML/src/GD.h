@@ -22,7 +22,7 @@ public:
 
 	static void stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta);
 
-	static void check(long**& xyData, double*& w, long& factorDim, long& sampleDim);
+	static void check(long**& xyData, double*& wData, long& factorDim, long& sampleDim);
 
 };
 

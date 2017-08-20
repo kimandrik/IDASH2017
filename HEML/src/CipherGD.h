@@ -17,10 +17,10 @@ public:
 	void encxyData(Cipher*& cxyData, long**& xyData, long& slots, long& factorDim, long& learnDim, long& xyBatch, long& cnum, long& xyBits);
 	void encwData(Cipher*& cwData, Cipher*& cxyData, long& slotBits, long& ldimBits, long& xyBatchBits, long& cnum, long& xyBits, long& wBits);
 
-	void encStepNLGD5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slots, long& learnDim, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta, double& etaprev, long& xyBits, long& wBits, long& pBits);
-	void encStepNLGD3(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slots, long& learnDim, long& xybatchBits, long& xyBatch, long& cnum, double& gamma, double& eta, double& etaprev, long& xyBits, long& wBits, long& pBits);
+	void encStepNLGD5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slotBits, long& xybatchBits, long& cnum, double& gamma, double& eta, double& etaprev, long& xyBits, long& wBits, long& pBits);
+	void encStepNLGD3(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slotBits, long& xybatchBits, long& cnum, double& gamma, double& eta, double& etaprev, long& xyBits, long& wBits, long& pBits);
 
-	void decwData(double*& w, Cipher*& cw, long& factorDim, long& xyBatch, long& cnum, long& wBits);
+	void decwData(double*& wData, Cipher*& cwData, long& factorDim, long& xyBatch, long& cnum, long& wBits);
 };
 
 #endif /* CIPHERGD_H_ */

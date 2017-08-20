@@ -170,16 +170,16 @@ void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 	delete[] grad;
 }
 
-void GD::check(long**& xyData, double*& w, long& factorDim, long& sampleDim) {
+void GD::check(long**& xyData, double*& wData, long& factorDim, long& sampleDim) {
 	cout << "w:";
 	for (long i = 0; i < factorDim; ++i) {
-		cout << w[i] << ",";
+		cout << wData[i] << ",";
 	}
 	cout << endl;
 
 	long num = 0;
 	for(long j = 0; j < sampleDim; ++j){
-		if(innerprod(w, xyData[j], factorDim) > 0) num++;
+		if(innerprod(wData, xyData[j], factorDim) > 0) num++;
 	}
 	cout << "Correctness: " << num << "/" << sampleDim << endl;
 
