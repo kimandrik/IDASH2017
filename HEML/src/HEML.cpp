@@ -139,10 +139,6 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 		cipherGD.encxyData(cxyData, xyDataLearn, slots, factorDim, learnDim, xyBatch, cnum, xyBits);
 		timeutils.stop("xyData encrypted");
 
-		for (long j = 0; j < learnDim; ++j) {
-			delete [] xyDataLearn[j];
-		}
-		delete [] xyDataLearn;
 		Cipher* cwData = new Cipher[cnum];
 		Cipher* cvData = new Cipher[cnum];
 		timeutils.start("Encrypting wData and vData...");

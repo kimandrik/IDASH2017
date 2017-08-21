@@ -20,17 +20,19 @@ void CipherGD::encxyData(Cipher*& cxyData, long**& xyData, long& slots, long& fa
 		}
 		cxyData[i] = scheme.encrypt(pxyData, slots);
 	}
+
 	long rest = factorDim - xyBatch * (cnum - 1);
 	for (long j = 0; j < learnDim; ++j) {
 		for (long l = 0; l < rest; ++l) {
 			pxyData[xyBatch * j + l] = xyData[j][xyBatch * (cnum - 1) + l] == -1 ? CZZ(-precision) :
 					xyData[j][xyBatch * (cnum - 1) + l] == 1 ? CZZ(precision) : CZZ();
 		}
-		for (int l = rest; l < xyBatch; ++l) {
+		for (long l = rest; l < xyBatch; ++l) {
 			pxyData[xyBatch * j + l] = CZZ();
 		}
 	}
 	cxyData[cnum - 1] = scheme.encrypt(pxyData, slots);
+
 	delete[] pxyData;
 }
 
