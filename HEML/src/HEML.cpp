@@ -22,7 +22,7 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 	cout << "!!! START NLGD !!!" << endl;
 	//-----------------------------------------
 	TimeUtils timeutils;
-	SetNumThreads(8);
+	SetNumThreads(4);
 	//-----------------------------------------
 
 	cout << "iter: " << iter << endl;
@@ -139,6 +139,10 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 		cipherGD.encxyData(cxyData, xyDataLearn, slots, factorDim, learnDim, xyBatch, cnum, xyBits);
 		timeutils.stop("xyData encrypted");
 
+		for (long j = 0; j < learnDim; ++j) {
+			delete [] xyDataLearn[j];
+		}
+		delete [] xyDataLearn;
 		Cipher* cwData = new Cipher[cnum];
 		Cipher* cvData = new Cipher[cnum];
 		timeutils.start("Encrypting wData and vData...");
@@ -182,7 +186,7 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 
 int main() {
 
-	string filename = "data/data5x500.txt";    bool isYfirst = false; //  421/500
+//	string filename = "data/data5x500.txt";    bool isYfirst = false; //  421/500
 //	string filename = "data/data9x1253.txt";   bool isYfirst = false; //  1147/1253
 //	string filename = "data/data15x1500.txt";  bool isYfirst = false; //  1277/1500
 //	string filename = "data/data16x101.txt";   bool isYfirst = false; //  101/101
@@ -191,7 +195,7 @@ int main() {
 //	string filename = "data/data45x296.txt";   bool isYfirst = false; //  257/296
 //	string filename = "data/data51x653.txt";   bool isYfirst = false; //  590/653
 //	string filename = "data/data67x216.txt";   bool isYfirst = false; //  216/216
-//	string filename = "data/data103x1579.txt"; bool isYfirst = true;  //  1086/1579
+	string filename = "data/data103x1579.txt"; bool isYfirst = true;  //  1086/1579
 
 	long iter = 7;
 
