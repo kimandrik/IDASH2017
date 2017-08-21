@@ -1,12 +1,9 @@
 #ifndef SGD_SGD_H_
 #define SGD_SGD_H_
 
-#include <Cipher.h>
-#include <Scheme.h>
-#include <SchemeAlgo.h>
+#include <iostream>
 
 using namespace std;
-using namespace NTL;
 
 class GD {
 

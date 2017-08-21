@@ -7,39 +7,31 @@
 #include <NTL/RR.h>
 #include <NTL/ZZ.h>
 #include <SchemeAux.h>
-#include <cmath>
 
 void CipherGD::encxyData(Cipher*& cxyData, long**& xyData, long& slots, long& factorDim, long& learnDim, long& xyBatch, long& cnum, long& xyBits) {
 	ZZ precision = power2_ZZ(xyBits);
-	NTL_EXEC_RANGE(cnum, first, last);
-	for (long i = first; i < last; ++i) {
-		CZZ* pxyData = new CZZ[slots];
-		if(i != (cnum - 1)) {
+	CZZ* pxyData = new CZZ[slots];
+	for (long i = 0; i < cnum - 1; ++i) {
+		for (long j = 0; j < learnDim; ++j) {
 			for (long l = 0; l < xyBatch; ++l) {
-				for (long j = 0; j < learnDim; ++j) {
-					if(xyData[j][xyBatch * i + l] == -1) {
-						pxyData[xyBatch * j + l] = CZZ(-precision);
-					} else if(xyData[j][xyBatch * i + l] == 1) {
-						pxyData[xyBatch * j + l] = CZZ(precision);
-					}
-				}
-			}
-		} else {
-			long rest = factorDim - xyBatch * i;
-			for (long l = 0; l < rest; ++l) {
-				for (long j = 0; j < learnDim; ++j) {
-					if(xyData[j][xyBatch * i + l] == -1) {
-						pxyData[xyBatch * j + l] = CZZ(-precision);
-					} else if(xyData[j][xyBatch * i + l] == 1) {
-						pxyData[xyBatch * j + l] = CZZ(precision);
-					}
-				}
+				pxyData[xyBatch * j + l] = xyData[j][xyBatch * i + l] == -1 ? CZZ(-precision) :
+						xyData[j][xyBatch * i + l] == 1 ? CZZ(precision) : CZZ();
 			}
 		}
 		cxyData[i] = scheme.encrypt(pxyData, slots);
-		delete[] pxyData;
 	}
-	NTL_EXEC_INDEX_END;
+	long rest = factorDim - xyBatch * (cnum - 1);
+	for (long j = 0; j < learnDim; ++j) {
+		for (long l = 0; l < rest; ++l) {
+			pxyData[xyBatch * j + l] = xyData[j][xyBatch * (cnum - 1) + l] == -1 ? CZZ(-precision) :
+					xyData[j][xyBatch * (cnum - 1) + l] == 1 ? CZZ(precision) : CZZ();
+		}
+		for (int l = rest; l < xyBatch; ++l) {
+			pxyData[xyBatch * j + l] = CZZ();
+		}
+	}
+	cxyData[cnum - 1] = scheme.encrypt(pxyData, slots);
+	delete[] pxyData;
 }
 
 void CipherGD::encwData(Cipher*& cwData, Cipher*& cxyData, long& slotBits, long& ldimBits, long& xyBatchBits, long& cnum, long& xyBits, long& wBits) {
@@ -58,8 +50,8 @@ void CipherGD::encwData(Cipher*& cwData, Cipher*& cxyData, long& slotBits, long&
 
 void CipherGD::encStepNLGD5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& slotBits, long& xybatchBits, long& cnum, double& gamma, double& eta, double& etaprev, long& xyBits, long& wBits, long& pBits) {
 	Cipher* cprod = new Cipher[cnum];
-
 	long bitsDown = cxyData[0].cbits - cwData[0].cbits;
+
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
 		scheme.modEmbedAndEqual(cxyData[i], bitsDown);
@@ -127,6 +119,8 @@ void CipherGD::encStepNLGD5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, 
 	}
 	NTL_EXEC_RANGE_END;
 
+	delete[] cprod;
+
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
 		for (long l = xybatchBits; l < slotBits; ++l) {
@@ -169,7 +163,6 @@ void CipherGD::encStepNLGD5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, 
 		}
 		NTL_EXEC_RANGE_END;
 	}
-	delete[] cprod;
 	delete[] cgrad;
 }
 

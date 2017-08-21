@@ -1,14 +1,13 @@
 #include "GD.h"
 
-#include <EvaluatorUtils.h>
-#include <CZZ.h>
-#include <NTL/BasicThreadPool.h>
 #include <NTL/ZZ.h>
 #include <math.h>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
+
+using namespace NTL;
 
 long** GD::xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool isfirst) {
 	vector<vector<long>> xdata;

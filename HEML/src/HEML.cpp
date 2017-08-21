@@ -1,15 +1,15 @@
-#include <NTL/BasicThreadPool.h>
 #include <Cipher.h>
 #include <CZZ.h>
 #include <Message.h>
+#include <NTL/BasicThreadPool.h>
+#include <NTL/tools.h>
+#include <NTL/ZZ.h>
 #include <Params.h>
 #include <PubKey.h>
 #include <Scheme.h>
-#include <SchemeAlgo.h>
 #include <SchemeAux.h>
 #include <SecKey.h>
 #include <TimeUtils.h>
-#include <algorithm>
 #include <cmath>
 #include <iostream>
 
@@ -123,13 +123,13 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 		timeutils.start("Polynomial generating...");
 		ZZ p = power2_ZZ(pBits);
 		CZZ* pvals = new CZZ[slots];
-		for (long j = 0; j < learnDim; ++j) {
-			pvals[xyBatch * j] = CZZ(p);
+		for (long j = 0; j < slots; j += xyBatch) {
+			pvals[j] = CZZ(p);
 		}
 		CZZ* pdvals = scheme.groupidx(pvals, slots);
-		Message msg = scheme.encode(pdvals, slots);
-
 		delete[] pvals;
+
+		Message msg = scheme.encode(pdvals, slots);
 		delete[] pdvals;
 
 		timeutils.stop("Polynomial generated");
@@ -182,7 +182,7 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 
 int main() {
 
-//	string filename = "data/data5x500.txt";    bool isYfirst = false; //  421/500
+	string filename = "data/data5x500.txt";    bool isYfirst = false; //  421/500
 //	string filename = "data/data9x1253.txt";   bool isYfirst = false; //  1147/1253
 //	string filename = "data/data15x1500.txt";  bool isYfirst = false; //  1277/1500
 //	string filename = "data/data16x101.txt";   bool isYfirst = false; //  101/101
@@ -191,13 +191,13 @@ int main() {
 //	string filename = "data/data45x296.txt";   bool isYfirst = false; //  257/296
 //	string filename = "data/data51x653.txt";   bool isYfirst = false; //  590/653
 //	string filename = "data/data67x216.txt";   bool isYfirst = false; //  216/216
-	string filename = "data/data103x1579.txt"; bool isYfirst = true;  //  1086/1579
+//	string filename = "data/data103x1579.txt"; bool isYfirst = true;  //  1086/1579
 
 	long iter = 7;
 
 	/*
-	 * gammaDownCnst > 0 : gamma = gammaUpCnst / gammaDownCnst / learnDim - constant gamma
-	 * gammaDownCnst < 0 : gamma = gammaUpCnst / (i + |gammaDownCnst|) / learnDim - decreasing gamma
+	 * gammaDownCnst > 0 : gamma = gammaUpCnst / gammaDownCnst / learnDim -> constant gamma
+	 * gammaDownCnst < 0 : gamma = gammaUpCnst / (i + |gammaDownCnst|) / learnDim -> decreasing gamma
 	 */
 	double gammaDownCnst = -2.;
 	double gammaUpCnst = 2.;
@@ -217,7 +217,7 @@ int main() {
 	 * false : unencrypted Nesterov Logistic Gradient Descent
 	 * true  : encrypted Nesterov Logistic Gradient Descent
 	 */
-	bool isEncrypted = false;
+	bool isEncrypted = true;
 
 	run(filename, iter, gammaDownCnst, gammaUpCnst, learnPortion, is3approx, isEncrypted, isYfirst);
 

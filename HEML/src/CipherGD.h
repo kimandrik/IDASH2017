@@ -2,7 +2,6 @@
 #define CIPHERGD_H_
 
 #include <Scheme.h>
-#include <SchemeAlgo.h>
 #include <SecKey.h>
 
 using namespace NTL;
