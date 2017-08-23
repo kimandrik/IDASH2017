@@ -8,6 +8,7 @@
 #include <PubKey.h>
 #include <Scheme.h>
 #include <SchemeAux.h>
+#include <TestScheme.h>
 #include <SecKey.h>
 #include <TimeUtils.h>
 #include <cmath>
@@ -18,7 +19,7 @@
 
 using namespace std;
 
-void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, double learnPortion, bool is3approx, bool isEncrypted, bool isYfirst) {
+void run(string filename, long iter, double gammaUpCnst, double gammaDownCnst, double learnPortion, bool is3approx, bool isEncrypted, bool isYfirst) {
 	cout << "!!! START NLGD !!!" << endl;
 	//-----------------------------------------
 	TimeUtils timeutils;
@@ -28,8 +29,8 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 	cout << "iter: " << iter << endl;
 	cout << "isEncrypted: " << isEncrypted << endl;
 	cout << "is3approx: " << is3approx << endl;
-	cout << "gammaDownCnst: " << gammaDownCnst << endl;
 	cout << "gammaUpCnst: " << gammaUpCnst << endl;
+	cout << "gammaDownCnst: " << gammaDownCnst << endl;
 
 	long factorDim = 0;
 	long sampleDim = 0;
@@ -49,20 +50,17 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 
 	long** xyDataLearn = GD::RandomxyDataLearn(xyData, learnDim, sampleDim, factorDim);
 
-	long wBits = max(fdimBits + ldimBits + 16, 28);
-	long xyBits = wBits;
+
+	long wBits = max(fdimBits + ldimBits + 15, 28);
+	long xyBits = max(fdimBits + ldimBits + 11, 28);
 	cout << "xyBits: " << xyBits << endl;
 	cout << "wBits: " << wBits << endl;
 
 	long lBits = 5;
 	long pBits = 16;
-	long gBits = 20;
-	long eBits = 20;
-	long aBits = 2;
+	long aBits = 3;
 	cout << "lBits: " << lBits << endl;
 	cout << "pBits: " << pBits << endl;
-	cout << "gBits: " << gBits << endl;
-	cout << "eBits: " << eBits << endl;
 	cout << "aBits: " << aBits << endl;
 
 	long logq = is3approx ? (ldimBits + xyBits) + iter * (2 * wBits + xyBits + pBits + aBits) + lBits
@@ -74,7 +72,7 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 
 	long bBits = min(logN - 1 - ldimBits, fdimBits);
 	long batch = 1 << bBits;
-	cout << "xyBatchBits: " << bBits << endl;
+	cout << "bBits: " << bBits << endl;
 
 	long sBits = ldimBits + bBits;
 	long slots =  1 << sBits;
@@ -166,11 +164,11 @@ void run(string filename, long iter, double gammaDownCnst, double gammaUpCnst, d
 
 			if(is3approx) {
 				timeutils.start("Encrypting NLGD step with degree 3 approx...");
-				cipherGD.encStepNLGD3(cxyData, cwData, cvData, msg.mx, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, gBits, eBits, aBits);
+				cipherGD.encStepNLGD3(cxyData, cwData, cvData, msg.mx, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
 				timeutils.stop("NLGD step with degree 3 approx, finished");
 			} else {
 				timeutils.start("Encrypting NLGD step with degree 5 approx...");
-				cipherGD.encStepNLGD5(cxyData, cwData, cvData, msg.mx, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, gBits, eBits, aBits);
+				cipherGD.encStepNLGD5(cxyData, cwData, cvData, msg.mx, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
 				timeutils.stop("NLGD step with degree 5 approx finished");
 			}
 
@@ -202,14 +200,14 @@ int main() {
 //	string filename = "data/data67x216.txt";   bool isYfirst = false; //  216/216
 	string filename = "data/data103x1579.txt"; bool isYfirst = true;  //  1086/1579
 
-	long iter = 3;
+	long iter = 7;
 
 	/*
 	 * gammaDownCnst > 0 : gamma = gammaUpCnst / gammaDownCnst / learnDim -> constant gamma
 	 * gammaDownCnst < 0 : gamma = gammaUpCnst / (i + |gammaDownCnst|) / learnDim -> decreasing gamma
 	 */
+	double gammaUpCnst = 3;
 	double gammaDownCnst = -2.;
-	double gammaUpCnst = 2.;
 
 	/*
 	 * portion used in learning (randomly chosen from sample set)
@@ -228,7 +226,9 @@ int main() {
 	 */
 	bool isEncrypted = true;
 
-	run(filename, iter, gammaDownCnst, gammaUpCnst, learnPortion, is3approx, isEncrypted, isYfirst);
+	run(filename, iter, gammaUpCnst, gammaDownCnst, learnPortion, is3approx, isEncrypted, isYfirst);
+
+//	TestScheme::testEncodeBatch(17, 500, 60, 16);
 
 	return 0;
 }

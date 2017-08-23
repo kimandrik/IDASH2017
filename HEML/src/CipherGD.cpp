@@ -49,7 +49,7 @@ void CipherGD::encwData(Cipher*& cwData, Cipher*& cxyData, long& cnum, long& sBi
 	NTL_EXEC_RANGE_END;
 }
 
-void CipherGD::encStepNLGD3(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& cnum, double& gamma, double& eta, double& etaprev, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& gBits, long& eBits, long& aBits) {
+void CipherGD::encStepNLGD3(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& cnum, double& gamma, double& eta, double& etaprev, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits) {
 	Cipher* cprod = new Cipher[cnum];
  	Cipher* cgrad = new Cipher[cnum];
 
@@ -158,7 +158,7 @@ void CipherGD::encStepNLGD3(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, 
 	delete[] cgrad;
 }
 
-void CipherGD::encStepNLGD5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& cnum, double& gamma, double& eta, double& etaprev, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& gBits, long& eBits, long& aBits) {
+void CipherGD::encStepNLGD5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& cnum, double& gamma, double& eta, double& etaprev, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits) {
 	Cipher* cprod = new Cipher[cnum];
  	Cipher* cgrad = new Cipher[cnum];
 
