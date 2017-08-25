@@ -50,15 +50,15 @@ void run(string filename, long iter, double gammaUpCnst, double gammaDownCnst, d
 
 	long** xyDataLearn = GD::RandomxyDataLearn(xyData, learnDim, sampleDim, factorDim);
 
+	long wBits = 34;
+	long xyBits = 33;
 
-	long wBits = max(fdimBits + ldimBits + 15, 28);
-	long xyBits = max(fdimBits + ldimBits + 11, 28);
 	cout << "xyBits: " << xyBits << endl;
 	cout << "wBits: " << wBits << endl;
 
 	long lBits = 5;
 	long pBits = 16;
-	long aBits = 3;
+	long aBits = 2;
 	cout << "lBits: " << lBits << endl;
 	cout << "pBits: " << pBits << endl;
 	cout << "aBits: " << aBits << endl;
@@ -206,8 +206,8 @@ int main() {
 	 * gammaDownCnst > 0 : gamma = gammaUpCnst / gammaDownCnst / learnDim -> constant gamma
 	 * gammaDownCnst < 0 : gamma = gammaUpCnst / (i + |gammaDownCnst|) / learnDim -> decreasing gamma
 	 */
-	double gammaUpCnst = 3;
-	double gammaDownCnst = -2.;
+	double gammaUpCnst = 1;
+	double gammaDownCnst = -1.;
 
 	/*
 	 * portion used in learning (randomly chosen from sample set)
@@ -228,7 +228,7 @@ int main() {
 
 	run(filename, iter, gammaUpCnst, gammaDownCnst, learnPortion, is3approx, isEncrypted, isYfirst);
 
-//	TestScheme::testEncodeBatch(17, 500, 60, 16);
+//	TestScheme::testEncodeBatch(16, 500, 60, 15);
 
 	return 0;
 }
