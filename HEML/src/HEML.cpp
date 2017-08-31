@@ -19,16 +19,57 @@
 
 using namespace std;
 
-void run(string filename, long iter, double gammaUpCnst, double gammaDownCnst, double learnPortion, bool is3approx, bool isEncrypted, bool isYfirst) {
-	cout << "!!! START NLGD !!!" << endl;
-	//-----------------------------------------
+/*
+ * run: ./HEML filename(string) isYfirst(bool) iter(long) learnPortion(double) is3approx(bool) isEncrypted(bool)
+ *
+ * example: ./HEML "../data/data103x1579.txt" 1 7 0.9 0 1
+ *
+ * parameters:
+ * filename - path to file
+ * isYfirst - y parameter first OR last
+ * iter - number of iterations
+ * learnPortion - portion of data used for learning (randomly chosen from sample set)
+ * is3approx - 3 degree OR 5 degree approximation used
+ * isEncrypted - encrypted OR unencrypted learning
+ *
+ * current files that in data folder (filename isYfirst):
+ * "../data/data5x500.txt" false
+ * "../data/data9x1253.txt" false
+ * "../data/data15x1500.txt" false
+ * "../data/data16x101.txt" false
+ * "../data/data27x148.txt" false
+ * "../data/data43x3247.txt" false
+ * "../data/data51x653.txt" false
+ * "../data/data67x216.txt" false
+ * "../data/data103x1579.txt" true
+ *
+ * FYI:  is3approx suggested iter: 4, 9, 18, 36, ...
+ * FYI: !is3approx suggested iter: 3, 7, 14, 28, ...
+ */
+
+int main(int argc, char **argv) {
+
+	string filename(argv[1]);
+	bool isYfirst = atoi(argv[2]);
+	long iter = atol(argv[3]);
+	double learnPortion = atof(argv[4]);
+	bool is3approx = atoi(argv[5]);
+	bool isEncrypted = atoi(argv[6]);
+
 	TimeUtils timeutils;
-	SetNumThreads(4);
-	//-----------------------------------------
+	SetNumThreads(8);
 
 	cout << "iter: " << iter << endl;
 	cout << "isEncrypted: " << isEncrypted << endl;
 	cout << "is3approx: " << is3approx << endl;
+
+	/*
+	 * gammaDownCnst > 0 : gamma = gammaUpCnst / gammaDownCnst / learnDim -> constant gamma
+	 * gammaDownCnst < 0 : gamma = gammaUpCnst / (i + |gammaDownCnst|) / learnDim -> decreasing gamma
+	 */
+	double gammaUpCnst = 1;
+	double gammaDownCnst = -1;
+
 	cout << "gammaUpCnst: " << gammaUpCnst << endl;
 	cout << "gammaDownCnst: " << gammaDownCnst << endl;
 
@@ -50,8 +91,8 @@ void run(string filename, long iter, double gammaUpCnst, double gammaDownCnst, d
 
 	long** xyDataLearn = GD::RandomxyDataLearn(xyData, learnDim, sampleDim, factorDim);
 
-	long wBits = 34;
-	long xyBits = 33;
+	long wBits = 37;
+	long xyBits = 37;
 
 	cout << "xyBits: " << xyBits << endl;
 	cout << "wBits: " << wBits << endl;
@@ -89,6 +130,8 @@ void run(string filename, long iter, double gammaUpCnst, double gammaDownCnst, d
 	alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;
 	alpha2 = (1. + sqrt(1. + 4.0 * alpha1 * alpha1)) / 2.0;
 
+	cout << "!!! START NLGD !!!" << endl;
+
 	if(!isEncrypted) {
 		double* vData = new double[factorDim];
 		double* wData = new double[factorDim];
@@ -125,7 +168,7 @@ void run(string filename, long iter, double gammaUpCnst, double gammaDownCnst, d
 		SchemeAux schemeaux(logN);
 		Scheme scheme(params, publicKey, schemeaux);
 		CipherGD cipherGD(scheme, secretKey);
-		timeutils.stop("Scheme generated");
+		timeutils.stop("Scheme generation");
 
 		timeutils.start("Polynomial generating...");
 		ZZ p = power2_ZZ(pBits);
@@ -139,12 +182,12 @@ void run(string filename, long iter, double gammaUpCnst, double gammaDownCnst, d
 		Message msg = scheme.encode(pdvals, slots);
 		delete[] pdvals;
 
-		timeutils.stop("Polynomial generated");
+		timeutils.stop("Polynomial generation");
 
 		Cipher* cxyData = new Cipher[cnum];
 		timeutils.start("Encrypting xyData...");
 		cipherGD.encxyData(cxyData, xyDataLearn, slots, factorDim, learnDim, batch, cnum, xyBits);
-		timeutils.stop("xyData encrypted");
+		timeutils.stop("xyData encryption");
 
 		Cipher* cwData = new Cipher[cnum];
 		Cipher* cvData = new Cipher[cnum];
@@ -153,7 +196,7 @@ void run(string filename, long iter, double gammaUpCnst, double gammaDownCnst, d
 		for (long i = 0; i < cnum; ++i) {
 			cvData[i] = cwData[i];
 		}
-		timeutils.stop("wData and vData encrypted");
+		timeutils.stop("wData and vData encryption");
 
 		double* dwData = new double[factorDim];
 		for (long k = 0; k < iter; ++k) {
@@ -165,70 +208,24 @@ void run(string filename, long iter, double gammaUpCnst, double gammaDownCnst, d
 			if(is3approx) {
 				timeutils.start("Encrypting NLGD step with degree 3 approx...");
 				cipherGD.encStepNLGD3(cxyData, cwData, cvData, msg.mx, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
-				timeutils.stop("NLGD step with degree 3 approx, finished");
+				timeutils.stop("NLGD step with degree 3 approx");
 			} else {
 				timeutils.start("Encrypting NLGD step with degree 5 approx...");
 				cipherGD.encStepNLGD5(cxyData, cwData, cvData, msg.mx, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
-				timeutils.stop("NLGD step with degree 5 approx finished");
+				timeutils.stop("NLGD step with degree 5 approx");
 			}
 
 			alpha0 = alpha1;
 			alpha1 = alpha2;
 			alpha2 = (1. + sqrt(1. + 4.0 * alpha1 * alpha1)) / 2.0;
 
-			timeutils.start("Decrypting wData");
+			timeutils.start("check");
 			cipherGD.decwData(dwData, cwData, factorDim, batch, cnum, wBits);
-			timeutils.stop("wData decrypted");
-
 			GD::check(xyData, dwData, factorDim, sampleDim);
+			timeutils.stop("check");
 		}
 	}
-	//-----------------------------------------
 	cout << "!!! END NLGD !!!" << endl;
-}
-
-int main() {
-
-//	string filename = "data/data5x500.txt";    bool isYfirst = false; //  421/500
-//	string filename = "data/data9x1253.txt";   bool isYfirst = false; //  1147/1253
-//	string filename = "data/data15x1500.txt";  bool isYfirst = false; //  1277/1500
-//	string filename = "data/data16x101.txt";   bool isYfirst = false; //  101/101
-//	string filename = "data/data27x148.txt";   bool isYfirst = false; //  132/148
-//	string filename = "data/data43x3247.txt";  bool isYfirst = false; //  3182/3247
-//	string filename = "data/data45x296.txt";   bool isYfirst = false; //  257/296
-//	string filename = "data/data51x653.txt";   bool isYfirst = false; //  590/653
-//	string filename = "data/data67x216.txt";   bool isYfirst = false; //  216/216
-	string filename = "data/data103x1579.txt"; bool isYfirst = true;  //  1086/1579
-
-	long iter = 7;
-
-	/*
-	 * gammaDownCnst > 0 : gamma = gammaUpCnst / gammaDownCnst / learnDim -> constant gamma
-	 * gammaDownCnst < 0 : gamma = gammaUpCnst / (i + |gammaDownCnst|) / learnDim -> decreasing gamma
-	 */
-	double gammaUpCnst = 1;
-	double gammaDownCnst = -1.;
-
-	/*
-	 * portion used in learning (randomly chosen from sample set)
-	 */
-	double learnPortion = 0.9;
-
-	/*
-	 * false : use 5 degree polynomial approximation of sigmoid function
-	 * true  : use 3 degree polynomial approximation of sigmoid function
-	 */
-	bool is3approx = false;
-
-	/*
-	 * false : unencrypted Nesterov Logistic Gradient Descent
-	 * true  : encrypted Nesterov Logistic Gradient Descent
-	 */
-	bool isEncrypted = true;
-
-	run(filename, iter, gammaUpCnst, gammaDownCnst, learnPortion, is3approx, isEncrypted, isYfirst);
-
-//	TestScheme::testEncodeBatch(16, 500, 60, 15);
 
 	return 0;
 }
