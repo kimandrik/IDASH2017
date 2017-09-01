@@ -2,13 +2,16 @@ in folder Debug/ run:
 
 make clean
 make all
-./HEML
 
-in file src/HEML.cpp in main method you can change parameters:
+run:
+./HEML filename(string) isYfirst(0,1) iter(long) learnPortion(double) is3approx(0,1) isEncrypted(0,1)
 
+example:
+./HEML "../data/data103x1579.txt" 1 7 0.9 0 1
 
-filename - path to file (currently on train file)
-isYfirst - is y first or last (in train file y is first)
-iter - number of iterations (currently iter = 7)
-learnPortion - portion of data for learning (currently learnPortion = 0.9)
-is3approx - used 3 degree or 5 degree polynomial aprroximation (currently is3approx = false means 5 degree polynomial approximation is used)
+filename - path to file
+isYfirst - is y first OR last
+iter - number of iterations
+learnPortion - portion of data for learning
+is3approx - used 3 OR 5 degree polynomial aprroximation
+isEncrypted - encrypted OR unencrypted
