@@ -11,8 +11,9 @@ public:
 	Scheme& scheme;
 	SecKey& secretKey;
 
-	double degree3[4] = {-0.5,0.19,0,-0.0035};
-	double degree5[6] = {-0.5,0.2166,0,-0.0077,0,0.00011};
+	double degree3[3] = {-0.5,0.19,-0.0035};
+	double degree5[4] = {-0.5,0.2166,-0.0077,0.00011};
+	double degree7[5] = {-0.5,0.216884,-0.00819276,0.000165861,-0.00000119581};
 
 	CipherGD(Scheme& scheme, SecKey& secretKey) : scheme(scheme), secretKey(secretKey) {}
 
@@ -21,6 +22,7 @@ public:
 
 	void encStepNLGD3(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& cnum, double& gamma, double& eta, double& etaprev, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits);
 	void encStepNLGD5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& cnum, double& gamma, double& eta, double& etaprev, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits);
+	void encStepNLGD7(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& cnum, double& gamma, double& eta, double& etaprev, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits);
 
 	void decwData(double*& wData, Cipher*& cwData, long& factorDim, long& batch, long& cnum, long& wBits);
 };

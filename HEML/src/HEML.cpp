@@ -20,17 +20,17 @@
 using namespace std;
 
 /*
- * run: ./HEML filename(string) isYfirst(bool) iter(long) learnPortion(double) is3approx(bool) isEncrypted(bool)
+ * run: ./HEML filename(string) isYfirst(bool) iter(long) learnPortion(double) approx(long) isEncrypted(bool)
  *
- * example: ./HEML "../data/data103x1579.txt" 1 7 0.9 0 1
+ * example: ./HEML "../data/data103x1579.txt" 1 7 0.9 7 1
  *
  * parameters:
  * filename - path to file
- * isYfirst - y parameter first OR last
+ * isYfirst - {0,1} y parameter first OR last
  * iter - number of iterations
  * learnPortion - portion of data used for learning (randomly chosen from sample set)
- * is3approx - 3 degree OR 5 degree approximation used
- * isEncrypted - encrypted OR unencrypted learning
+ * approx - {3,5,7} polynomial degree approximation used
+ * isEncrypted - {0,1} encrypted OR unencrypted learning
  *
  * current files that in data folder (filename isYfirst):
  * "../data/data5x500.txt" false
@@ -38,13 +38,13 @@ using namespace std;
  * "../data/data15x1500.txt" false
  * "../data/data16x101.txt" false
  * "../data/data27x148.txt" false
- * "../data/data43x3247.txt" false
  * "../data/data51x653.txt" false
  * "../data/data67x216.txt" false
  * "../data/data103x1579.txt" true
  *
- * FYI:  is3approx suggested iter: 4, 9, 18, 36, ...
- * FYI: !is3approx suggested iter: 3, 7, 14, 28, ...
+ * FYI: approx 3 suggested iter: 4, 9, 18, 36, ...
+ * FYI: approx 5 suggested iter: 3, 7, 14, 28, ...
+ * FYI: approx 7 suggested iter: 3, 7, 14, 28, ...
  */
 
 int main(int argc, char **argv) {
@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
 	bool isYfirst = atoi(argv[2]);
 	long iter = atol(argv[3]);
 	double learnPortion = atof(argv[4]);
-	bool is3approx = atoi(argv[5]);
+	long approx = atol(argv[5]);
 	bool isEncrypted = atoi(argv[6]);
 
 	TimeUtils timeutils;
@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
 
 	cout << "iter: " << iter << endl;
 	cout << "isEncrypted: " << isEncrypted << endl;
-	cout << "is3approx: " << is3approx << endl;
+	cout << "approx: " << approx << endl;
 
 	/*
 	 * gammaDownCnst > 0 : gamma = gammaUpCnst / gammaDownCnst / learnDim -> constant gamma
@@ -98,13 +98,13 @@ int main(int argc, char **argv) {
 	cout << "wBits: " << wBits << endl;
 
 	long lBits = 5;
-	long pBits = 16;
+	long pBits = 18;
 	long aBits = 2;
 	cout << "lBits: " << lBits << endl;
 	cout << "pBits: " << pBits << endl;
 	cout << "aBits: " << aBits << endl;
 
-	long logq = is3approx ? (ldimBits + xyBits) + iter * (2 * wBits + xyBits + pBits + aBits) + lBits
+	long logq = (approx == 3) ? (ldimBits + xyBits) + iter * (2 * wBits + xyBits + pBits + aBits) + lBits
 			: (ldimBits + xyBits) + iter * (3 * wBits + xyBits + pBits + aBits) + lBits;
 
 	long logN = Params::suggestlogN(80, logq);
@@ -205,14 +205,18 @@ int main(int argc, char **argv) {
 			eta = (1 - alpha1) / alpha2;
 			gamma = gammaDownCnst > 0 ? gammaUpCnst / gammaDownCnst / learnDim : gammaUpCnst / (k - gammaDownCnst) / learnDim;
 
-			if(is3approx) {
+			if(approx == 3) {
 				timeutils.start("Encrypting NLGD step with degree 3 approx...");
 				cipherGD.encStepNLGD3(cxyData, cwData, cvData, msg.mx, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
 				timeutils.stop("NLGD step with degree 3 approx");
-			} else {
+			} else if(approx == 5) {
 				timeutils.start("Encrypting NLGD step with degree 5 approx...");
 				cipherGD.encStepNLGD5(cxyData, cwData, cvData, msg.mx, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
 				timeutils.stop("NLGD step with degree 5 approx");
+			} else {
+				timeutils.start("Encrypting NLGD step with degree 7 approx...");
+				cipherGD.encStepNLGD7(cxyData, cwData, cvData, msg.mx, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
+				timeutils.stop("NLGD step with degree 7 approx");
 			}
 
 			alpha0 = alpha1;
