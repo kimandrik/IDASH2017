@@ -1,5 +1,12 @@
 ./HEML ../data/data103x1579.txt 1 7 1 7 1
 
+First iter time ~ 5.4 min
+Last iter time ~ 3 min
+
+Total time ~ 29 min
+
+-------------------------------------
+
 iter: 7
 isEncrypted: 1
 approx: 7

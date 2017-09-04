@@ -1,6 +1,6 @@
 Dear IDASH organizers
 
-Sending manual of our final version of program on server.
+Sending description of our final version of program on server.
 
 We installed gmp, and ntl libraries in default folders.
 
@@ -45,16 +45,6 @@ In file idash/HEML/src/HEML.cpp we also have some other parameters that could be
 
 After each iteration we decrypt ciphers to check the correctness, and then continue with the same ciphers (it is not recryption, just decryption for checking. You can remove this check step in idash/HEML/src/HEML.cpp).
 
-We attached files with example of results with 7 iterations on data103x1579.txt with degree {3,5,7} approximations and {0.9,1.0} learning portions.
-
-results_iter7_deg3_portion090.txt: ./HEML ../data/data103x1579.txt 1 7 0.9 3 1
-results_iter7_deg5_portion090.txt: ./HEML ../data/data103x1579.txt 1 7 0.9 5 1
-results_iter7_deg7_portion090.txt: ./HEML ../data/data103x1579.txt 1 7 0.9 7 1
-
-results_iter7_deg3_portion100.txt: ./HEML ../data/data103x1579.txt 1 7 1 3 1
-results_iter7_deg5_portion100.txt: ./HEML ../data/data103x1579.txt 1 7 1 5 1
-results_iter7_deg7_portion100.txt: ./HEML ../data/data103x1579.txt 1 7 1 7 1
-
-PS.
+We attached files with some results on data103x1579.txt.
 
 Kind Regards, Andrey Kim
