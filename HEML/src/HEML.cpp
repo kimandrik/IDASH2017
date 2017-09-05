@@ -22,7 +22,7 @@ using namespace std;
 /*
  * run: ./HEML filename(string) isYfirst(bool) iter(long) learnPortion(double) approx(long) isEncrypted(bool)
  *
- * example: ./HEML "../data/data103x1579.txt" 1 7 0.9 7 1
+ * example: ./HEML "../data/data103x1579.txt" 1 7 1 7 1
  *
  * parameters:
  * filename - path to file

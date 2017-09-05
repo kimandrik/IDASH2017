@@ -8,7 +8,7 @@ In folder idash/HEAAN there is a FHE library that we used in our implementation,
 https://eprint.iacr.org/2016/421
 https://github.com/kimandrik/HEAAN
 
-Code for the task 3 is in folder idash/HEML/src.
+Code for the task 3 is in folder idash/HEML/src. We used a variant of Nesterov Logistic Gradient Descent (NLGD) in implementation.
 In folder idash/HEML/data there are some datasets that we used for testing, including testing dataset from IDASH (data103x1579.txt)
 makefile is in folder idash/HEML/Debug. To compile the program(it already compiled) in folder idash/HEML/Debug run:
 make clean
@@ -37,11 +37,11 @@ current files that in data folder (filename isYfirst):
 "../data/data67x216.txt" false
 "../data/data103x1579.txt" true
 
-if approx = 3 suggested number of iterations: 4, 9, 18, 36, 72, ...
-if approx = 5 suggested number of iterations: 3, 7, 14, 28, 56, ...
-if approx = 7 suggested number of iterations: 3, 7, 14, 28, 56, ...
+if approx = 3 suggested number of iterations: 4, 9, 18, 36, ...
+if approx = 5 suggested number of iterations: 3, 7(~25 min), 14, 28, ...
+if approx = 7 suggested number of iterations: 3, 7(~30 min), 14, 28, ...
 
-In file idash/HEML/src/HEML.cpp we also have some other parameters that could be changed for optimizations and better results, but we tried to hardcore them so they work for any dataset (for example we have xyBits = 37, wBits=37, but if dataset is not so big we can lower these parameters a little).
+In file idash/HEML/src/HEML.cpp we also have some other parameters that could be changed for optimizations and better results, but we tried to hardcore them so they work for any dataset (for example we have xyBits = 37, wBits=37, but if the dataset is not so big we can lower these parameters a little).
 
 After each iteration we decrypt ciphers to check the correctness, and then continue with the same ciphers (it is not recryption, just decryption for checking. You can remove this check step in idash/HEML/src/HEML.cpp).
 
