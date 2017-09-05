@@ -24,7 +24,7 @@ filename - path to file
 isYfirst - {0,1} Y parameter is first OR last
 iter - number of iterations
 learnPortion - portion of data used for learning (randomly chosen from sample set)
-approx - {3,5,7} polynomial approximation degree used 
+approx - {3,5,7} polynomial approximation degree used (better use degree 5 or 7) 
 isEncrypted - {0,1} encrypted OR unencrypted learning
 
 current files that in data folder (filename isYfirst):
@@ -38,13 +38,20 @@ current files that in data folder (filename isYfirst):
 "../data/data103x1579.txt" true
 
 if approx = 3 suggested number of iterations: 4, 9, 18, 36, ...
-if approx = 5 suggested number of iterations: 3, 7(~25 min), 14, 28, ...
-if approx = 7 suggested number of iterations: 3, 7(~30 min), 14, 28, ...
+if approx = 5 suggested number of iterations: 3, 7, 14, 28, ...
+if approx = 7 suggested number of iterations: 3, 7, 14, 28, ...
 
 In file idash/HEML/src/HEML.cpp we also have some other parameters that could be changed for optimizations and better results, but we tried to hardcore them so they work for any dataset (for example we have xyBits = 37, wBits=37, but if the dataset is not so big we can lower these parameters a little).
 
 After each iteration we decrypt ciphers to check the correctness, and then continue with the same ciphers (it is not recryption, just decryption for checking. You can remove this check step in idash/HEML/src/HEML.cpp).
 
 We attached files with some results on data103x1579.txt.
+
+results_iter3_deg5.txt   total time ~
+results_iter3_deg7.txt   total time ~
+results_iter7_deg5.txt   total time ~25 mins
+results_iter7_deg7.txt   total time ~30 mins
+results_iter14_deg5.txt  total time ~3 hours
+results_iter14_deg7.txt  total time ~3 hours
 
 Kind Regards, Andrey Kim
