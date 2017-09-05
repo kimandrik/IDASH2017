@@ -41,17 +41,32 @@ if approx = 3 suggested number of iterations: 4, 9, 18, 36, ...
 if approx = 5 suggested number of iterations: 3, 7, 14, 28, ...
 if approx = 7 suggested number of iterations: 3, 7, 14, 28, ...
 
+Explanation: increasing number of iterations increases ciphertext modulus space. To obtain 80 bits of security we have to increase dimension N of RLWE scheme. Suggested number of iterations means that adding one iterations increases N, making program run slower.
+
 In file idash/HEML/src/HEML.cpp we also have some other parameters that could be changed for optimizations and better results, but we tried to hardcore them so they work for any dataset (for example we have xyBits = 37, wBits=37, but if the dataset is not so big we can lower these parameters a little).
 
 After each iteration we decrypt ciphers to check the correctness, and then continue with the same ciphers (it is not recryption, just decryption for checking. You can remove this check step in idash/HEML/src/HEML.cpp).
 
 We attached files with some results on data103x1579.txt.
 
-results_iter3_deg5.txt   total time ~
-results_iter3_deg7.txt   total time ~
-results_iter7_deg5.txt   total time ~25 mins
-results_iter7_deg7.txt   total time ~30 mins
-results_iter14_deg5.txt  total time ~3 hours
-results_iter14_deg7.txt  total time ~3 hours
+./HEML "../data/data103x1579.txt" 1 3 1 5 1
+results_iter3_deg5.txt   total time ~4 mins (~1.3 mins for one iteration)
+
+./HEML "../data/data103x1579.txt" 1 3 1 7 1
+results_iter3_deg7.txt   total time ~5 mins (~1.5 mins for one iteration)
+
+./HEML "../data/data103x1579.txt" 1 7 1 5 1
+results_iter7_deg5.txt   total time ~25 mins (~3.5 mins for one iteration)
+
+./HEML "../data/data103x1579.txt" 1 7 1 7 1
+results_iter7_deg7.txt   total time ~30 mins (~4.2 mins for one iteration)
+
+./HEML "../data/data103x1579.txt" 1 14 1 5 1
+results_iter14_deg5.txt  total time ~3 hours (~12 mins for one iteration)
+
+./HEML "../data/data103x1579.txt" 1 14 1 7 1
+results_iter14_deg7.txt  total time ~4 hours (~15 mins for one iteration)
+
+each iteration need less time than previous, so we just calculated average
 
 Kind Regards, Andrey Kim
