@@ -124,6 +124,14 @@ double GD::innerprod(double*& w, long*& xy, long& size){
 	return res;
 }
 
+void GD::stepLGD(long**& xyData, double*& wData, long& factorDim, long& learnDim, double& gamma) {
+	//TODO implement method
+}
+
+void GD::stepMLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta) {
+	//TODO implement method
+}
+
 void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta) {
 	double* grad = new double[factorDim]();
 

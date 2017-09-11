@@ -49,6 +49,30 @@ void CipherGD::encwData(Cipher*& cwData, Cipher*& cxyData, long& cnum, long& sBi
 	NTL_EXEC_RANGE_END;
 }
 
+void CipherGD::encStepLGD3(Cipher*& cxyData, Cipher*& cwData, ZZX& poly, long& cnum, double& gamma, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits) {
+	//TODO implement method
+}
+
+void CipherGD::encStepLGD5(Cipher*& cxyData, Cipher*& cwData, ZZX& poly, long& cnum, double& gamma, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits) {
+	//TODO implement method
+}
+
+void CipherGD::encStepLGD7(Cipher*& cxyData, Cipher*& cwData, ZZX& poly, long& cnum, double& gamma, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits) {
+	//TODO implement method
+}
+
+void CipherGD::encStepMLGD3(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& cnum, double& gamma, double& eta, double& etaprev, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits) {
+	//TODO implement method
+}
+
+void CipherGD::encStepMLGD5(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& cnum, double& gamma, double& eta, double& etaprev, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits) {
+	//TODO implement method
+}
+
+void CipherGD::encStepMLGD7(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& cnum, double& gamma, double& eta, double& etaprev, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits) {
+	//TODO implement method
+}
+
 void CipherGD::encStepNLGD3(Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& cnum, double& gamma, double& eta, double& etaprev, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits) {
 	Cipher* cprod = new Cipher[cnum];
  	Cipher* cgrad = new Cipher[cnum];
