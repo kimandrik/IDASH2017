@@ -49,6 +49,19 @@ void CipherGD::encwData(Cipher*& cwData, Cipher*& cxyData, long& cnum, long& sBi
 	NTL_EXEC_RANGE_END;
 }
 
+ZZX CipherGD::generateAuxPoly(long& slots, long& batch, long& pBits) {
+	ZZ p = power2_ZZ(pBits);
+	CZZ* pvals = new CZZ[slots];
+	for (long j = 0; j < slots; j += batch) {
+		pvals[j] = CZZ(p);
+	}
+	CZZ* pdvals = scheme.groupidx(pvals, slots);
+	delete[] pvals;
+	Message msg = scheme.encode(pdvals, slots);
+	delete[] pdvals;
+	return msg.mx;
+}
+
 void CipherGD::encStepLGD3(Cipher*& cxyData, Cipher*& cwData, ZZX& poly, long& cnum, double& gamma, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits) {
 	//TODO implement method
 }

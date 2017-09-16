@@ -23,6 +23,11 @@ public:
 
 	static void check(long**& xyData, double*& wData, long& factorDim, long& sampleDim);
 
+	static long* calculateYtrueData(long**& xyData, long& sampleDim);
+
+	static double* calculateYpredictData(long**& xyData, double*& wData, long& factorDim, long& sampleDim);
+
+	static double calcuateAUC(long**& xyData, double*& wData, long& factorDim, long& sampleDim, long steps);
 };
 
 #endif /* SGD_SGD_H_ */

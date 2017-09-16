@@ -171,3 +171,62 @@ void GD::check(long**& xyData, double*& wData, long& factorDim, long& sampleDim)
 	cout << "Correctness: " << num << "/" << sampleDim << endl;
 
 }
+
+long* GD::calculateYtrueData(long**& xyData, long& sampleDim) {
+	long* res = new long[sampleDim];
+	for (long i = 0; i < sampleDim; ++i) {
+		res[i] = xyData[i][0] == -1 ? 0 : 1;
+	}
+	return res;
+}
+
+double* GD::calculateYpredictData(long**& xyData, double*& wData, long& factorDim, long& sampleDim) {
+	double* res = new double[sampleDim];
+	for(long i = 0; i < sampleDim; ++i){
+		res[i] = innerprod(wData, xyData[i], factorDim) * xyData[i][0] / 2. + 0.5;
+	}
+	return res;
+}
+
+double GD::calcuateAUC(long**& xyData, double*& wData, long& factorDim, long& sampleDim, long steps) {
+
+	long* yTrueData = calculateYtrueData(xyData, sampleDim);
+	double* yPredictData = calculateYpredictData(xyData, wData, factorDim, sampleDim);
+
+	double* TPR = new double[steps + 1];
+	double* FPR = new double[steps + 1];
+
+	for (long i = 0; i < steps + 1; ++i) {
+		double threshold =  (double)i / steps;
+
+		long FP = 0;
+		long TP = 0;
+		long TN = 0;
+		long FN = 0;
+
+		for (long j = 0; j < sampleDim; ++j) {
+			if(yTrueData[j] == 0) {
+				if(yPredictData[j] > threshold) FP++;
+				else TN++;
+			} else {
+				if(yPredictData[j] > threshold) TP++;
+				else FN++;
+			}
+		}
+		double TPFN = TP + FN;
+		double FPTN = FP + TN;
+
+		TPR[i] = TP / TPFN;
+		FPR[i] = FP / FPTN;
+	}
+	double auc = 0.0;
+
+	for (long i = 0; i < steps; ++i) {
+		auc += (TPR[i] + TPR[i + 1]) * (FPR[i] - FPR[i + 1]) / 2.;
+	}
+	delete[] TPR;
+	delete[] FPR;
+	delete[] yTrueData;
+	delete[] yPredictData;
+	return auc;
+}

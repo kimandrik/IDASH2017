@@ -8,10 +8,10 @@
 #include <PubKey.h>
 #include <Scheme.h>
 #include <SchemeAux.h>
-#include <TestScheme.h>
 #include <SecKey.h>
 #include <TimeUtils.h>
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 
 #include "CipherGD.h"
@@ -19,18 +19,46 @@
 
 using namespace std;
 
+double cipherSizeMB(Cipher& cipher) {
+	double res = cipher.cbits * 2 * (deg(cipher.ax)+1) + cipher.cbits + 64;
+	res /= 8;
+	res /= 1024;
+	res /= 1024;
+	return res;
+}
+
+double schemeSizeMB(Scheme& scheme) {
+	double res = 0.0;
+
+	//params size
+	res += 8 * scheme.params.N; // rotGroup and rotGroupInv size
+	res += 3 * (scheme.params.logq / 8.); // q and qq size
+	res += 7 * 4; // other from params
+	//pubKey size
+	res += (2 + 4 * scheme.params.logN) * (scheme.params.N / 8.) * scheme.params.logq;
+	//schemeAux size
+	res += scheme.params.N * 150; // ksiPowr and ksiPowi size
+	res += 100; // other parts of map has not a lot of memory
+
+	res /= 1024;
+	res /= 1024;
+	return res;
+}
+
 /*
- * run: ./HEML filename(string) isYfirst(bool) iter(long) learnPortion(double) approx(long) isEncrypted(bool)
+ * run: ./HEML trainfile(string) isYfirst(bool) iter(long) learnPortion(double) approx(long) isEncrypted(bool) testfile(string)
  *
  * example: ./HEML "../data/data103x1579.txt" 1 7 1 7 1
+ * example: ./HEML "../data/1_training_data_csv" 1 7 1 7 1 "../data/1_testing_data_csv"
  *
  * parameters:
- * filename - path to file
+ * trainfile - path to train file
  * isYfirst - {0,1} y parameter first OR last
  * iter - number of iterations
  * learnPortion - portion of data used for learning (randomly chosen from sample set)
  * approx - {3,5,7} polynomial degree approximation used
  * isEncrypted - {0,1} encrypted OR unencrypted learning
+ * testfile - path to test file (checks if number of arguments <= 7 then testfile = trainfile)
  *
  * current files that in data folder (filename isYfirst):
  * "../data/data5x500.txt" false
@@ -41,28 +69,26 @@ using namespace std;
  * "../data/data51x653.txt" false
  * "../data/data67x216.txt" false
  * "../data/data103x1579.txt" true
+ * "../data/1_training_data.csv" true
+ * "../data/1_testing_data.csv" true
  *
  * FYI: approx 3 suggested iter: 4, 9, 18, 36, ...
  * FYI: approx 5 suggested iter: 3, 7, 14, 28, ...
  * FYI: approx 7 suggested iter: 3, 7, 14, 28, ...
  */
-
 int main(int argc, char **argv) {
 
-	string filename(argv[1]);
+	string trainfile(argv[1]);
 	bool isYfirst = atoi(argv[2]);
 	long iter = atol(argv[3]);
 	double learnPortion = atof(argv[4]);
 	long approx = atol(argv[5]);
 	bool isEncrypted = atoi(argv[6]);
 
+	string testfile = argc > 7 ? string(argv[7]) : trainfile;
+
 	TimeUtils timeutils;
 	SetNumThreads(8);
-
-	cout << "iter: " << iter << endl;
-	cout << "isEncrypted: " << isEncrypted << endl;
-	cout << "approx: " << approx << endl;
-
 	/*
 	 * gammaDownCnst > 0 : gamma = gammaUpCnst / gammaDownCnst / learnDim -> constant gamma
 	 * gammaDownCnst < 0 : gamma = gammaUpCnst / (i + |gammaDownCnst|) / learnDim -> decreasing gamma
@@ -70,56 +96,32 @@ int main(int argc, char **argv) {
 	double gammaUpCnst = 1;
 	double gammaDownCnst = -1;
 
-	cout << "gammaUpCnst: " << gammaUpCnst << endl;
-	cout << "gammaDownCnst: " << gammaDownCnst << endl;
-
 	long factorDim = 0;
 	long sampleDim = 0;
+	long** xyData = GD::xyDataFromFile(trainfile, factorDim, sampleDim, isYfirst);
 
-	long** xyData = GD::xyDataFromFile(filename, factorDim, sampleDim, isYfirst);
+	long factorDimTest = 0;
+	long sampleDimTest = 0;
+	long** xyDataTest;
+	if(argc > 7) {
+		xyDataTest = GD::xyDataFromFile(testfile, factorDimTest, sampleDimTest, isYfirst);
+	} else {
+		xyDataTest = xyData;
+		factorDimTest = factorDim;
+		sampleDimTest = sampleDim;
+	}
+	long learnDim = (long)((double)sampleDim * learnPortion);
+
+	cout << "iter: " << iter << endl;
+	cout << "isEncrypted: " << isEncrypted << endl;
+	cout << "approx: " << approx << endl;
+	cout << "gammaUpCnst: " << gammaUpCnst << endl;
+	cout << "gammaDownCnst: " << gammaDownCnst << endl;
 	cout << "sampleDim: " << sampleDim << endl;
 	cout << "factorDim: " << factorDim << endl;
-
-	long fdimBits = (long)ceil(log2(factorDim));
-	cout << "fdimBits: " << fdimBits << endl;
-
-	long learnDim = (long)((double)sampleDim * learnPortion);
 	cout << "learnDim: " << learnDim << endl;
 
-	long ldimBits = (long)ceil(log2(learnDim));
-	cout << "ldimBits: " << ldimBits << endl;
-
 	long** xyDataLearn = GD::RandomxyDataLearn(xyData, learnDim, sampleDim, factorDim);
-
-	long wBits = 37;
-	long xyBits = 37;
-
-	cout << "xyBits: " << xyBits << endl;
-	cout << "wBits: " << wBits << endl;
-
-	long lBits = 5;
-	long pBits = 18;
-	long aBits = 2;
-	cout << "lBits: " << lBits << endl;
-	cout << "pBits: " << pBits << endl;
-	cout << "aBits: " << aBits << endl;
-
-	long logq = (approx == 3) ? (ldimBits + xyBits) + iter * (2 * wBits + xyBits + pBits + aBits) + lBits
-			: (ldimBits + xyBits) + iter * (3 * wBits + xyBits + pBits + aBits) + lBits;
-
-	long logN = Params::suggestlogN(80, logq);
-	cout << "logq: " << logq << endl;
-	cout << "logN: " << logN << endl;
-
-	long bBits = min(logN - 1 - ldimBits, fdimBits);
-	long batch = 1 << bBits;
-	cout << "bBits: " << bBits << endl;
-
-	long sBits = ldimBits + bBits;
-	long slots =  1 << sBits;
-	long cnum = (long)ceil((double)factorDim / batch);
-	cout << "slots: " << slots << endl;
-	cout << "cnum: " << cnum << endl;
 
 	double alpha0, alpha1, alpha2;
 	double etaprev, eta;
@@ -129,8 +131,6 @@ int main(int argc, char **argv) {
 
 	alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;
 	alpha2 = (1. + sqrt(1. + 4.0 * alpha1 * alpha1)) / 2.0;
-
-	cout << "!!! START NLGD !!!" << endl;
 
 	if(!isEncrypted) {
 		double* vData = new double[factorDim];
@@ -146,21 +146,57 @@ int main(int argc, char **argv) {
 		}
 
 		for (long k = 0; k < iter; ++k) {
-
 			etaprev = (1 - alpha0) / alpha1;
 			eta = (1 - alpha1) / alpha2;
-
 			gamma = gammaDownCnst > 0 ? gammaUpCnst / gammaDownCnst / learnDim : gammaUpCnst / (k - gammaDownCnst) / learnDim;
 
 			GD::stepNLGD(xyDataLearn, wData, vData, factorDim, learnDim, gamma, eta);
+
+			timeutils.start("check on train data");
 			GD::check(xyData, wData, factorDim, sampleDim);
+			double auctrain = GD::calcuateAUC(xyData, wData, factorDim, sampleDim, 100);
+			cout << "auc train: " << auctrain << endl;
+			timeutils.stop("check on train data");
+
+			timeutils.start("check on test data");
+			GD::check(xyDataTest, wData, factorDimTest, sampleDimTest);
+			double auctest = GD::calcuateAUC(xyDataTest, wData, factorDimTest, sampleDimTest, 100);
+			cout << "auc test: " << auctest << endl;
+			timeutils.stop("check on test data");
 
 			alpha0 = alpha1;
 			alpha1 = alpha2;
 			alpha2 = (1. + sqrt(1. + 4.0 * alpha1 * alpha1)) / 2.0;
-
 		}
 	} else {
+		long fdimBits = (long)ceil(log2(factorDim));
+		long ldimBits = (long)ceil(log2(learnDim));
+		long wBits = 37;
+		long xyBits = 37;
+		long lBits = 5;
+		long pBits = 18;
+		long aBits = 2;
+		long logq = (approx == 3) ? (ldimBits + xyBits) + iter * (2 * wBits + xyBits + pBits + aBits) + lBits
+				: (ldimBits + xyBits) + iter * (3 * wBits + xyBits + pBits + aBits) + lBits;
+		long logN = Params::suggestlogN(80, logq);
+		long bBits = min(logN - 1 - ldimBits, fdimBits);
+		long batch = 1 << bBits;
+
+		long sBits = ldimBits + bBits;
+		long slots =  1 << sBits;
+		long cnum = (long)ceil((double)factorDim / batch);
+
+		cout << "fdimBits: " << fdimBits << endl;
+		cout << "ldimBits: " << ldimBits << endl;
+		cout << "xyBits: " << xyBits << endl;
+		cout << "wBits: " << wBits << endl;
+		cout << "lBits: " << lBits << endl;
+		cout << "pBits: " << pBits << endl;
+		cout << "aBits: " << aBits << endl;
+		cout << "bBits: " << bBits << endl;
+		cout << "slots: " << slots << endl;
+		cout << "cnum: " << cnum << endl;
+
 		timeutils.start("Scheme generating...");
 		Params params(logN, logq);
 		SecKey secretKey(params);
@@ -170,18 +206,14 @@ int main(int argc, char **argv) {
 		CipherGD cipherGD(scheme, secretKey);
 		timeutils.stop("Scheme generation");
 
+		cout << "HEAAN PARAMETER logq: " << logq << endl;
+		cout << "HEAAN PARAMETER logN: " << logN << endl;
+		cout << "HEAAN PARAMETER h: " << params.h << endl;
+		cout << "HEAAN PARAMETER sigma: " << params.sigma << endl;
+
+		cout << "Scheme size ~ " << schemeSizeMB(scheme) << "MB" << endl;
 		timeutils.start("Polynomial generating...");
-		ZZ p = power2_ZZ(pBits);
-		CZZ* pvals = new CZZ[slots];
-		for (long j = 0; j < slots; j += batch) {
-			pvals[j] = CZZ(p);
-		}
-		CZZ* pdvals = scheme.groupidx(pvals, slots);
-		delete[] pvals;
-
-		Message msg = scheme.encode(pdvals, slots);
-		delete[] pdvals;
-
+		ZZX poly = cipherGD.generateAuxPoly(slots, batch, pBits);
 		timeutils.stop("Polynomial generation");
 
 		Cipher* cxyData = new Cipher[cnum];
@@ -191,6 +223,7 @@ int main(int argc, char **argv) {
 
 		Cipher* cwData = new Cipher[cnum];
 		Cipher* cvData = new Cipher[cnum];
+
 		timeutils.start("Encrypting wData and vData...");
 		cipherGD.encwData(cwData, cxyData, cnum, sBits, ldimBits, bBits, xyBits, wBits);
 		for (long i = 0; i < cnum; ++i) {
@@ -198,8 +231,14 @@ int main(int argc, char **argv) {
 		}
 		timeutils.stop("wData and vData encryption");
 
+		cout << "xyData ciphers size ~ " << cnum * cipherSizeMB(cxyData[0]) << "MB" << endl;
+		cout << "wData ciphers size ~ " << cnum * cipherSizeMB(cwData[0]) << "MB" << endl;
+		cout << "vData ciphers size ~ " << cnum * cipherSizeMB(cvData[0]) << "MB" << endl;
+
 		double* dwData = new double[factorDim];
 		for (long k = 0; k < iter; ++k) {
+
+			cout << " !!! START " << k + 1 << " ITERATION !!! " << endl;
 
 			etaprev = (1 - alpha0) / alpha1;
 			eta = (1 - alpha1) / alpha2;
@@ -207,15 +246,15 @@ int main(int argc, char **argv) {
 
 			if(approx == 3) {
 				timeutils.start("Encrypting NLGD step with degree 3 approx...");
-				cipherGD.encStepNLGD3(cxyData, cwData, cvData, msg.mx, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
+				cipherGD.encStepNLGD3(cxyData, cwData, cvData, poly, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
 				timeutils.stop("NLGD step with degree 3 approx");
 			} else if(approx == 5) {
 				timeutils.start("Encrypting NLGD step with degree 5 approx...");
-				cipherGD.encStepNLGD5(cxyData, cwData, cvData, msg.mx, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
+				cipherGD.encStepNLGD5(cxyData, cwData, cvData, poly, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
 				timeutils.stop("NLGD step with degree 5 approx");
 			} else {
 				timeutils.start("Encrypting NLGD step with degree 7 approx...");
-				cipherGD.encStepNLGD7(cxyData, cwData, cvData, msg.mx, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
+				cipherGD.encStepNLGD7(cxyData, cwData, cvData, poly, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
 				timeutils.stop("NLGD step with degree 7 approx");
 			}
 
@@ -223,13 +262,29 @@ int main(int argc, char **argv) {
 			alpha1 = alpha2;
 			alpha2 = (1. + sqrt(1. + 4.0 * alpha1 * alpha1)) / 2.0;
 
-			timeutils.start("check");
+			timeutils.start("decrypting");
 			cipherGD.decwData(dwData, cwData, factorDim, batch, cnum, wBits);
+			timeutils.stop("decrypting");
+
+			timeutils.start("check on train data");
 			GD::check(xyData, dwData, factorDim, sampleDim);
-			timeutils.stop("check");
+			double auctrain = GD::calcuateAUC(xyData, dwData, factorDim, sampleDim, 100);
+			cout << "auc train: " << auctrain << endl;
+			timeutils.stop("check on train data");
+
+			timeutils.start("check on test data");
+			GD::check(xyDataTest, dwData, factorDimTest, sampleDimTest);
+			double auctest = GD::calcuateAUC(xyDataTest, dwData, factorDimTest, sampleDimTest, 100);
+			cout << "auc test: " << auctest << endl;
+			timeutils.stop("check on test data");
+
+			cout << " !!! STOP " << k + 1 << " ITERATION !!! " << endl;
+
+			cout << "xyData ciphers size ~ " << cnum * cipherSizeMB(cxyData[0]) << "MB" << endl;
+			cout << "wData ciphers size ~ " << cnum * cipherSizeMB(cwData[0]) << "MB" << endl;
+			cout << "vData ciphers size ~ " << cnum * cipherSizeMB(cvData[0]) << "MB" << endl;
 		}
 	}
-	cout << "!!! END NLGD !!!" << endl;
 
 	return 0;
 }
