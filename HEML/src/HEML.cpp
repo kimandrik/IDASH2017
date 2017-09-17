@@ -13,37 +13,16 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <unistd.h>
+#include <ios>
+#include <fstream>
+#include <string>
 
+#include "MemoryUsage.h"
 #include "CipherGD.h"
 #include "GD.h"
 
 using namespace std;
-
-double cipherSizeMB(Cipher& cipher) {
-	double res = cipher.cbits * 2 * (deg(cipher.ax)+1) + cipher.cbits + 64;
-	res /= 8;
-	res /= 1024;
-	res /= 1024;
-	return res;
-}
-
-double schemeSizeMB(Scheme& scheme) {
-	double res = 0.0;
-
-	//params size
-	res += 8 * scheme.params.N; // rotGroup and rotGroupInv size
-	res += 3 * (scheme.params.logq / 8.); // q and qq size
-	res += 7 * 4; // other from params
-	//pubKey size
-	res += (2 + 4 * scheme.params.logN) * (scheme.params.N / 8.) * scheme.params.logq;
-	//schemeAux size
-	res += scheme.params.N * 150; // ksiPowr and ksiPowi size
-	res += 100; // other parts of map has not a lot of memory
-
-	res /= 1024;
-	res /= 1024;
-	return res;
-}
 
 /*
  * run: ./HEML trainfile(string) isYfirst(bool) iter(long) learnPortion(double) approx(long) isEncrypted(bool) testfile(string)
@@ -77,7 +56,6 @@ double schemeSizeMB(Scheme& scheme) {
  * FYI: approx 7 suggested iter: 3, 7, 14, 28, ...
  */
 int main(int argc, char **argv) {
-
 	string trainfile(argv[1]);
 	bool isYfirst = atoi(argv[2]);
 	long iter = atol(argv[3]);
@@ -197,6 +175,11 @@ int main(int argc, char **argv) {
 		cout << "slots: " << slots << endl;
 		cout << "cnum: " << cnum << endl;
 
+		size_t currentPreSchemeSize = getCurrentRSS( ) / 1048576;
+		size_t peakPreSchemeSize = getPeakRSS() / 1048576;
+		cout << "Current Memory Usage Before Scheme Generation: " << currentPreSchemeSize << "MB"<< endl;
+		cout << "Peak Memory Usage Before Scheme Generation: " << peakPreSchemeSize << "MB"<< endl;
+
 		timeutils.start("Scheme generating...");
 		Params params(logN, logq);
 		SecKey secretKey(params);
@@ -206,12 +189,17 @@ int main(int argc, char **argv) {
 		CipherGD cipherGD(scheme, secretKey);
 		timeutils.stop("Scheme generation");
 
+		size_t currentAfterSchemeSize = getCurrentRSS( ) / 1048576;
+		size_t peakAfterSchemeSize = getPeakRSS() / 1048576;
+		cout << "Current Memory Usage After Scheme Generation: " << currentAfterSchemeSize << "MB"<< endl;
+		cout << "Peak Memory Usage After Scheme Generation: " << peakAfterSchemeSize << "MB"<< endl;
+		cout << "Scheme Size is approximately " << currentAfterSchemeSize - currentPreSchemeSize << "MB" << endl;
+
 		cout << "HEAAN PARAMETER logq: " << logq << endl;
 		cout << "HEAAN PARAMETER logN: " << logN << endl;
 		cout << "HEAAN PARAMETER h: " << params.h << endl;
 		cout << "HEAAN PARAMETER sigma: " << params.sigma << endl;
 
-		cout << "Scheme size ~ " << schemeSizeMB(scheme) << "MB" << endl;
 		timeutils.start("Polynomial generating...");
 		ZZX poly = cipherGD.generateAuxPoly(slots, batch, pBits);
 		timeutils.stop("Polynomial generation");
@@ -231,9 +219,11 @@ int main(int argc, char **argv) {
 		}
 		timeutils.stop("wData and vData encryption");
 
-		cout << "xyData ciphers size ~ " << cnum * cipherSizeMB(cxyData[0]) << "MB" << endl;
-		cout << "wData ciphers size ~ " << cnum * cipherSizeMB(cwData[0]) << "MB" << endl;
-		cout << "vData ciphers size ~ " << cnum * cipherSizeMB(cvData[0]) << "MB" << endl;
+		size_t currentAfterCipherSize = getCurrentRSS( ) / 1048576;
+		size_t peakAfterCipherSize = getPeakRSS() / 1048576;
+		cout << "Current Memory Usage After Scheme Generation: " << currentAfterCipherSize << "MB"<< endl;
+		cout << "Peak Memory Usage After Scheme Generation: " << peakAfterCipherSize << "MB"<< endl;
+		cout << "Total Ciphertexts Size is approximately " << currentAfterCipherSize - currentAfterSchemeSize << "MB" << endl;
 
 		double* dwData = new double[factorDim];
 		for (long k = 0; k < iter; ++k) {
@@ -272,6 +262,11 @@ int main(int argc, char **argv) {
 			cout << "auc train: " << auctrain << endl;
 			timeutils.stop("check on train data");
 
+			size_t currentAfterIterSize = getCurrentRSS( ) / 1048576;
+			size_t peakAfterIterSize = getPeakRSS() / 1048576;
+			cout << "Current Memory Usage After Iteration " << (k+1) << ": " << currentAfterIterSize << "MB"<< endl;
+			cout << "Peak Memory Usage After Iteration " << (k+1) << ": " << peakAfterIterSize << "MB"<< endl;
+
 			timeutils.start("check on test data");
 			GD::check(xyDataTest, dwData, factorDimTest, sampleDimTest);
 			double auctest = GD::calcuateAUC(xyDataTest, dwData, factorDimTest, sampleDimTest, 100);
@@ -280,9 +275,10 @@ int main(int argc, char **argv) {
 
 			cout << " !!! STOP " << k + 1 << " ITERATION !!! " << endl;
 
-			cout << "xyData ciphers size ~ " << cnum * cipherSizeMB(cxyData[0]) << "MB" << endl;
-			cout << "wData ciphers size ~ " << cnum * cipherSizeMB(cwData[0]) << "MB" << endl;
-			cout << "vData ciphers size ~ " << cnum * cipherSizeMB(cvData[0]) << "MB" << endl;
+			size_t currentAfterDecSize = getCurrentRSS( ) / 1048576;
+			size_t peakAfterDecSize = getPeakRSS() / 1048576;
+			cout << "Current Memory Usage After Decryption " << (k+1) << ": " << currentAfterDecSize << "MB"<< endl;
+			cout << "Peak Memory Usage After Decryption " << (k+1) << ": " << peakAfterDecSize << "MB"<< endl;
 		}
 	}
 
