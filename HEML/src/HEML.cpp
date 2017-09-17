@@ -221,8 +221,8 @@ int main(int argc, char **argv) {
 
 		size_t currentAfterCipherSize = getCurrentRSS( ) / 1048576;
 		size_t peakAfterCipherSize = getPeakRSS() / 1048576;
-		cout << "Current Memory Usage After Scheme Generation: " << currentAfterCipherSize << "MB"<< endl;
-		cout << "Peak Memory Usage After Scheme Generation: " << peakAfterCipherSize << "MB"<< endl;
+		cout << "Current Memory Usage After Ciphertexts Generation: " << currentAfterCipherSize << "MB"<< endl;
+		cout << "Peak Memory Usage After Ciphertexts Generation: " << peakAfterCipherSize << "MB"<< endl;
 		cout << "Total Ciphertexts Size is approximately " << currentAfterCipherSize - currentAfterSchemeSize << "MB" << endl;
 
 		double* dwData = new double[factorDim];
@@ -252,6 +252,13 @@ int main(int argc, char **argv) {
 			alpha1 = alpha2;
 			alpha2 = (1. + sqrt(1. + 4.0 * alpha1 * alpha1)) / 2.0;
 
+			cout << " !!! STOP " << k + 1 << " ITERATION !!! " << endl;
+
+			size_t currentAfterIterSize = getCurrentRSS( ) / 1048576;
+			size_t peakAfterIterSize = getPeakRSS() / 1048576;
+			cout << "Current Memory Usage After Iteration " << (k+1) << ": " << currentAfterIterSize << "MB"<< endl;
+			cout << "Peak Memory Usage After Iteration " << (k+1) << ": " << peakAfterIterSize << "MB"<< endl;
+
 			timeutils.start("decrypting");
 			cipherGD.decwData(dwData, cwData, factorDim, batch, cnum, wBits);
 			timeutils.stop("decrypting");
@@ -262,18 +269,11 @@ int main(int argc, char **argv) {
 			cout << "auc train: " << auctrain << endl;
 			timeutils.stop("check on train data");
 
-			size_t currentAfterIterSize = getCurrentRSS( ) / 1048576;
-			size_t peakAfterIterSize = getPeakRSS() / 1048576;
-			cout << "Current Memory Usage After Iteration " << (k+1) << ": " << currentAfterIterSize << "MB"<< endl;
-			cout << "Peak Memory Usage After Iteration " << (k+1) << ": " << peakAfterIterSize << "MB"<< endl;
-
 			timeutils.start("check on test data");
 			GD::check(xyDataTest, dwData, factorDimTest, sampleDimTest);
 			double auctest = GD::calcuateAUC(xyDataTest, dwData, factorDimTest, sampleDimTest, 100);
 			cout << "auc test: " << auctest << endl;
 			timeutils.stop("check on test data");
-
-			cout << " !!! STOP " << k + 1 << " ITERATION !!! " << endl;
 
 			size_t currentAfterDecSize = getCurrentRSS( ) / 1048576;
 			size_t peakAfterDecSize = getPeakRSS() / 1048576;
