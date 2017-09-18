@@ -137,7 +137,7 @@ void CipherGD::encStepLGD3(Cipher*& cxyData, Cipher*& cwData, ZZX& poly, long& c
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
 		scheme.modEmbedAndEqual(cwData[i], bitsDown + wBits);
-		scheme.subAndEqual(cwData[i],cvData[i]);
+		scheme.subAndEqual(cwData[i],cgrad[i]);
 	}
 	NTL_EXEC_RANGE_END;
 	
@@ -231,7 +231,7 @@ void CipherGD::encStepLGD5(Cipher*& cxyData, Cipher*& cwData, ZZX& poly, long& c
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
 		scheme.modEmbedAndEqual(cwData[i], bitsDown + wBits);
-		scheme.subAndEqual(cwData[i],cvData[i]);
+		scheme.subAndEqual(cwData[i],cgrad[i]);
 	}
 	NTL_EXEC_RANGE_END;
 	
@@ -335,7 +335,7 @@ void CipherGD::encStepLGD7(Cipher*& cxyData, Cipher*& cwData, ZZX& poly, long& c
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
 		scheme.modEmbedAndEqual(cwData[i], bitsDown + wBits);
-		scheme.subAndEqual(cwData[i],cvData[i]);
+		scheme.subAndEqual(cwData[i],cgrad[i]);
 	}
 	NTL_EXEC_RANGE_END;
 
