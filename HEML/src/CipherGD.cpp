@@ -63,7 +63,6 @@ ZZX CipherGD::generateAuxPoly(long& slots, long& batch, long& pBits) {
 }
 
 void CipherGD::encStepLGD3(Cipher*& cxyData, Cipher*& cwData, ZZX& poly, long& cnum, double& gamma, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits) {
-	//TODO implement method
 	Cipher* cprod = new Cipher[cnum];
  	Cipher* cgrad = new Cipher[cnum];
 
@@ -146,7 +145,6 @@ void CipherGD::encStepLGD3(Cipher*& cxyData, Cipher*& cwData, ZZX& poly, long& c
 }
 
 void CipherGD::encStepLGD5(Cipher*& cxyData, Cipher*& cwData, ZZX& poly, long& cnum, double& gamma, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits) {
-	//TODO implement method
 	Cipher* cprod = new Cipher[cnum];
  	Cipher* cgrad = new Cipher[cnum];
 
