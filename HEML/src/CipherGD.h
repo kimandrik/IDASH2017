@@ -21,6 +21,16 @@ public:
 	void encwData(Cipher*& cwData, Cipher*& cxyData, long& cnum, long& sBits, long& ldimBits, long& bBits, long& xyBits, long& wBits);
 	ZZX generateAuxPoly(long& slots, long& batch, long& pBits);
 
+	Cipher encIP(Cipher*& cxyData, Cipher*& cwData, Cipher*& cgrad, Cipher*& cprod, ZZX& poly, long& cnum, long& bBits, long& xyBits, long& pBits, long& aBits);
+
+	void encSigmoid3(Cipher*& cxyData, Cipher*& cgrad, Cipher*& cprod, Cipher& cip, long& cnum, double& gamma, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits);
+	void encSigmoid5(Cipher*& cxyData, Cipher*& cgrad, Cipher*& cprod, Cipher& cip, long& cnum, double& gamma, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits);
+	void encSigmoid7(Cipher*& cxyData, Cipher*& cgrad, Cipher*& cprod, Cipher& cip, long& cnum, double& gamma, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits);
+
+	void encLGD(Cipher*& cwData, Cipher*& cgrad, long& cnum, long& wBits, long& bitsDown);
+	void encMLGD(Cipher*& cwData, Cipher*& cvData, Cipher*& cgrad, double& eta, long& cnum, long& wBits, long& bitsDown);
+	void encNLGD(Cipher*& cwData, Cipher*& cvData, Cipher*& cgrad, double& eta, double& etaprev, long& cnum, long& wBits, long& bitsDown);
+
 	void encStepLGD3(Cipher*& cxyData, Cipher*& cwData, ZZX& poly, long& cnum, double& gamma, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits);
 	void encStepLGD5(Cipher*& cxyData, Cipher*& cwData, ZZX& poly, long& cnum, double& gamma, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits);
 	void encStepLGD7(Cipher*& cxyData, Cipher*& cwData, ZZX& poly, long& cnum, double& gamma, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits);
