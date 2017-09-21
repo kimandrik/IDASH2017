@@ -234,19 +234,9 @@ int main(int argc, char **argv) {
 			eta = (1 - alpha1) / alpha2;
 			gamma = gammaDownCnst > 0 ? gammaUpCnst / gammaDownCnst / learnDim : gammaUpCnst / (k - gammaDownCnst) / learnDim;
 
-			if(approx == 3) {
-				timeutils.start("Encrypting NLGD step with degree 3 approx...");
-				cipherGD.encStepNLGD3(cxyData, cwData, cvData, poly, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
-				timeutils.stop("NLGD step with degree 3 approx");
-			} else if(approx == 5) {
-				timeutils.start("Encrypting NLGD step with degree 5 approx...");
-				cipherGD.encStepNLGD5(cxyData, cwData, cvData, poly, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
-				timeutils.stop("NLGD step with degree 5 approx");
-			} else {
-				timeutils.start("Encrypting NLGD step with degree 7 approx...");
-				cipherGD.encStepNLGD7(cxyData, cwData, cvData, poly, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
-				timeutils.stop("NLGD step with degree 7 approx");
-			}
+			timeutils.start("Encrypting NLGD step...");
+			cipherGD.encStepNLGD(approx, cxyData, cwData, cvData, poly, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
+			timeutils.stop("NLGD step ");
 
 			alpha0 = alpha1;
 			alpha1 = alpha2;
