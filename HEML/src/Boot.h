@@ -27,27 +27,30 @@ public:
 
 	virtual ~Boot();
 
-	void normalize(Cipher& cipher, long N);
+	void normalizeAndEqual(Cipher& cipher, long N);
 
-	void linearTransform(Cipher& enclin, Cipher& encx, long size);
-	void linearTransformInv(Cipher& res, Cipher& enclin, long size);
+	void linearTransform(Cipher& res, Cipher& cipher, long size);
+	void linearTransformInv(Cipher& res, Cipher& cipher, long size);
+
+	void linearTransformAndEqual(Cipher& cipher, long size);
+	void linearTransformInvAndEqual(Cipher& cipher, long size);
 
 	Cipher leftBabyRotate(Cipher& cipher, long i);
 	void leftGiantRotateAndEqual(Cipher& cipher, long l, long k, long i);
 
-	Cipher evaluateEncSin2pix7(Cipher& enclinx, long precisionBits);
-	Cipher evaluateEncSin2pix3(Cipher& enclinx, long precisionBits);
+	Cipher evaluateEncSin2pix7(Cipher& cipher, long precisionBits);
+	Cipher evaluateEncSin2pix3(Cipher& cipher, long precisionBits);
 
-	Cipher evaluateEncCos2pix6(Cipher& enclinx, long precisionBits);
-	Cipher evaluateEncCos2pix2(Cipher& enclinx, long precisionBits);
+	Cipher evaluateEncCos2pix6(Cipher& cipher, long precisionBits);
+	Cipher evaluateEncCos2pix2(Cipher& cipher, long precisionBits);
 
-	Cipher evaluateEncSin2x(Cipher& encSinx, Cipher& encCosx, long precisionBits);
-	Cipher evaluateEncCos2x(Cipher& encSinx, Cipher& encCosx, long precisionBits);
+	Cipher evaluateEncSin2x(Cipher& cipherSin, Cipher& cipherCos, long precisionBits);
+	Cipher evaluateEncCos2x(Cipher& cipherSin, Cipher& cipherCos, long precisionBits);
 
 	Cipher removeIpart(Cipher& cipher, long logq0, long logT, long logI);
+	void removeIpartAndEqual(Cipher& cipher, long logq0, long logT, long logI);
 
 	Cipher bootstrap(Cipher& encx, long logq0, long logT, long logI);
-
 	void bootstrapAndEqual(Cipher& cipher, long logq0, long logT, long logI);
 };
 

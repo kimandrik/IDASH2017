@@ -59,7 +59,7 @@ void TestBoot::testBootstrap() {
 	Cipher cipher = scheme.encryptWithBits(mvec, logq0, slots);
 	timeutils.stop("Encrypt batch");
 
-	boot.normalize(cipher, params.N);
+	boot.normalizeAndEqual(cipher, params.N);
 
 	cipher.cbits = logq;
 	cipher.mod = power2_ZZ(logq);
@@ -170,7 +170,7 @@ void TestBoot::testBootstrapOneReal() {
 	Cipher cipher = scheme.encryptWithBits(mvec, logq0, slots);
 	timeutils.stop("Encrypt batch");
 
-	boot.normalize(cipher, params.N);
+	boot.normalizeAndEqual(cipher, params.N);
 
 	cipher.cbits = logq;
 	cipher.mod = power2_ZZ(logq);
@@ -249,7 +249,7 @@ void TestBoot::testBoundOfI() {
 		if(NumBits(msgSmall.mx.rep[i]) == msgSmall.cbits) msgSmall.mx.rep[i] -= msgSmall.mod;
 	}
 
-	boot.normalize(cipher, params.N);
+	boot.normalizeAndEqual(cipher, params.N);
 
 	cipher.cbits = logq;
 	cipher.mod = params.q;
