@@ -283,20 +283,20 @@ Cipher Boot::evaluateEncCos2x(Cipher& cipherSin, Cipher& cipherCos, long precisi
 Cipher Boot::removeIpart(Cipher& cipher, long logq0, long logT, long logI) {
 	Cipher cms = scheme.modSwitch(cipher, logT);
 
-	Cipher encsinx = evaluateEncSin2pix7(cms, logq0 + logI);
-	Cipher enccosx = evaluateEncCos2pix6(cms, logq0 + logI);
+	Cipher cipherSin = evaluateEncSin2pix7(cms, logq0 + logI);
+	Cipher cipherCos = evaluateEncCos2pix6(cms, logq0 + logI);
 
-	Cipher encsin2x, enccos2x;
+	Cipher cipherSin2, cipherCos2;
 	for (long i = 0; i < logI + logT; ++i) {
-		encsin2x = evaluateEncSin2x(encsinx, enccosx, logq0 + logI);
-		enccos2x = evaluateEncCos2x(encsinx, enccosx, logq0 + logI);
-		encsinx = encsin2x;
-		enccosx = enccos2x;
+		cipherSin2 = evaluateEncSin2x(cipherSin, cipherCos, logq0 + logI);
+		cipherCos2 = evaluateEncCos2x(cipherSin, cipherCos, logq0 + logI);
+		cipherSin = cipherSin2;
+		cipherCos = cipherCos2;
 	}
 	ZZ temp = EvaluatorUtils::evaluateVal(1/(2*Pi), logq0 + logI);
-	scheme.multByConstAndEqual(encsinx, temp);
-	scheme.modSwitchAndEqual(encsinx, logq0 + 2 * logI);
-	return encsinx;
+	scheme.multByConstAndEqual(cipherSin, temp);
+	scheme.modSwitchAndEqual(cipherSin, logq0 + 2 * logI);
+	return cipherSin;
 }
 
 void Boot::removeIpartAndEqual(Cipher& cipher, long logq0, long logT, long logI) {
