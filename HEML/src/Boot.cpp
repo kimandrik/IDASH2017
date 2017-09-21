@@ -145,34 +145,34 @@ void Boot::linearTransformInv(Cipher& res, Cipher& enclin, long size) {
  * sin(x) ~ x - x^3/6 + x^5/120 - x^7/5040
  * This process need 3 level down
  */
-Cipher Boot::evaluateEncSin2pix7(Cipher& enclinx, long precisionBits) {
+Cipher Boot::evaluateEncSin2pix7(Cipher& cipher, long precisionBits) {
 
-	Cipher encx2 = scheme.square(enclinx); //depth 1
-	scheme.modSwitchAndEqual(encx2, precisionBits);
-	Cipher encx4 = scheme.square(encx2); //depth 2
-	scheme.modSwitchAndEqual(encx4, precisionBits);
+	Cipher cipher2 = scheme.square(cipher); //depth 1
+	scheme.modSwitchAndEqual(cipher2, precisionBits);
+	Cipher cipher4 = scheme.square(cipher2); //depth 2
+	scheme.modSwitchAndEqual(cipher4, precisionBits);
 	RR c = -4*Pi*Pi*Pi/3;
 	ZZ pc = EvaluatorUtils::evaluateVal(c, precisionBits);
-	Cipher tmp = scheme.multByConst(enclinx, pc);
+	Cipher tmp = scheme.multByConst(cipher, pc);
 	scheme.modSwitchAndEqual(tmp, precisionBits); // depth 1
 
 	c = -3/(2*Pi*Pi);
 	pc = EvaluatorUtils::evaluateVal(c, precisionBits);
-	Cipher encx13 = scheme.addConst(encx2, pc);
+	Cipher encx13 = scheme.addConst(cipher2, pc);
 	scheme.multAndEqual(encx13, tmp);
 	scheme.modSwitchAndEqual(encx13, precisionBits); // depth 2
 
 	c = -8*Pi*Pi*Pi*Pi*Pi*Pi*Pi/315;
 	pc = EvaluatorUtils::evaluateVal(c, precisionBits);
-	tmp = scheme.multByConst(enclinx, pc);
+	tmp = scheme.multByConst(cipher, pc);
 	scheme.modSwitchAndEqual(tmp, precisionBits); // depth 1
 
 	c = -21/(2*Pi*Pi);
 	pc = EvaluatorUtils::evaluateVal(c, precisionBits);
-	Cipher encx57 = scheme.addConst(encx2, pc);
+	Cipher encx57 = scheme.addConst(cipher2, pc);
 	scheme.multAndEqual(encx57, tmp);
 	scheme.modSwitchAndEqual(encx57, precisionBits); // depth 2
-	scheme.multAndEqual(encx57, encx4);
+	scheme.multAndEqual(encx57, cipher4);
 	scheme.modSwitchAndEqual(encx57, precisionBits); // depth 3
 
 	scheme.modEmbedAndEqual(encx13, precisionBits); // depth 3
@@ -294,12 +294,12 @@ Cipher Boot::removeIpart(Cipher& cipher, long logq0, long logT, long logI) {
 }
 
 
-Cipher Boot::bootstrap(Cipher& encx, long logq0, long logT, long logI) {
-	long logSlots = log2(encx.slots);
+Cipher Boot::bootstrap(Cipher& cipher, long logq0, long logT, long logI) {
+	long logSlots = log2(cipher.slots);
 	if(logSlots == scheme.params.logN - 1) {
 		Cipher clinOdd, clinEven, cresEven, cresOdd;
-		linearTransform(clinEven, encx, scheme.params.N / 2);
-		Cipher cshift1 = scheme.multByMonomial(encx, 2 * scheme.params.N - 1);
+		linearTransform(clinEven, cipher, scheme.params.N / 2);
+		Cipher cshift1 = scheme.multByMonomial(cipher, 2 * scheme.params.N - 1);
 		linearTransform(clinOdd, cshift1, scheme.params.N / 2);
 
 		Cipher clinEvenConj = scheme.conjugate(clinEven);
@@ -324,22 +324,69 @@ Cipher Boot::bootstrap(Cipher& encx, long logq0, long logT, long logI) {
 	} else {
 		Cipher clinEven, cresEven;
 
-		Cipher rotated = encx;
+		Cipher rotated = cipher;
 		for (long i = logSlots; i < scheme.params.logN - 1; ++i) {
 			Cipher rot = scheme.leftRotateByPo2(rotated, i);
 			scheme.addAndEqual(rotated, rot);
 		}
 		scheme.modSwitchAndEqual(rotated, scheme.params.logN - 1 - logSlots);
-		linearTransform(clinEven, rotated, encx.slots * 2);
+		linearTransform(clinEven, rotated, cipher.slots * 2);
 
 		Cipher clinEvenConj = scheme.conjugate(clinEven);
 		scheme.addAndEqual(clinEven, clinEvenConj);
 		scheme.modSwitchAndEqual(clinEven, logq0 + logI + logSlots + 2);
 
 		Cipher csinEven = removeIpart(clinEven, logq0, logT, logI);
-		linearTransformInv(cresEven, csinEven, encx.slots * 2);
+		linearTransformInv(cresEven, csinEven, cipher.slots * 2);
 		scheme.modSwitchAndEqual(cresEven, logq0 + logI);
 		return cresEven;
+	}
+}
+
+void Boot::bootstrapAndEqual(Cipher& cipher, long logq0, long logT, long logI) {
+	long logSlots = log2(cipher.slots);
+	if(logSlots == scheme.params.logN - 1) {
+		Cipher clinOdd, clinEven, cresEven, cresOdd;
+		linearTransform(clinEven, cipher, scheme.params.N / 2);
+		Cipher cshift1 = scheme.multByMonomial(cipher, 2 * scheme.params.N - 1);
+		linearTransform(clinOdd, cshift1, scheme.params.N / 2);
+
+		Cipher clinEvenConj = scheme.conjugate(clinEven);
+		scheme.addAndEqual(clinEven, clinEvenConj);
+		scheme.modSwitchAndEqual(clinEven, logq0 + logI + logSlots);
+
+		Cipher clinOddConj = scheme.conjugate(clinOdd);
+		scheme.addAndEqual(clinOdd, clinOddConj);
+		scheme.modSwitchAndEqual(clinOdd, logq0 + logI + logSlots);
+
+		Cipher csinEven = removeIpart(clinEven, logq0, logT, logI);
+		Cipher csinOdd = removeIpart(clinOdd, logq0, logT, logI);
+
+		linearTransformInv(cresEven, csinEven, scheme.params.N / 2);
+		linearTransformInv(cresOdd, csinOdd, scheme.params.N / 2);
+
+		scheme.multByMonomialAndEqual(cresOdd, 1);
+		scheme.addAndEqual(cresEven, cresOdd);
+		scheme.modSwitchAndEqual(cresEven, logq0 + logI);
+
+	} else {
+		Cipher clinEven, cresEven;
+
+		Cipher rotated = cipher;
+		for (long i = logSlots; i < scheme.params.logN - 1; ++i) {
+			Cipher rot = scheme.leftRotateByPo2(rotated, i);
+			scheme.addAndEqual(rotated, rot);
+		}
+		scheme.modSwitchAndEqual(rotated, scheme.params.logN - 1 - logSlots);
+		linearTransform(clinEven, rotated, cipher.slots * 2);
+
+		Cipher clinEvenConj = scheme.conjugate(clinEven);
+		scheme.addAndEqual(clinEven, clinEvenConj);
+		scheme.modSwitchAndEqual(clinEven, logq0 + logI + logSlots + 2);
+
+		Cipher csinEven = removeIpart(clinEven, logq0, logT, logI);
+		linearTransformInv(cresEven, csinEven, cipher.slots * 2);
+		scheme.modSwitchAndEqual(cresEven, logq0 + logI);
 	}
 }
 
