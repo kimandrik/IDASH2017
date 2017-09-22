@@ -17,7 +17,7 @@ BootAux::BootAux() {
 
 	sinTaylorDeg7[0] = -4*Pi*Pi*Pi/3; // c3
 	sinTaylorDeg7[1] = -3/(2*Pi*Pi); // c1/c3
-	sinTaylorDeg7[2] = -8*Pi*Pi*Pi*Pi*Pi/315; // c7
+	sinTaylorDeg7[2] = -8*Pi*Pi*Pi*Pi*Pi*Pi*Pi/315; // c7
 	sinTaylorDeg7[3] = -21/(2*Pi*Pi); // c5/c7
 
 	cosTaylorDeg6[0] = -1/(2*Pi*Pi); // 1/c2
