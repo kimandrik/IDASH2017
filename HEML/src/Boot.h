@@ -2,6 +2,7 @@
 #define BOOT_H_
 
 #include "BootKey.h"
+#include "BootAux.h"
 #include <NTL/ZZ.h>
 #include <NTL/RR.h>
 #include <Cipher.h>
@@ -16,6 +17,7 @@ public:
 
 	Scheme& scheme;
 	SecKey& secretKey;
+	BootAux bootAux;
 	map<long, BootKey> bootKeyMap;
 
 	ZZX* axBabyRot;

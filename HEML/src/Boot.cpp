@@ -113,7 +113,33 @@ void Boot::linearTransform(Cipher& res, Cipher& cipher, long size) {
 }
 
 void Boot::linearTransformAndEqual(Cipher& cipher, long size) {
-	//TODO
+	long logSize = log2(size);
+	long k = 1 << (logSize / 2);
+	long m = size / k;
+
+	Cipher* cipherRotVec = new Cipher[k];
+	cipherRotVec[0] = cipher;
+
+	for (long i = 1; i < k; ++i) {
+		cipherRotVec[i] = leftBabyRotate(cipherRotVec[0], i);
+	}
+
+	cipher = scheme.multByPoly(cipherRotVec[0], bootKeyMap.at(logSize).pvec[0]);
+	for (long j = 1; j < k; ++j) {
+		Cipher cij = scheme.multByPoly(cipherRotVec[j], bootKeyMap.at(logSize).pvec[j]);
+		scheme.addAndEqual(cipher, cij);
+	}
+
+	for (long i = 1; i < m; ++i) {
+		Cipher ci0 = scheme.multByPoly(cipherRotVec[0], bootKeyMap.at(logSize).pvec[k * i]);
+		for (long j = 1; j < k; ++j) {
+			Cipher cij = scheme.multByPoly(cipherRotVec[j], bootKeyMap.at(logSize).pvec[j + k * i]);
+			scheme.addAndEqual(ci0, cij);
+		}
+		leftGiantRotateAndEqual(ci0, logSize, k, i);
+		scheme.addAndEqual(cipher, ci0);
+	}
+	delete[] cipherRotVec;
 }
 
 void Boot::linearTransformInv(Cipher& res, Cipher& cipher, long size) {
@@ -145,7 +171,31 @@ void Boot::linearTransformInv(Cipher& res, Cipher& cipher, long size) {
 }
 
 void Boot::linearTransformInvAndEqual(Cipher& cipher, long size) {
-	//TODO
+	long logSize = log2(size);
+	long k = 1 << (logSize / 2);
+	long m = size / k;
+
+	Cipher* cipherRotVec = new Cipher[k];
+	cipherRotVec[0] = cipher;
+	for (long i = 1; i < k; ++i) {
+		cipherRotVec[i] = leftBabyRotate(cipherRotVec[0], i);
+	}
+	cipher = scheme.multByPoly(cipherRotVec[0], bootKeyMap.at(logSize).pvecInv[0]);
+
+	for (long j = 1; j < k; ++j) {
+		Cipher c0j = scheme.multByPoly(cipherRotVec[j], bootKeyMap.at(logSize).pvecInv[j]);
+		scheme.addAndEqual(cipher, c0j);
+	}
+	for (long i = 1; i < m; ++i) {
+		Cipher ci0 = scheme.multByPoly(cipherRotVec[0], bootKeyMap.at(logSize).pvecInv[k * i]);
+		for (long j = 1; j < k; ++j) {
+			Cipher cij = scheme.multByPoly(cipherRotVec[j], bootKeyMap.at(logSize).pvecInv[j + k * i]);
+			scheme.addAndEqual(ci0, cij);
+		}
+		leftGiantRotateAndEqual(ci0, logSize, k, i);
+		scheme.addAndEqual(cipher, ci0);
+	}
+	delete[] cipherRotVec;
 }
 
 /**
@@ -157,26 +207,23 @@ Cipher Boot::evaluateEncSin2pix7(Cipher& cipher, long precisionBits) {
 
 	Cipher cipher2 = scheme.square(cipher); //depth 1
 	scheme.modSwitchAndEqual(cipher2, precisionBits);
+
 	Cipher cipher4 = scheme.square(cipher2); //depth 2
 	scheme.modSwitchAndEqual(cipher4, precisionBits);
-	RR c = -4*Pi*Pi*Pi/3;
-	ZZ pc = EvaluatorUtils::evaluateVal(c, precisionBits);
+	ZZ pc = EvaluatorUtils::evaluateVal(bootAux.sinTaylorDeg7[0], precisionBits);
 	Cipher tmp = scheme.multByConst(cipher, pc);
 	scheme.modSwitchAndEqual(tmp, precisionBits); // depth 1
 
-	c = -3/(2*Pi*Pi);
-	pc = EvaluatorUtils::evaluateVal(c, precisionBits);
+	pc = EvaluatorUtils::evaluateVal(bootAux.sinTaylorDeg7[1], precisionBits);
 	Cipher cipher13 = scheme.addConst(cipher2, pc);
 	scheme.multAndEqual(cipher13, tmp);
 	scheme.modSwitchAndEqual(cipher13, precisionBits); // depth 2
 
-	c = -8*Pi*Pi*Pi*Pi*Pi*Pi*Pi/315;
-	pc = EvaluatorUtils::evaluateVal(c, precisionBits);
+	pc = EvaluatorUtils::evaluateVal(bootAux.sinTaylorDeg7[2], precisionBits);
 	tmp = scheme.multByConst(cipher, pc);
 	scheme.modSwitchAndEqual(tmp, precisionBits); // depth 1
 
-	c = -21/(2*Pi*Pi);
-	pc = EvaluatorUtils::evaluateVal(c, precisionBits);
+	pc = EvaluatorUtils::evaluateVal(bootAux.sinTaylorDeg7[3], precisionBits);
 	Cipher cipher57 = scheme.addConst(cipher2, pc);
 	scheme.multAndEqual(cipher57, tmp);
 	scheme.modSwitchAndEqual(cipher57, precisionBits); // depth 2
@@ -198,13 +245,11 @@ Cipher Boot::evaluateEncSin2pix3(Cipher& cipher, long precisionBits) {
 	Cipher cipher2 = scheme.square(cipher); //depth 1
 	scheme.modSwitchAndEqual(cipher2, precisionBits);
 
-	RR c = -4*Pi*Pi*Pi/3;
-	ZZ pc = EvaluatorUtils::evaluateVal(c, precisionBits);
+	ZZ pc = EvaluatorUtils::evaluateVal(bootAux.sinTaylorDeg7[0], precisionBits);
 	Cipher tmp = scheme.multByConst(cipher, pc);
 	scheme.modSwitchAndEqual(tmp, precisionBits); // depth 1
 
-	c = -3/(2*Pi*Pi);
-	pc = EvaluatorUtils::evaluateVal(c, precisionBits);
+	pc = EvaluatorUtils::evaluateVal(bootAux.sinTaylorDeg7[1], precisionBits);
 	Cipher res = scheme.addConst(cipher2, pc);
 	scheme.multAndEqual(res, tmp);
 	scheme.modSwitchAndEqual(res, precisionBits); // depth 2
@@ -224,21 +269,17 @@ Cipher Boot::evaluateEncCos2pix6(Cipher& cipher, long precisionBits) {
 	Cipher cipher4 = scheme.square(cipher2); //depth 2
 	scheme.modSwitchAndEqual(cipher4, precisionBits);
 
-	RR c = -1/(2*Pi*Pi);
-	ZZ pc = EvaluatorUtils::evaluateVal(c, precisionBits);
+	ZZ pc = EvaluatorUtils::evaluateVal(bootAux.cosTaylorDeg6[0], precisionBits);
 	Cipher cipher02 = scheme.addConst(cipher2, pc);
 
-	c = -2*Pi*Pi;
-	pc = EvaluatorUtils::evaluateVal(c, precisionBits);
+	pc = EvaluatorUtils::evaluateVal(bootAux.cosTaylorDeg6[1], precisionBits);
 	scheme.multByConstAndEqual(cipher02, pc);
 	scheme.modSwitchAndEqual(cipher02, precisionBits); // depth 2
 
-	c = -15/(2*Pi*Pi);
-	pc = EvaluatorUtils::evaluateVal(c, precisionBits);
+	pc = EvaluatorUtils::evaluateVal(bootAux.cosTaylorDeg6[2], precisionBits);
 	Cipher cipher46 = scheme.addConst(cipher2, pc);
 
-	c = -4*Pi*Pi*Pi*Pi*Pi*Pi/45;
-	pc = EvaluatorUtils::evaluateVal(c, precisionBits);
+	pc = EvaluatorUtils::evaluateVal(bootAux.cosTaylorDeg6[3], precisionBits);
 	scheme.multByConstAndEqual(cipher46, pc);
 	scheme.modSwitchAndEqual(cipher46, precisionBits); // depth 2
 
@@ -253,12 +294,10 @@ Cipher Boot::evaluateEncCos2pix6(Cipher& cipher, long precisionBits) {
 Cipher Boot::evaluateEncCos2pix2(Cipher& cipher, long precisionBits) {
 	Cipher cipher2 = scheme.square(cipher); //depth 1
 	scheme.modSwitchAndEqual(cipher2, precisionBits);
-	RR c = -1/(2*Pi*Pi);
-	ZZ pc = EvaluatorUtils::evaluateVal(c, precisionBits);
+	ZZ pc = EvaluatorUtils::evaluateVal(bootAux.cosTaylorDeg6[0], precisionBits);
 	Cipher res = scheme.addConst(cipher2, pc);
 
-	c = -2*Pi*Pi;
-	pc = EvaluatorUtils::evaluateVal(c, precisionBits);
+	pc = EvaluatorUtils::evaluateVal(bootAux.cosTaylorDeg6[1], precisionBits);
 	scheme.multByConstAndEqual(res, pc);
 	scheme.modSwitchAndEqual(res, precisionBits); // depth 2
 
@@ -287,20 +326,40 @@ Cipher Boot::removeIpart(Cipher& cipher, long logq0, long logT, long logI) {
 	Cipher cipherCos = evaluateEncCos2pix6(cms, logq0 + logI);
 
 	Cipher cipherSin2, cipherCos2;
-	for (long i = 0; i < logI + logT; ++i) {
+	for (long i = 0; i < logI + logT - 1; ++i) {
 		cipherSin2 = evaluateEncSin2x(cipherSin, cipherCos, logq0 + logI);
 		cipherCos2 = evaluateEncCos2x(cipherSin, cipherCos, logq0 + logI);
 		cipherSin = cipherSin2;
 		cipherCos = cipherCos2;
 	}
-	ZZ temp = EvaluatorUtils::evaluateVal(1/(2*Pi), logq0 + logI);
-	scheme.multByConstAndEqual(cipherSin, temp);
-	scheme.modSwitchAndEqual(cipherSin, logq0 + 2 * logI);
+	cipherSin2 = evaluateEncSin2x(cipherSin, cipherCos, logq0 + logI);
+
+	ZZ temp = EvaluatorUtils::evaluateVal(bootAux.oneOver2pi, logq0 + logI);
+
+	scheme.multByConstAndEqual(cipherSin2, temp);
+	scheme.modSwitchAndEqual(cipherSin2, logq0 + 2 * logI);
 	return cipherSin;
 }
 
 void Boot::removeIpartAndEqual(Cipher& cipher, long logq0, long logT, long logI) {
-	//TODO
+	scheme.modSwitchAndEqual(cipher, logT);
+
+	Cipher cipherSin = evaluateEncSin2pix7(cipher, logq0 + logI);
+	Cipher cipherCos = evaluateEncCos2pix6(cipher, logq0 + logI);
+
+	Cipher cipherSin2, cipherCos2;
+	for (long i = 0; i < logI + logT - 1; ++i) {
+		cipherSin2 = evaluateEncSin2x(cipherSin, cipherCos, logq0 + logI);
+		cipherCos2 = evaluateEncCos2x(cipherSin, cipherCos, logq0 + logI);
+		cipherSin = cipherSin2;
+		cipherCos = cipherCos2;
+	}
+	cipher = evaluateEncSin2x(cipherSin, cipherCos, logq0 + logI);
+
+	ZZ temp = EvaluatorUtils::evaluateVal(bootAux.oneOver2pi, logq0 + logI);
+
+	scheme.multByConstAndEqual(cipher, temp);
+	scheme.modSwitchAndEqual(cipher, logq0 + 2 * logI);
 }
 
 Cipher Boot::bootstrap(Cipher& cipher, long logq0, long logT, long logI) {
@@ -353,6 +412,44 @@ Cipher Boot::bootstrap(Cipher& cipher, long logq0, long logT, long logI) {
 }
 
 void Boot::bootstrapAndEqual(Cipher& cipher, long logq0, long logT, long logI) {
-	//TODO
+	long logSlots = log2(cipher.slots);
+	if(logSlots == scheme.params.logN - 1) {
+		Cipher cshift1 = scheme.multByMonomial(cipher, 2 * scheme.params.N - 1);
+		linearTransformAndEqual(cipher, scheme.params.N / 2);
+		linearTransformAndEqual(cshift1, scheme.params.N / 2);
+
+		Cipher clinEvenConj = scheme.conjugate(cipher);
+		scheme.addAndEqual(cipher, clinEvenConj);
+		scheme.modSwitchAndEqual(cipher, logq0 + logI + logSlots);
+
+		Cipher clinOddConj = scheme.conjugate(cshift1);
+		scheme.addAndEqual(cshift1, clinOddConj);
+		scheme.modSwitchAndEqual(cshift1, logq0 + logI + logSlots);
+
+		removeIpartAndEqual(cipher, logq0, logT, logI);
+		removeIpartAndEqual(cshift1, logq0, logT, logI);
+
+		linearTransformInvAndEqual(cipher, scheme.params.N / 2);
+		linearTransformInvAndEqual(cshift1, scheme.params.N / 2);
+
+		scheme.multByMonomialAndEqual(cshift1, 1);
+		scheme.addAndEqual(cipher, cshift1);
+		scheme.modSwitchAndEqual(cipher, logq0 + logI);
+	} else {
+		for (long i = logSlots; i < scheme.params.logN - 1; ++i) {
+			Cipher rot = scheme.leftRotateByPo2(cipher, i);
+			scheme.addAndEqual(cipher, rot);
+		}
+		scheme.modSwitchAndEqual(cipher, scheme.params.logN - 1 - logSlots);
+		linearTransformAndEqual(cipher, cipher.slots * 2);
+
+		Cipher clinEvenConj = scheme.conjugate(cipher);
+		scheme.addAndEqual(cipher, clinEvenConj);
+		scheme.modSwitchAndEqual(cipher, logq0 + logI + logSlots + 2);
+
+		removeIpartAndEqual(cipher, logq0, logT, logI);
+		linearTransformInvAndEqual(cipher, cipher.slots * 2);
+		scheme.modSwitchAndEqual(cipher, logq0 + logI);
+	}
 }
 

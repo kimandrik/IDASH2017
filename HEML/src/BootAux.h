@@ -16,13 +16,11 @@ public:
 	RR* cosChebyshevDeg4;
 	RR* cosChebyshevDeg6;
 
-	RR* sinTaylorDeg3;
-	RR* sinTaylorDeg5;
 	RR* sinTaylorDeg7;
 
-	RR* cosTaylorDeg2;
-	RR* cosTaylorDeg4;
 	RR* cosTaylorDeg6;
+
+	RR oneOver2pi;
 
 	BootAux();
 	virtual ~BootAux();

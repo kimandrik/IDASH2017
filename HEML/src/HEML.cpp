@@ -20,6 +20,7 @@
 
 #include "MemoryUsage.h"
 #include "CipherGD.h"
+#include "TestBoot.h"
 #include "GD.h"
 
 using namespace std;
@@ -56,6 +57,9 @@ using namespace std;
  * FYI: approx 7 suggested iter: 3, 7, 14, 28, ...
  */
 int main(int argc, char **argv) {
+
+	TestBoot::testBootstrap();
+
 	string trainfile(argv[1]);
 	bool isYfirst = atoi(argv[2]);
 	long iter = atol(argv[3]);

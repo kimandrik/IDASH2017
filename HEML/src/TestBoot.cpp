@@ -28,7 +28,7 @@ void TestBoot::testBootstrap() {
 	long nu = 15;
 	long msgBits = 39;
 	long logq0 = msgBits + nu;
-	long logN = 15;
+	long logN = 16;
 	long logT = 5;
 	long logI = 4;
 	long logSlots = 0;
@@ -60,68 +60,15 @@ void TestBoot::testBootstrap() {
 	timeutils.stop("Encrypt batch");
 
 	boot.normalizeAndEqual(cipher, params.N);
-
 	cipher.cbits = logq;
 	cipher.mod = power2_ZZ(logq);
 
-	Cipher cboot;
-	if(logSlots == scheme.params.logN - 1) {
-		Cipher clinOdd, clinEven, cresOdd;
+	timeutils.start("Bootstrap");
+	boot.bootstrapAndEqual(cipher, logq0, logT, logI);
+	timeutils.stop("Bootstrap");
 
-		timeutils.start("Linear Transformation");
-		boot.linearTransform(clinEven, cipher, slots);
-		Cipher cshift1 = scheme.multByMonomial(cipher, 2 * scheme.params.N - 1);
-		boot.linearTransform(clinOdd, cshift1, slots);
-		Cipher clinEvenConj = scheme.conjugate(clinEven);
-		Cipher clinOddConj = scheme.conjugate(clinOdd);
-		scheme.addAndEqual(clinEven, clinEvenConj);
-		scheme.addAndEqual(clinOdd, clinOddConj);
-		scheme.modSwitchAndEqual(clinEven, logq0 + logI + logSlots + 1);
-		scheme.modSwitchAndEqual(clinOdd, logq0 + logI + logSlots + 1);
-		timeutils.stop("Linear Transformation");
-
-		timeutils.start("Remove I Part");
-		Cipher csinEven = boot.removeIpart(clinEven, logq0, logT, logI);
-		Cipher csinOdd = boot.removeIpart(clinOdd, logq0, logT, logI);
-		timeutils.stop("Remove I Part");
-
-		timeutils.start("Linear Transformation Inv");
-		boot.linearTransformInv(cboot, csinEven, slots);
-		boot.linearTransformInv(cresOdd, csinOdd, slots);
-		scheme.multByMonomialAndEqual(cresOdd, 1);
-		scheme.addAndEqual(cboot, cresOdd);
-		scheme.modSwitchAndEqual(cboot, logq0 + logI);
-		timeutils.stop("Linear Transformation Inv");
-
-	} else {
-		Cipher rotated = cipher;
-		timeutils.start("Rotation");
-		for (long i = logSlots; i < params.logN - 1; ++i) {
-			Cipher rot = scheme.leftRotateByPo2(rotated, i);
-			scheme.addAndEqual(rotated, rot);
-		}
-		scheme.modSwitchAndEqual(rotated, params.logN - 1 - logSlots);
-		timeutils.stop("Rotation");
-
-		Cipher clinEven;
-		timeutils.start("Linear Transformation");
-		boot.linearTransform(clinEven, rotated, slots * 2);
-		Cipher clinEvenConj = scheme.conjugate(clinEven);
-		scheme.addAndEqual(clinEven, clinEvenConj);
-		scheme.modSwitchAndEqual(clinEven, logq0 + logI + logSlots + 2);
-		timeutils.stop("Linear Transformation");
-
-		timeutils.start("Remove I Part");
-		Cipher csinEven = boot.removeIpart(clinEven, logq0, logT, logI);
-		timeutils.stop("Remove I Part");
-
-		timeutils.start("Linear Transformation Inv");
-		boot.linearTransformInv(cboot, csinEven, slots * 2);
-		scheme.modSwitchAndEqual(cboot, logq0 + logI);
-		timeutils.stop("Linear Transformation Inv");
-	}
 	timeutils.start("Decrypt batch");
-	CZZ* dvec = scheme.decrypt(secretKey, cboot);
+	CZZ* dvec = scheme.decrypt(secretKey, cipher);
 	timeutils.stop("Decrypt batch");
 
 	StringUtils::showcompare(mvec, dvec, slots, "m");
@@ -196,15 +143,6 @@ void TestBoot::testBootstrapOneReal() {
 
 	StringUtils::showcompare(mvec, dvec, slots, "m");
 	cout << "!!! END TEST BOOTSRTAP ONE REAL !!!" << endl;
-}
-
-void TestBoot::testRemoveIpart() {
-}
-
-void TestBoot::testLinTransform() {
-}
-
-void TestBoot::testLinTransformInv() {
 }
 
 void TestBoot::testBoundOfI() {
