@@ -21,7 +21,7 @@ long** GD::xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool i
 		for(long i = 0; i < line.length(); ++i) if(line[i] == ',' ) factorDim++;
 		if(isfirst) {
 			while(getline(openFile, line)){
-				if(line.length() != 2 * factorDim + 1 ) {
+				if(line.length() != 2 * factorDim + 1) {
 					cout << "Error: data format" << endl;
 					break;
 				}
@@ -173,7 +173,7 @@ void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 	double* grad = new double[factorDim]();
 
 	for(int j = 0; j < learnDim; ++j) {
-		double ip = innerprod(wData, xyData[j], factorDim);
+		double ip = innerprod(vData, xyData[j], factorDim);
 		double tmp = (ip > 15.0) ? 0 : (ip < -15.0) ? -1.0 : - 1. / (1. + exp(ip));
 		if(ip > 6) {
 			cout << "too big ip: " << ip << endl;
@@ -187,9 +187,9 @@ void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 
 	// Nesterov steps
 	for (int i = 0; i < factorDim; ++i) {
-		double tmpv = wData[i] - gamma * grad[i];
-		wData[i] = (1.0 - eta) * tmpv + eta * vData[i];
-		vData[i] = tmpv;
+		double tmpw = vData[i] - gamma * grad[i];
+		vData[i] = (1.0 - eta) * tmpw + eta * wData[i];
+		wData[i] = tmpw;
 	}
 	delete[] grad;
 }

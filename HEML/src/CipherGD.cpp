@@ -241,17 +241,17 @@ void CipherGD::encNLGD(Cipher*& cwData, Cipher*& cvData, Cipher*& cgrad, double&
 
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
-		scheme.multByConstAndEqual(cwData[i], tmpzz);
-		scheme.modSwitchAndEqual(cwData[i], wBits);
-		scheme.modEmbedAndEqual(cwData[i], bitsDown);
-		cgrad[i] = scheme.sub(cwData[i], cgrad[i]);
-
-		scheme.multByConstAndEqual(cvData[i], tmpzz1);
+		scheme.multByConstAndEqual(cvData[i], tmpzz);
 		scheme.modSwitchAndEqual(cvData[i], wBits);
 		scheme.modEmbedAndEqual(cvData[i], bitsDown);
+		cgrad[i] = scheme.sub(cvData[i], cgrad[i]);
 
-		cwData[i] = scheme.add(cvData[i], cgrad[i]);
-		cvData[i] = cgrad[i];
+		scheme.multByConstAndEqual(cwData[i], tmpzz1);
+		scheme.modSwitchAndEqual(cwData[i], wBits);
+		scheme.modEmbedAndEqual(cwData[i], bitsDown);
+
+		cvData[i] = scheme.add(cwData[i], cgrad[i]);
+		cwData[i] = cgrad[i];
 	}
 	NTL_EXEC_RANGE_END;
 }
@@ -291,7 +291,7 @@ void CipherGD::encStepNLGD(long& approxDeg, Cipher*& cxyData, Cipher*& cwData, C
 	Cipher* cprod = new Cipher[cnum];
  	Cipher* cgrad = new Cipher[cnum];
 
-	Cipher cip = encIP(cxyData, cwData, cgrad, cprod, poly, cnum, bBits, xyBits, pBits, aBits);
+	Cipher cip = encIP(cxyData, cvData, cgrad, cprod, poly, cnum, bBits, xyBits, pBits, aBits);
 
 	encSigmoid(approxDeg, cxyData, cgrad, cprod, cip, cnum, gamma, sBits, bBits, xyBits, wBits, pBits, aBits);
 

@@ -57,9 +57,6 @@ using namespace std;
  * FYI: approx 7 suggested iter: 3, 7, 14, 28, ...
  */
 int main(int argc, char **argv) {
-
-	TestBoot::testBootstrap();
-
 	string trainfile(argv[1]);
 	bool isYfirst = atoi(argv[2]);
 	long iter = atol(argv[3]);
@@ -238,9 +235,11 @@ int main(int argc, char **argv) {
 			eta = (1 - alpha1) / alpha2;
 			gamma = gammaDownCnst > 0 ? gammaUpCnst / gammaDownCnst / learnDim : gammaUpCnst / (k - gammaDownCnst) / learnDim;
 
+			cout << "cwData cbits: " << cwData[0].cbits << endl;
 			timeutils.start("Encrypting NLGD step...");
 			cipherGD.encStepNLGD(approx, cxyData, cwData, cvData, poly, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
 			timeutils.stop("NLGD step ");
+			cout << "cwData cbits: " << cwData[0].cbits << endl;
 
 			alpha0 = alpha1;
 			alpha1 = alpha2;
