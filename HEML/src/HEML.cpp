@@ -20,7 +20,6 @@
 
 #include "MemoryUsage.h"
 #include "CipherGD.h"
-#include "TestBoot.h"
 #include "GD.h"
 
 using namespace std;
@@ -273,7 +272,12 @@ int main(int argc, char **argv) {
 			cout << "Current Memory Usage After Decryption " << (k+1) << ": " << currentAfterDecSize << "MB"<< endl;
 			cout << "Peak Memory Usage After Decryption " << (k+1) << ": " << peakAfterDecSize << "MB"<< endl;
 		}
+		delete[] dwData;
 	}
+	size_t currentAfterDecSize = getCurrentRSS( ) / 1048576;
+	size_t peakAfterDecSize = getPeakRSS() / 1048576;
+	cout << "Current Memory Usage Final: " << currentAfterDecSize << "MB"<< endl;
+	cout << "Peak Memory Usage Final: " << peakAfterDecSize << "MB"<< endl;
 
 	return 0;
 }
