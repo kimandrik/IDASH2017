@@ -187,6 +187,8 @@ int main(int argc, char **argv) {
 		SchemeAux schemeaux(logN);
 		Scheme scheme(params, publicKey, schemeaux);
 		CipherGD cipherGD(scheme, secretKey);
+		publicKey.addLeftRotKeys(params, secretKey);
+		publicKey.addRightRotKeys(params, secretKey);
 		timeutils.stop("Scheme generation");
 
 		size_t currentAfterSchemeSize = getCurrentRSS( ) / 1048576;

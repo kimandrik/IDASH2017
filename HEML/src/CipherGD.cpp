@@ -55,10 +55,8 @@ ZZX CipherGD::generateAuxPoly(long& slots, long& batch, long& pBits) {
 	for (long j = 0; j < slots; j += batch) {
 		pvals[j] = CZZ(p);
 	}
-	CZZ* pdvals = scheme.groupidx(pvals, slots);
+	Message msg = scheme.encode(pvals, slots);
 	delete[] pvals;
-	Message msg = scheme.encode(pdvals, slots);
-	delete[] pdvals;
 	return msg.mx;
 }
 
