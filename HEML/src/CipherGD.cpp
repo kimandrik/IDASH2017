@@ -44,7 +44,7 @@ void CipherGD::encwData(Cipher*& cwData, Cipher*& cxyData, long& cnum, long& sBi
 			Cipher rot = scheme.leftRotateByPo2(cwData[i], l);
 			scheme.addAndEqual(cwData[i], rot);
 		}
-		scheme.modSwitchAndEqual(cwData[i], downBits);
+		scheme.reScaleByAndEqual(cwData[i], downBits);
 	}
 	NTL_EXEC_RANGE_END;
 }
@@ -65,7 +65,7 @@ Cipher CipherGD::encIP(Cipher*& cxyData, Cipher*& cwData, Cipher*& cgrad, Cipher
 	{
 		NTL_EXEC_RANGE(cnum, first, last);
 		for (long i = first; i < last; ++i) {
-			scheme.modEmbedAndEqual(cxyData[i], bitsDown);
+			scheme.modDownByAndEqual(cxyData[i], bitsDown);
 			cprod[i] = scheme.mult(cxyData[i], cwData[i]);
 			for (long l = 0; l < bBits; ++l) {
 				cgrad[i] = scheme.leftRotateByPo2(cprod[i], l);
@@ -79,19 +79,19 @@ Cipher CipherGD::encIP(Cipher*& cxyData, Cipher*& cwData, Cipher*& cgrad, Cipher
 	for (long i = 1; i < cnum; ++i) {
 		scheme.addAndEqual(cip, cprod[i]);
 	}
-	scheme.modSwitchAndEqual(cip, xyBits);
+	scheme.reScaleByAndEqual(cip, xyBits);
 	scheme.multByPolyAndEqual(cip, poly);
 	for (long l = 0; l < bBits; ++l) {
 		cprod[0] = scheme.rightRotateByPo2(cip, l);
 		scheme.addAndEqual(cip, cprod[0]);
 	}
-	scheme.modSwitchAndEqual(cip, pBits + aBits); // (xyBits + pBits + aBits, wBits - aBits)
+	scheme.reScaleByAndEqual(cip, pBits + aBits); // (xyBits + pBits + aBits, wBits - aBits)
 	return cip;
 }
 
 void CipherGD::encSigmoid(long& approxDeg, Cipher*& cxyData, Cipher*& cgrad, Cipher*& cprod, Cipher& cip, long& cnum, double& gamma, long& sBits, long & bBits, long& xyBits, long& wBits, long& pBits, long& aBits) {
 	Cipher cip2 = scheme.square(cip);
-	scheme.modSwitchAndEqual(cip2, wBits); // cip2 (xyBits + pBits + aBits + wBits, wBits - 2aBits)
+	scheme.reScaleByAndEqual(cip2, wBits); // cip2 (xyBits + pBits + aBits + wBits, wBits - 2aBits)
 
 	if(approxDeg == 3) {
 		RR tmp = to_RR(degree3[1]) / degree3[2];
@@ -105,16 +105,16 @@ void CipherGD::encSigmoid(long& approxDeg, Cipher*& cxyData, Cipher*& cgrad, Cip
 		NTL_EXEC_RANGE(cnum, first, last);
 		for (long i = first; i < last; ++i) {
 			cprod[i] = scheme.multByConst(cxyData[i], tmpzz); // cprod (0, xyBits + wBits)
-			scheme.modSwitchAndEqual(cprod[i], xyBits);// cprod (xyData, wBits)
-			scheme.modEmbedAndEqual(cprod[i], pBits + aBits + 2 * wBits);// cprod (xyData + pBits + aBits + 2wBits, wBits)
+			scheme.reScaleByAndEqual(cprod[i], xyBits);// cprod (xyData, wBits)
+			scheme.modDownByAndEqual(cprod[i], pBits + aBits + 2 * wBits);// cprod (xyData + pBits + aBits + 2wBits, wBits)
 
 			cgrad[i] = scheme.multByConst(cxyData[i], tmpzz1);// cgrad (0, xyData + wBits + 3aBits)
-			scheme.modSwitchAndEqual(cgrad[i], xyBits);// cgrad (xyData, wBits + 3aBits)
-			scheme.modEmbedAndEqual(cgrad[i], pBits + aBits);// cgrad (xyData + pBits + aBits, wBits + 3aBits)
+			scheme.reScaleByAndEqual(cgrad[i], xyBits);// cgrad (xyData, wBits + 3aBits)
+			scheme.modDownByAndEqual(cgrad[i], pBits + aBits);// cgrad (xyData + pBits + aBits, wBits + 3aBits)
 			scheme.multAndEqual(cgrad[i], cip);// cgrad (xyData + pBits + aBits, 2wBits + 2aBits)
-			scheme.modSwitchAndEqual(cgrad[i], wBits);// cgrad (xyData + pBits + aBits + wBits, wBits + 2aBits)
+			scheme.reScaleByAndEqual(cgrad[i], wBits);// cgrad (xyData + pBits + aBits + wBits, wBits + 2aBits)
 			scheme.multAndEqual(cgrad[i], cip2);// cgrad (xyData + pBits + aBits + 2wBits, 2wBits)
-			scheme.modSwitchAndEqual(cgrad[i], wBits);// cgrad (xyData + pBits + aBits + 2wBits, wBits)
+			scheme.reScaleByAndEqual(cgrad[i], wBits);// cgrad (xyData + pBits + aBits + 2wBits, wBits)
 			scheme.addAndEqual(cgrad[i], cprod[i]);// cgrad (xyData + pBits + aBits + 2wBits, wBits)
 		}
 		NTL_EXEC_RANGE_END;
@@ -123,8 +123,8 @@ void CipherGD::encSigmoid(long& approxDeg, Cipher*& cxyData, Cipher*& cgrad, Cip
 		RR tmp = to_RR(degree5[2]) / degree5[3];
 		ZZ tmpzz = EvaluatorUtils::evaluateVal(tmp, wBits - 2 * aBits);
 		scheme.multByConstAndEqual(cip2, tmpzz); // cip2 (xyBits + pBits + aBits + wBits, 2wBits - 4aBits)
-		scheme.modSwitchAndEqual(cip2, wBits); // cip2 (xyBits + pBits + aBits + 2wBits, wBits - 4aBits)
-		scheme.modSwitchAndEqual(cip4, wBits); // cip4 (xyBits + pBits + aBits + 2wBits, wBits - 4aBits)
+		scheme.reScaleByAndEqual(cip2, wBits); // cip2 (xyBits + pBits + aBits + 2wBits, wBits - 4aBits)
+		scheme.reScaleByAndEqual(cip4, wBits); // cip4 (xyBits + pBits + aBits + 2wBits, wBits - 4aBits)
 		scheme.addAndEqual(cip4, cip2);
 		tmp = to_RR(degree5[1]) / degree5[3];
 		tmpzz = EvaluatorUtils::evaluateVal(tmp, wBits - 4 * aBits);
@@ -137,27 +137,27 @@ void CipherGD::encSigmoid(long& approxDeg, Cipher*& cxyData, Cipher*& cgrad, Cip
 		NTL_EXEC_RANGE(cnum, first, last);
 		for (long i = first; i < last; ++i) {
 			cprod[i] = scheme.multByConst(cxyData[i], tmpzz); // cprod (0, xyBits + wBits)
-			scheme.modSwitchAndEqual(cprod[i], xyBits);// cprod (xyData, wBits)
-			scheme.modEmbedAndEqual(cprod[i], pBits + aBits + 3 * wBits);// cprod (xyData + pBits + aBits + 3wBits, wBits)
+			scheme.reScaleByAndEqual(cprod[i], xyBits);// cprod (xyData, wBits)
+			scheme.modDownByAndEqual(cprod[i], pBits + aBits + 3 * wBits);// cprod (xyData + pBits + aBits + 3wBits, wBits)
 
 			cgrad[i] = scheme.multByConst(cxyData[i], tmpzz1);// cgrad (0, xyData + wBits + 5aBits)
-			scheme.modSwitchAndEqual(cgrad[i], xyBits);// cgrad (xyData, wBits + 5aBits)
-			scheme.modEmbedAndEqual(cgrad[i], pBits + aBits);// cgrad (xyData + pBits + aBits, wBits + 5aBits)
+			scheme.reScaleByAndEqual(cgrad[i], xyBits);// cgrad (xyData, wBits + 5aBits)
+			scheme.modDownByAndEqual(cgrad[i], pBits + aBits);// cgrad (xyData + pBits + aBits, wBits + 5aBits)
 			scheme.multAndEqual(cgrad[i], cip);// cgrad (xyData + pBits + aBits, 2wBits + 4aBits)
-			scheme.modSwitchAndEqual(cgrad[i], wBits);// cgrad (xyData + pBits + aBits + wBits, wBits + 4aBits)
-			scheme.modEmbedAndEqual(cgrad[i], wBits);// cgrad (xyData + pBits + aBits + 2wBits, wBits + 4aBits)
+			scheme.reScaleByAndEqual(cgrad[i], wBits);// cgrad (xyData + pBits + aBits + wBits, wBits + 4aBits)
+			scheme.modDownByAndEqual(cgrad[i], wBits);// cgrad (xyData + pBits + aBits + 2wBits, wBits + 4aBits)
 			scheme.multAndEqual(cgrad[i], cip4);// cgrad (xyData + pBits + aBits + 2wBits, 2wBits)
-			scheme.modSwitchAndEqual(cgrad[i], wBits);// cgrad (xyData + pBits + aBits + 3wBits, wBits)
+			scheme.reScaleByAndEqual(cgrad[i], wBits);// cgrad (xyData + pBits + aBits + 3wBits, wBits)
 			scheme.addAndEqual(cgrad[i], cprod[i]);// cgrad (xyData + pBits + aBits + 3wBits, wBits)
 		}
 		NTL_EXEC_RANGE_END;
 	} else {
 		Cipher cip4 = scheme.square(cip2);
-		scheme.modSwitchAndEqual(cip4, wBits); // cip4 (xyBits + pBits + aBits + 2wBits, wBits - 4aBits)
+		scheme.reScaleByAndEqual(cip4, wBits); // cip4 (xyBits + pBits + aBits + 2wBits, wBits - 4aBits)
 		RR tmp = to_RR(degree7[3]) / degree7[4];
 		ZZ tmpzz = EvaluatorUtils::evaluateVal(tmp, wBits - 2 * aBits);
 		Cipher cip2c = scheme.multByConst(cip2, tmpzz); // cip2c (xyBits + pBits + aBits + wBits, 2wBits - 4aBits)
-		scheme.modSwitchAndEqual(cip2c, wBits); // cip2c (xyBits + pBits + aBits + 2wBits, wBits - 4aBits)
+		scheme.reScaleByAndEqual(cip2c, wBits); // cip2c (xyBits + pBits + aBits + 2wBits, wBits - 4aBits)
 		scheme.addAndEqual(cip4, cip2c);
 		tmp = to_RR(degree7[2]) / degree7[4];
 		tmpzz = EvaluatorUtils::evaluateVal(tmp, wBits - 4 * aBits);
@@ -171,26 +171,26 @@ void CipherGD::encSigmoid(long& approxDeg, Cipher*& cxyData, Cipher*& cgrad, Cip
 		NTL_EXEC_RANGE(cnum, first, last);
 		for (long i = first; i < last; ++i) {
 			cgrad[i] = scheme.multByConst(cxyData[i], tmpzz); // cgrad (0, xyBits + wBits)
-			scheme.modSwitchAndEqual(cgrad[i], xyBits);// cgrad (xybits, wBits)
-			scheme.modEmbedAndEqual(cgrad[i], pBits + aBits + 3 * wBits);// cgrad (xyBits + pBits + aBits + 3wBits, wBits)
+			scheme.reScaleByAndEqual(cgrad[i], xyBits);// cgrad (xybits, wBits)
+			scheme.modDownByAndEqual(cgrad[i], pBits + aBits + 3 * wBits);// cgrad (xyBits + pBits + aBits + 3wBits, wBits)
 
 			cprod[i] = scheme.multByConst(cxyData[i], tmpzz1);// cprod (0, xyBits + wBits + aBits);
-			scheme.modSwitchAndEqual(cprod[i], xyBits);// cprod (xyBits, wBits + aBits);
-			scheme.modEmbedAndEqual(cprod[i], pBits + aBits);// cprod (xyBits + pBits + aBits, wBits + aBits);
+			scheme.reScaleByAndEqual(cprod[i], xyBits);// cprod (xyBits, wBits + aBits);
+			scheme.modDownByAndEqual(cprod[i], pBits + aBits);// cprod (xyBits + pBits + aBits, wBits + aBits);
 			scheme.multAndEqual(cprod[i], cip);// cprod (xyBits + pBits + aBits, 2wBits);
-			scheme.modSwitchAndEqual(cprod[i], wBits);// cprod (xyBits + pBits + aBits + wBits, wBits);
-			scheme.modEmbedAndEqual(cprod[i], 2 * wBits);// cprod (xyBits + pBits + aBits + 3wBits, wBits);
+			scheme.reScaleByAndEqual(cprod[i], wBits);// cprod (xyBits + pBits + aBits + wBits, wBits);
+			scheme.modDownByAndEqual(cprod[i], 2 * wBits);// cprod (xyBits + pBits + aBits + 3wBits, wBits);
 			scheme.addAndEqual(cprod[i], cgrad[i]);// cprod (xyBits + pBits + aBits + 3wBits, wBits);
 
 			cgrad[i] = scheme.multByConst(cxyData[i], tmpzz2);// cgrad (0, xyData + wBits + 7aBits)
-			scheme.modSwitchAndEqual(cgrad[i], xyBits);// cgrad (xyBits, wBits + 7aBits)
-			scheme.modEmbedAndEqual(cgrad[i], pBits + aBits);// cgrad (xyBits + pBits + aBits, wBits + 7aBits)
+			scheme.reScaleByAndEqual(cgrad[i], xyBits);// cgrad (xyBits, wBits + 7aBits)
+			scheme.modDownByAndEqual(cgrad[i], pBits + aBits);// cgrad (xyBits + pBits + aBits, wBits + 7aBits)
 			scheme.multAndEqual(cgrad[i], cip);// cgrad (xyData + pBits + aBits, 2wBits + 6aBits)
-			scheme.modSwitchAndEqual(cgrad[i], wBits);// cgrad (xyBits + pBits + aBits + wBits, wBits + 6aBits)
+			scheme.reScaleByAndEqual(cgrad[i], wBits);// cgrad (xyBits + pBits + aBits + wBits, wBits + 6aBits)
 			scheme.multAndEqual(cgrad[i], cip2);// cgrad (xyBits + pBits + aBits + wBits, 2wBits + 4aBits)
-			scheme.modSwitchAndEqual(cgrad[i], wBits);// cgrad (xyData + pBits + aBits + 2wBits, wBits + 4aBits)
+			scheme.reScaleByAndEqual(cgrad[i], wBits);// cgrad (xyData + pBits + aBits + 2wBits, wBits + 4aBits)
 			scheme.multAndEqual(cgrad[i], cip4);// cgrad (xyData + pBits + aBits + 2wBits, 2wBits)
-			scheme.modSwitchAndEqual(cgrad[i], wBits);// cgrad (xyData + pBits + aBits + 3wBits, wBits)
+			scheme.reScaleByAndEqual(cgrad[i], wBits);// cgrad (xyData + pBits + aBits + 3wBits, wBits)
 			scheme.addAndEqual(cgrad[i], cprod[i]);// cgrad (xyData + pBits + aBits + 3wBits, wBits)
 		}
 		NTL_EXEC_RANGE_END;
@@ -210,7 +210,7 @@ void CipherGD::encSigmoid(long& approxDeg, Cipher*& cxyData, Cipher*& cgrad, Cip
 void CipherGD::encLGD(Cipher*& cwData, Cipher*& cgrad, long& cnum, long& wBits, long& bitsDown) {
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
-		scheme.modEmbedAndEqual(cwData[i], bitsDown + wBits);
+		scheme.modDownByAndEqual(cwData[i], bitsDown + wBits);
 		scheme.subAndEqual(cwData[i], cgrad[i]);
 	}
 	NTL_EXEC_RANGE_END;
@@ -222,10 +222,10 @@ void CipherGD::encMLGD(Cipher*& cwData, Cipher*& cvData, Cipher*& cgrad, double&
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
 		scheme.multByConstAndEqual(cvData[i], tmpzz);
-		scheme.modSwitchAndEqual(cvData[i], wBits);
-		scheme.modEmbedAndEqual(cvData[i], bitsDown);
+		scheme.reScaleByAndEqual(cvData[i], wBits);
+		scheme.modDownByAndEqual(cvData[i], bitsDown);
 		scheme.addAndEqual(cvData[i], cgrad[i]);
-		scheme.modEmbedAndEqual(cwData[i], bitsDown + wBits);
+		scheme.modDownByAndEqual(cwData[i], bitsDown + wBits);
 		scheme.subAndEqual(cwData[i],cvData[i]);
 	}
 	NTL_EXEC_RANGE_END;
@@ -240,13 +240,13 @@ void CipherGD::encNLGD(Cipher*& cwData, Cipher*& cvData, Cipher*& cgrad, double&
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
 		scheme.multByConstAndEqual(cvData[i], tmpzz);
-		scheme.modSwitchAndEqual(cvData[i], wBits);
-		scheme.modEmbedAndEqual(cvData[i], bitsDown);
+		scheme.reScaleByAndEqual(cvData[i], wBits);
+		scheme.modDownByAndEqual(cvData[i], bitsDown);
 		cgrad[i] = scheme.sub(cvData[i], cgrad[i]);
 
 		scheme.multByConstAndEqual(cwData[i], tmpzz1);
-		scheme.modSwitchAndEqual(cwData[i], wBits);
-		scheme.modEmbedAndEqual(cwData[i], bitsDown);
+		scheme.reScaleByAndEqual(cwData[i], wBits);
+		scheme.modDownByAndEqual(cwData[i], bitsDown);
 
 		cvData[i] = scheme.add(cwData[i], cgrad[i]);
 		cwData[i] = cgrad[i];

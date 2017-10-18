@@ -149,9 +149,9 @@ int main(int argc, char **argv) {
 	} else {
 		long fdimBits = (long)ceil(log2(factorDim));
 		long ldimBits = (long)ceil(log2(learnDim));
-		long wBits = 37;
-		long xyBits = 37;
-		long lBits = 5;
+		long wBits = 27;
+		long xyBits = 27;
+		long lBits = 10;
 		long pBits = 18;
 		long aBits = 2;
 		long logq = (approx == 3) ? (ldimBits + xyBits) + iter * (2 * wBits + xyBits + pBits + aBits) + lBits
