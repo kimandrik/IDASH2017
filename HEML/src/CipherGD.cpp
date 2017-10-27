@@ -207,7 +207,7 @@ void CipherGD::encSigmoid(long& approxDeg, Cipher*& cxyData, Cipher*& cgrad, Cip
 	NTL_EXEC_RANGE_END;
 }
 
-void CipherGD::encLGD(Cipher*& cwData, Cipher*& cgrad, long& cnum, long& wBits, long& bitsDown) {
+void CipherGD::encLGDstep(Cipher*& cwData, Cipher*& cgrad, long& cnum, long& wBits, long& bitsDown) {
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
 		scheme.modDownByAndEqual(cwData[i], bitsDown + wBits);
@@ -216,7 +216,7 @@ void CipherGD::encLGD(Cipher*& cwData, Cipher*& cgrad, long& cnum, long& wBits, 
 	NTL_EXEC_RANGE_END;
 }
 
-void CipherGD::encMLGD(Cipher*& cwData, Cipher*& cvData, Cipher*& cgrad, double& eta, long& cnum, long& wBits, long& bitsDown) {
+void CipherGD::encMLGDstep(Cipher*& cwData, Cipher*& cvData, Cipher*& cgrad, double& eta, long& cnum, long& wBits, long& bitsDown) {
 	RR tmp = to_RR(eta);
 	ZZ tmpzz = EvaluatorUtils::evaluateVal(tmp, wBits);
 	NTL_EXEC_RANGE(cnum, first, last);
@@ -231,7 +231,7 @@ void CipherGD::encMLGD(Cipher*& cwData, Cipher*& cvData, Cipher*& cgrad, double&
 	NTL_EXEC_RANGE_END;
 }
 
-void CipherGD::encNLGD(Cipher*& cwData, Cipher*& cvData, Cipher*& cgrad, double& eta, double& etaprev, long& cnum, long& wBits, long& bitsDown) {
+void CipherGD::encNLGDstep(Cipher*& cwData, Cipher*& cvData, Cipher*& cgrad, double& eta, double& etaprev, long& cnum, long& wBits, long& bitsDown) {
 	RR tmp = to_RR(1. - eta);
 	ZZ tmpzz = EvaluatorUtils::evaluateVal(tmp, wBits);
 	tmp = to_RR(eta / (1 - etaprev));
@@ -254,7 +254,7 @@ void CipherGD::encNLGD(Cipher*& cwData, Cipher*& cvData, Cipher*& cgrad, double&
 	NTL_EXEC_RANGE_END;
 }
 
-void CipherGD::encStepLGD(long& approxDeg, Cipher*& cxyData, Cipher*& cwData, ZZX& poly, long& cnum, double& gamma, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits) {
+void CipherGD::encLGDiteration(long& approxDeg, Cipher*& cxyData, Cipher*& cwData, ZZX& poly, long& cnum, double& gamma, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits) {
 	Cipher* cprod = new Cipher[cnum];
  	Cipher* cgrad = new Cipher[cnum];
 
@@ -264,12 +264,12 @@ void CipherGD::encStepLGD(long& approxDeg, Cipher*& cxyData, Cipher*& cwData, ZZ
 
 	long bitsDown = approxDeg == 3 ? xyBits + pBits + aBits + wBits : xyBits + pBits + aBits + 2 * wBits;
 
-	encLGD(cwData, cgrad, cnum, wBits, bitsDown);
+	encLGDstep(cwData, cgrad, cnum, wBits, bitsDown);
 
 	delete[] cgrad;
 }
 
-void CipherGD::encStepMLGD(long& approxDeg, Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& cnum, double& gamma, double& eta, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits) {
+void CipherGD::encMLGDiteration(long& approxDeg, Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& cnum, double& gamma, double& eta, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits) {
 	Cipher* cprod = new Cipher[cnum];
  	Cipher* cgrad = new Cipher[cnum];
 
@@ -280,12 +280,12 @@ void CipherGD::encStepMLGD(long& approxDeg, Cipher*& cxyData, Cipher*& cwData, C
 
 	long bitsDown = approxDeg == 3 ? xyBits + pBits + aBits + wBits : xyBits + pBits + aBits + 2 * wBits;
 
-	encMLGD(cwData, cvData, cgrad, eta, cnum, wBits, bitsDown);
+	encMLGDstep(cwData, cvData, cgrad, eta, cnum, wBits, bitsDown);
 
 	delete[] cgrad;
 }
 
-void CipherGD::encStepNLGD(long& approxDeg, Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& cnum, double& gamma, double& eta, double& etaprev, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits) {
+void CipherGD::encNLGDiteration(long& approxDeg, Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& cnum, double& gamma, double& eta, double& etaprev, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits) {
 	Cipher* cprod = new Cipher[cnum];
  	Cipher* cgrad = new Cipher[cnum];
 
@@ -297,7 +297,7 @@ void CipherGD::encStepNLGD(long& approxDeg, Cipher*& cxyData, Cipher*& cwData, C
 
 	long bitsDown = approxDeg == 3 ? xyBits + pBits + aBits + wBits : xyBits + pBits + aBits + 2 * wBits;
 
-	encNLGD(cwData, cvData, cgrad, eta, etaprev, cnum, wBits, bitsDown);
+	encNLGDstep(cwData, cvData, cgrad, eta, etaprev, cnum, wBits, bitsDown);
 
 	delete[] cgrad;
 }

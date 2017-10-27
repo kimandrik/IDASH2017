@@ -25,13 +25,13 @@ public:
 
 	void encSigmoid(long& approxDeg, Cipher*& cxyData, Cipher*& cgrad, Cipher*& cprod, Cipher& cip, long& cnum, double& gamma, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits);
 
-	void encLGD(Cipher*& cwData, Cipher*& cgrad, long& cnum, long& wBits, long& bitsDown);
-	void encMLGD(Cipher*& cwData, Cipher*& cvData, Cipher*& cgrad, double& eta, long& cnum, long& wBits, long& bitsDown);
-	void encNLGD(Cipher*& cwData, Cipher*& cvData, Cipher*& cgrad, double& eta, double& etaprev, long& cnum, long& wBits, long& bitsDown);
+	void encLGDstep(Cipher*& cwData, Cipher*& cgrad, long& cnum, long& wBits, long& bitsDown);
+	void encMLGDstep(Cipher*& cwData, Cipher*& cvData, Cipher*& cgrad, double& eta, long& cnum, long& wBits, long& bitsDown);
+	void encNLGDstep(Cipher*& cwData, Cipher*& cvData, Cipher*& cgrad, double& eta, double& etaprev, long& cnum, long& wBits, long& bitsDown);
 
-	void encStepLGD(long& approxDeg, Cipher*& cxyData, Cipher*& cwData, ZZX& poly, long& cnum, double& gamma, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits);
-	void encStepMLGD(long& approxDeg, Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& cnum, double& gamma, double& eta, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits);
-	void encStepNLGD(long& approxDeg, Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& cnum, double& gamma, double& eta, double& etaprev, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits);
+	void encLGDiteration(long& approxDeg, Cipher*& cxyData, Cipher*& cwData, ZZX& poly, long& cnum, double& gamma, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits);
+	void encMLGDiteration(long& approxDeg, Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& cnum, double& gamma, double& eta, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits);
+	void encNLGDiteration(long& approxDeg, Cipher*& cxyData, Cipher*& cwData, Cipher*& cvData, ZZX& poly, long& cnum, double& gamma, double& eta, double& etaprev, long& sBits, long& bBits, long& xyBits, long& wBits, long& pBits, long& aBits);
 
 	void decwData(double*& wData, Cipher*& cwData, long& factorDim, long& batch, long& cnum, long& wBits);
 };

@@ -149,9 +149,9 @@ int main(int argc, char **argv) {
 	} else {
 		long fdimBits = (long)ceil(log2(factorDim));
 		long ldimBits = (long)ceil(log2(learnDim));
-		long wBits = 27;
-		long xyBits = 27;
-		long lBits = 10;
+		long wBits = 37;
+		long xyBits = 37;
+		long lBits = 5;
 		long pBits = 18;
 		long aBits = 2;
 		long logq = (approx == 3) ? (ldimBits + xyBits) + iter * (2 * wBits + xyBits + pBits + aBits) + lBits
@@ -238,7 +238,7 @@ int main(int argc, char **argv) {
 
 			cout << "cwData cbits: " << cwData[0].cbits << endl;
 			timeutils.start("Encrypting NLGD step...");
-			cipherGD.encStepNLGD(approx, cxyData, cwData, cvData, poly, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
+			cipherGD.encNLGDiteration(approx, cxyData, cwData, cvData, poly, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
 			timeutils.stop("NLGD step ");
 			cout << "cwData cbits: " << cwData[0].cbits << endl;
 
