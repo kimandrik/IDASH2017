@@ -57,6 +57,7 @@ ZZX CipherGD::generateAuxPoly(long& slots, long& batch, long& pBits) {
 	}
 	Message msg = scheme.encode(pvals, slots, scheme.params.logq);
 	delete[] pvals;
+	msg.mx >>= scheme.params.logq;
 	return msg.mx;
 }
 
