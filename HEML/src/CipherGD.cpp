@@ -17,7 +17,7 @@ void CipherGD::encxyData(Cipher*& cxyData, long**& xyData, long& slots, long& fa
 						xyData[j][batch * i + l] == 1 ? CZZ(precision) : CZZ();
 			}
 		}
-		cxyData[i] = scheme.encrypt(pxyData, slots);
+		cxyData[i] = scheme.encrypt(pxyData, slots, scheme.params.logq);
 	}
 
 	long rest = factorDim - batch * (cnum - 1);
@@ -30,7 +30,7 @@ void CipherGD::encxyData(Cipher*& cxyData, long**& xyData, long& slots, long& fa
 			pxyData[batch * j + l] = CZZ();
 		}
 	}
-	cxyData[cnum - 1] = scheme.encrypt(pxyData, slots);
+	cxyData[cnum - 1] = scheme.encrypt(pxyData, slots, scheme.params.logq);
 
 	delete[] pxyData;
 }
@@ -55,7 +55,7 @@ ZZX CipherGD::generateAuxPoly(long& slots, long& batch, long& pBits) {
 	for (long j = 0; j < slots; j += batch) {
 		pvals[j] = CZZ(p);
 	}
-	Message msg = scheme.encode(pvals, slots);
+	Message msg = scheme.encode(pvals, slots, scheme.params.logq);
 	delete[] pvals;
 	return msg.mx;
 }
