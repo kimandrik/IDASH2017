@@ -1,14 +1,14 @@
-#include <Cipher.h>
+#include <Ciphertext.h>
 #include <CZZ.h>
-#include <Message.h>
 #include <NTL/BasicThreadPool.h>
 #include <NTL/tools.h>
 #include <NTL/ZZ.h>
 #include <Params.h>
-#include <PubKey.h>
+#include <Plaintext.h>
+#include <PublicKey.h>
 #include <Scheme.h>
 #include <SchemeAux.h>
-#include <SecKey.h>
+#include <SecretKey.h>
 #include <TimeUtils.h>
 #include <cmath>
 #include <cstdlib>
@@ -182,8 +182,8 @@ int main(int argc, char **argv) {
 
 		timeutils.start("Scheme generating...");
 		Params params(logN, logq);
-		SecKey secretKey(params);
-		PubKey publicKey(params, secretKey);
+		SecretKey secretKey(params);
+		PublicKey publicKey(params, secretKey);
 		SchemeAux schemeaux(logN);
 		Scheme scheme(params, publicKey, schemeaux);
 		CipherGD cipherGD(scheme, secretKey);
@@ -206,13 +206,13 @@ int main(int argc, char **argv) {
 		ZZX poly = cipherGD.generateAuxPoly(slots, batch, pBits);
 		timeutils.stop("Polynomial generation");
 
-		Cipher* cxyData = new Cipher[cnum];
+		Ciphertext* cxyData = new Ciphertext[cnum];
 		timeutils.start("Encrypting xyData...");
 		cipherGD.encxyData(cxyData, xyDataLearn, slots, factorDim, learnDim, batch, cnum, xyBits);
 		timeutils.stop("xyData encryption");
 
-		Cipher* cwData = new Cipher[cnum];
-		Cipher* cvData = new Cipher[cnum];
+		Ciphertext* cwData = new Ciphertext[cnum];
+		Ciphertext* cvData = new Ciphertext[cnum];
 
 		timeutils.start("Encrypting wData and vData...");
 		cipherGD.encwData(cwData, cxyData, cnum, sBits, ldimBits, bBits, xyBits, wBits);
