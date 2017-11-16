@@ -5,9 +5,7 @@
 #include <NTL/ZZ.h>
 #include <Params.h>
 #include <Plaintext.h>
-#include <PublicKey.h>
 #include <Scheme.h>
-#include <SchemeAux.h>
 #include <SecretKey.h>
 #include <TimeUtils.h>
 #include <cmath>
@@ -182,13 +180,12 @@ int main(int argc, char **argv) {
 
 		timeutils.start("Scheme generating...");
 		Params params(logN, logq);
+		Context context(params);
 		SecretKey secretKey(params);
-		PublicKey publicKey(params, secretKey);
-		SchemeAux schemeaux(logN);
-		Scheme scheme(params, publicKey, schemeaux);
+		Scheme scheme(secretKey, context);
 		CipherGD cipherGD(scheme, secretKey);
-		publicKey.addLeftRotKeys(params, secretKey);
-		publicKey.addRightRotKeys(params, secretKey);
+		scheme.addLeftRotKeys(secretKey);
+		scheme.addRightRotKeys(secretKey);
 		timeutils.stop("Scheme generation");
 
 		size_t currentAfterSchemeSize = getCurrentRSS( ) / 1048576;
