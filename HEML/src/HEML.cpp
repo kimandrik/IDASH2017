@@ -233,11 +233,11 @@ int main(int argc, char **argv) {
 			eta = (1 - alpha1) / alpha2;
 			gamma = gammaDownCnst > 0 ? gammaUpCnst / gammaDownCnst / learnDim : gammaUpCnst / (k - gammaDownCnst) / learnDim;
 
-			cout << "cwData cbits: " << cwData[0].cbits << endl;
+			cout << "cwData logq: " << cwData[0].logq << endl;
 			timeutils.start("Encrypting NLGD step...");
 			cipherGD.encNLGDiteration(approx, cxyData, cwData, cvData, poly, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
 			timeutils.stop("NLGD step ");
-			cout << "cwData cbits: " << cwData[0].cbits << endl;
+			cout << "cwData logq: " << cwData[0].logq << endl;
 
 			alpha0 = alpha1;
 			alpha1 = alpha2;

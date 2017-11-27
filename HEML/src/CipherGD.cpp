@@ -17,7 +17,7 @@ void CipherGD::encxyData(Ciphertext*& cxyData, long**& xyData, long& slots, long
 						xyData[j][batch * i + l] == 1 ? CZZ(precision) : CZZ();
 			}
 		}
-		cxyData[i] = scheme.encrypt(pxyData, slots, scheme.context.logq);
+		cxyData[i] = scheme.encrypt(pxyData, slots, scheme.context.logQ);
 	}
 
 	long rest = factorDim - batch * (cnum - 1);
@@ -30,7 +30,7 @@ void CipherGD::encxyData(Ciphertext*& cxyData, long**& xyData, long& slots, long
 			pxyData[batch * j + l] = CZZ();
 		}
 	}
-	cxyData[cnum - 1] = scheme.encrypt(pxyData, slots, scheme.context.logq);
+	cxyData[cnum - 1] = scheme.encrypt(pxyData, slots, scheme.context.logQ);
 
 	delete[] pxyData;
 }
@@ -55,27 +55,26 @@ ZZX CipherGD::generateAuxPoly(long& slots, long& batch, long& pBits) {
 	for (long j = 0; j < slots; j += batch) {
 		pvals[j] = CZZ(p);
 	}
-	Plaintext msg = scheme.encode(pvals, slots, scheme.context.logq);
+	Plaintext msg = scheme.encode(pvals, slots, scheme.context.logQ);
 	delete[] pvals;
-	msg.mx >>= scheme.context.logq;
+	msg.mx >>= scheme.context.logQ;
 	return msg.mx;
 }
 
 Ciphertext CipherGD::encIP(Ciphertext*& cxyData, Ciphertext*& cwData, Ciphertext*& cgrad, Ciphertext*& cprod, ZZX& poly, long& cnum, long& bBits, long& xyBits, long& pBits, long& aBits) {
-	long bitsDown = cxyData[0].cbits - cwData[0].cbits;
-	{
-		NTL_EXEC_RANGE(cnum, first, last);
-		for (long i = first; i < last; ++i) {
-			scheme.modDownByAndEqual(cxyData[i], bitsDown);
-			cprod[i] = scheme.mult(cxyData[i], cwData[i]);
-			for (long l = 0; l < bBits; ++l) {
-				cgrad[i] = scheme.leftRotateByPo2(cprod[i], l);
-				scheme.addAndEqual(cprod[i], cgrad[i]);
-			}
+	long bitsDown = cxyData[0].logq - cwData[0].logq;
+
+	NTL_EXEC_RANGE(cnum, first, last);
+	for (long i = first; i < last; ++i) {
+		scheme.modDownByAndEqual(cxyData[i], bitsDown);
+		cprod[i] = scheme.mult(cxyData[i], cwData[i]);
+		for (long l = 0; l < bBits; ++l) {
+			cgrad[i] = scheme.leftRotateByPo2(cprod[i], l);
+			scheme.addAndEqual(cprod[i], cgrad[i]);
 		}
-		NTL_EXEC_RANGE_END
 	}
-	;
+	NTL_EXEC_RANGE_END
+
 	Ciphertext cip = cprod[0];
 	for (long i = 1; i < cnum; ++i) {
 		scheme.addAndEqual(cip, cprod[i]);
