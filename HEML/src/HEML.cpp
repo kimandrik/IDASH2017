@@ -152,9 +152,9 @@ int main(int argc, char **argv) {
 		long lBits = 5;
 		long pBits = 18;
 		long aBits = 2;
-		long logq = (approx == 3) ? (ldimBits + xyBits) + iter * (2 * wBits + xyBits + pBits + aBits) + lBits
+		long logQ = (approx == 3) ? (ldimBits + xyBits) + iter * (2 * wBits + xyBits + pBits + aBits) + lBits
 				: (ldimBits + xyBits) + iter * (3 * wBits + xyBits + pBits + aBits) + lBits;
-		long logN = Params::suggestlogN(80, logq);
+		long logN = Params::suggestlogN(80, logQ);
 		long bBits = min(logN - 1 - ldimBits, fdimBits);
 		long batch = 1 << bBits;
 
@@ -179,7 +179,7 @@ int main(int argc, char **argv) {
 		cout << "Peak Memory Usage Before Scheme Generation: " << peakPreSchemeSize << "MB"<< endl;
 
 		timeutils.start("Scheme generating...");
-		Params params(logN, logq);
+		Params params(logN, logQ);
 		Context context(params);
 		SecretKey secretKey(params);
 		Scheme scheme(secretKey, context);
@@ -194,7 +194,7 @@ int main(int argc, char **argv) {
 		cout << "Peak Memory Usage After Scheme Generation: " << peakAfterSchemeSize << "MB"<< endl;
 		cout << "Scheme Size is approximately " << currentAfterSchemeSize - currentPreSchemeSize << "MB" << endl;
 
-		cout << "HEAAN PARAMETER logq: " << logq << endl;
+		cout << "HEAAN PARAMETER logQ: " << logQ << endl;
 		cout << "HEAAN PARAMETER logN: " << logN << endl;
 		cout << "HEAAN PARAMETER h: " << params.h << endl;
 		cout << "HEAAN PARAMETER sigma: " << params.sigma << endl;

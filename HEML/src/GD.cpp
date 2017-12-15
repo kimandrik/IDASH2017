@@ -94,7 +94,7 @@ long** GD::xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool i
 	return xyData;
 }
 
-long** GD::RandomxyDataLearn(long**& xyData, long& learnDim, long& sampleDim, long& factorDim) {
+long** GD::RandomxyDataLearn(long** xyData, long& learnDim, long& sampleDim, long& factorDim) {
 	long** res = new long*[learnDim];
 
 	bool* notTaken = new bool[sampleDim];
@@ -116,7 +116,7 @@ long** GD::RandomxyDataLearn(long**& xyData, long& learnDim, long& sampleDim, lo
 	return res;
 }
 
-double GD::innerprod(double*& w, long*& xy, long& size){
+double GD::innerprod(double* w, long* xy, long& size){
 	double res = 0.0;
 	for(int i = 0; i < size; ++i) {
 		res += w[i] * xy[i];
@@ -124,7 +124,7 @@ double GD::innerprod(double*& w, long*& xy, long& size){
 	return res;
 }
 
-void GD::stepLGD(long**& xyData, double*& wData, long& factorDim, long& learnDim, double& gamma) {
+void GD::stepLGD(long** xyData, double* wData, long& factorDim, long& learnDim, double& gamma) {
 	double* grad = new double[factorDim]();
 
 	for(int j = 0; j < learnDim; ++j) {
@@ -146,7 +146,7 @@ void GD::stepLGD(long**& xyData, double*& wData, long& factorDim, long& learnDim
 	delete[] grad;
 }
 
-void GD::stepMLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta) {
+void GD::stepMLGD(long** xyData, double* wData, double* vData, long& factorDim, long& learnDim, double& gamma, double& eta) {
 	double* grad = new double[factorDim]();
 
 	for(int j = 0; j < learnDim; ++j) {
@@ -169,7 +169,7 @@ void GD::stepMLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 	delete[] grad;
 }
 
-void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDim, long& learnDim, double& gamma, double& eta) {
+void GD::stepNLGD(long** xyData, double* wData, double* vData, long& factorDim, long& learnDim, double& gamma, double& eta) {
 	double* grad = new double[factorDim]();
 
 	for(int j = 0; j < learnDim; ++j) {
@@ -194,7 +194,7 @@ void GD::stepNLGD(long**& xyData, double*& wData, double*& vData, long& factorDi
 	delete[] grad;
 }
 
-void GD::check(long**& xyData, double*& wData, long& factorDim, long& sampleDim) {
+void GD::check(long** xyData, double* wData, long& factorDim, long& sampleDim) {
 	cout << "w:";
 	for (long i = 0; i < factorDim; ++i) {
 		cout << wData[i] << ",";
@@ -209,7 +209,7 @@ void GD::check(long**& xyData, double*& wData, long& factorDim, long& sampleDim)
 
 }
 
-long* GD::calculateYtrueData(long**& xyData, long& sampleDim) {
+long* GD::calculateYtrueData(long** xyData, long& sampleDim) {
 	long* res = new long[sampleDim];
 	for (long i = 0; i < sampleDim; ++i) {
 		res[i] = xyData[i][0] == -1 ? 0 : 1;
@@ -217,7 +217,7 @@ long* GD::calculateYtrueData(long**& xyData, long& sampleDim) {
 	return res;
 }
 
-double* GD::calculateYpredictData(long**& xyData, double*& wData, long& factorDim, long& sampleDim) {
+double* GD::calculateYpredictData(long** xyData, double* wData, long& factorDim, long& sampleDim) {
 	double* res = new double[sampleDim];
 	for(long i = 0; i < sampleDim; ++i){
 		res[i] = innerprod(wData, xyData[i], factorDim) * xyData[i][0] / 2. + 0.5;
@@ -225,7 +225,7 @@ double* GD::calculateYpredictData(long**& xyData, double*& wData, long& factorDi
 	return res;
 }
 
-double GD::calcuateAUC(long**& xyData, double*& wData, long& factorDim, long& sampleDim, long steps) {
+double GD::calcuateAUC(long** xyData, double* wData, long& factorDim, long& sampleDim, long steps) {
 
 	long* yTrueData = calculateYtrueData(xyData, sampleDim);
 	double* yPredictData = calculateYpredictData(xyData, wData, factorDim, sampleDim);
