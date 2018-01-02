@@ -305,21 +305,21 @@ void CipherGD::encNLGDiteration(long& approxDeg, Ciphertext* cxyData, Ciphertext
 void CipherGD::decwData(double* wData, Ciphertext* cwData, long& factorDim, long& batch, long& cnum, long& wBits) {
 	for (long i = 0; i < (cnum - 1); ++i) {
 		CZZ* dcw = scheme.decrypt(secretKey, cwData[i]);
-		EvaluatorUtils::evalRealArray(wData + batch * i, dcw, batch, wBits);
-//		for (long l = 0; l < batch; ++l) {
-//			RR wi = to_RR(dcw[l].r);
-//			wi.e -= wBits;
-//			wData[batch * i + l] = to_double(wi);
-//		}
+//		EvaluatorUtils::evalRealArray(wData + batch * i, dcw, batch, wBits);
+		for (long l = 0; l < batch; ++l) {
+			RR wi = to_RR(dcw[l].r);
+			wi.e -= wBits;
+			wData[batch * i + l] = to_double(wi);
+		}
 		delete[] dcw;
 	}
 	CZZ* dcw = scheme.decrypt(secretKey, cwData[cnum-1]);
 	long rest = factorDim - batch * (cnum - 1);
-	EvaluatorUtils::evalRealArray(wData + batch * (cnum - 1), dcw, rest, wBits);
-//	for (long l = 0; l < rest; ++l) {
-//		RR wi = to_RR(dcw[l].r);
-//		wi.e -= wBits;
-//		wData[batch * (cnum - 1) + l] = to_double(wi);
-//	}
+//	EvaluatorUtils::evalRealArray(wData + batch * (cnum - 1), dcw, rest, wBits);
+	for (long l = 0; l < rest; ++l) {
+		RR wi = to_RR(dcw[l].r);
+		wi.e -= wBits;
+		wData[batch * (cnum - 1) + l] = to_double(wi);
+	}
 	delete[] dcw;
 }

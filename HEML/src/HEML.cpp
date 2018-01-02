@@ -65,6 +65,7 @@ int main(int argc, char **argv) {
 
 	TimeUtils timeutils;
 	SetNumThreads(8);
+
 	/*
 	 * gammaDownCnst > 0 : gamma = gammaUpCnst / gammaDownCnst / learnDim -> constant gamma
 	 * gammaDownCnst < 0 : gamma = gammaUpCnst / (i + |gammaDownCnst|) / learnDim -> decreasing gamma
@@ -147,10 +148,10 @@ int main(int argc, char **argv) {
 	} else {
 		long fdimBits = (long)ceil(log2(factorDim));
 		long ldimBits = (long)ceil(log2(learnDim));
-		long wBits = 37;
-		long xyBits = 37;
+		long wBits = 30;
+		long xyBits = 30;
 		long lBits = 5;
-		long pBits = 18;
+		long pBits = 20;
 		long aBits = 2;
 		long logQ = (approx == 3) ? (ldimBits + xyBits) + iter * (2 * wBits + xyBits + pBits + aBits) + lBits
 				: (ldimBits + xyBits) + iter * (3 * wBits + xyBits + pBits + aBits) + lBits;
@@ -173,8 +174,8 @@ int main(int argc, char **argv) {
 		cout << "slots: " << slots << endl;
 		cout << "cnum: " << cnum << endl;
 
-		size_t currentPreSchemeSize = getCurrentRSS( ) / 1048576;
-		size_t peakPreSchemeSize = getPeakRSS() / 1048576;
+		size_t currentPreSchemeSize = getCurrentRSS( ) >> 20;
+		size_t peakPreSchemeSize = getPeakRSS() >> 20;
 		cout << "Current Memory Usage Before Scheme Generation: " << currentPreSchemeSize << "MB"<< endl;
 		cout << "Peak Memory Usage Before Scheme Generation: " << peakPreSchemeSize << "MB"<< endl;
 
@@ -188,8 +189,8 @@ int main(int argc, char **argv) {
 		scheme.addRightRotKeys(secretKey);
 		timeutils.stop("Scheme generation");
 
-		size_t currentAfterSchemeSize = getCurrentRSS( ) / 1048576;
-		size_t peakAfterSchemeSize = getPeakRSS() / 1048576;
+		size_t currentAfterSchemeSize = getCurrentRSS( ) >> 20;
+		size_t peakAfterSchemeSize = getPeakRSS() >> 20;
 		cout << "Current Memory Usage After Scheme Generation: " << currentAfterSchemeSize << "MB"<< endl;
 		cout << "Peak Memory Usage After Scheme Generation: " << peakAfterSchemeSize << "MB"<< endl;
 		cout << "Scheme Size is approximately " << currentAfterSchemeSize - currentPreSchemeSize << "MB" << endl;
@@ -218,8 +219,8 @@ int main(int argc, char **argv) {
 		}
 		timeutils.stop("wData and vData encryption");
 
-		size_t currentAfterCipherSize = getCurrentRSS( ) / 1048576;
-		size_t peakAfterCipherSize = getPeakRSS() / 1048576;
+		size_t currentAfterCipherSize = getCurrentRSS( ) >> 20;
+		size_t peakAfterCipherSize = getPeakRSS() >> 20;
 		cout << "Current Memory Usage After Ciphertexts Generation: " << currentAfterCipherSize << "MB"<< endl;
 		cout << "Peak Memory Usage After Ciphertexts Generation: " << peakAfterCipherSize << "MB"<< endl;
 		cout << "Total Ciphertexts Size is approximately " << currentAfterCipherSize - currentAfterSchemeSize << "MB" << endl;
@@ -245,8 +246,8 @@ int main(int argc, char **argv) {
 
 			cout << " !!! STOP " << k + 1 << " ITERATION !!! " << endl;
 
-			size_t currentAfterIterSize = getCurrentRSS( ) / 1048576;
-			size_t peakAfterIterSize = getPeakRSS() / 1048576;
+			size_t currentAfterIterSize = getCurrentRSS( ) >> 20;
+			size_t peakAfterIterSize = getPeakRSS() >> 20;
 			cout << "Current Memory Usage After Iteration " << (k+1) << ": " << currentAfterIterSize << "MB"<< endl;
 			cout << "Peak Memory Usage After Iteration " << (k+1) << ": " << peakAfterIterSize << "MB"<< endl;
 
@@ -266,15 +267,15 @@ int main(int argc, char **argv) {
 			cout << "auc test: " << auctest << endl;
 			timeutils.stop("check on test data");
 
-			size_t currentAfterDecSize = getCurrentRSS( ) / 1048576;
-			size_t peakAfterDecSize = getPeakRSS() / 1048576;
+			size_t currentAfterDecSize = getCurrentRSS( ) >> 20;
+			size_t peakAfterDecSize = getPeakRSS() >> 20;
 			cout << "Current Memory Usage After Decryption " << (k+1) << ": " << currentAfterDecSize << "MB"<< endl;
 			cout << "Peak Memory Usage After Decryption " << (k+1) << ": " << peakAfterDecSize << "MB"<< endl;
 		}
 		delete[] dwData;
 	}
-	size_t currentAfterDecSize = getCurrentRSS( ) / 1048576;
-	size_t peakAfterDecSize = getPeakRSS() / 1048576;
+	size_t currentAfterDecSize = getCurrentRSS( ) >> 20;
+	size_t peakAfterDecSize = getPeakRSS() >> 20;
 	cout << "Current Memory Usage Final: " << currentAfterDecSize << "MB"<< endl;
 	cout << "Peak Memory Usage Final: " << peakAfterDecSize << "MB"<< endl;
 
