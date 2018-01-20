@@ -7,14 +7,13 @@
 #include <NTL/RR.h>
 #include <NTL/ZZ.h>
 
-void CipherGD::encxyData(Ciphertext* cxyData, long** xyData, long& slots, long& factorDim, long& learnDim, long& batch, long& cnum, long& xyBits) {
+void CipherGD::encxyData(Ciphertext* cxyData, double** xyData, long& slots, long& factorDim, long& learnDim, long& batch, long& cnum, long& xyBits) {
 	ZZ precision = power2_ZZ(xyBits);
 	CZZ* pxyData = new CZZ[slots];
 	for (long i = 0; i < cnum - 1; ++i) {
 		for (long j = 0; j < learnDim; ++j) {
 			for (long l = 0; l < batch; ++l) {
-				pxyData[batch * j + l] = xyData[j][batch * i + l] == -1 ? CZZ(-precision) :
-						xyData[j][batch * i + l] == 1 ? CZZ(precision) : CZZ();
+				pxyData[batch * j + l] = EvaluatorUtils::evalCZZ0(xyData[j][batch * i + l], xyBits);
 			}
 		}
 		cxyData[i] = scheme.encrypt(pxyData, slots, scheme.context.logQ);
@@ -23,11 +22,7 @@ void CipherGD::encxyData(Ciphertext* cxyData, long** xyData, long& slots, long& 
 	long rest = factorDim - batch * (cnum - 1);
 	for (long j = 0; j < learnDim; ++j) {
 		for (long l = 0; l < rest; ++l) {
-			pxyData[batch * j + l] = xyData[j][batch * (cnum - 1) + l] == -1 ? CZZ(-precision) :
-					xyData[j][batch * (cnum - 1) + l] == 1 ? CZZ(precision) : CZZ();
-		}
-		for (long l = rest; l < batch; ++l) {
-			pxyData[batch * j + l] = CZZ();
+			pxyData[batch * j + l] = EvaluatorUtils::evalCZZ0(xyData[j][batch * (cnum - 1) + l], xyBits);
 		}
 	}
 	cxyData[cnum - 1] = scheme.encrypt(pxyData, slots, scheme.context.logQ);

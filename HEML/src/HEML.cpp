@@ -75,11 +75,11 @@ int main(int argc, char **argv) {
 
 	long factorDim = 0;
 	long sampleDim = 0;
-	long** xyData = GD::xyDataFromFile(trainfile, factorDim, sampleDim, isYfirst);
+	double** xyData = GD::xyDataFromFile(trainfile, factorDim, sampleDim, isYfirst);
 
 	long factorDimTest = 0;
 	long sampleDimTest = 0;
-	long** xyDataTest;
+	double** xyDataTest;
 	if(argc > 7) {
 		xyDataTest = GD::xyDataFromFile(testfile, factorDimTest, sampleDimTest, isYfirst);
 	} else {
@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
 	cout << "factorDim: " << factorDim << endl;
 	cout << "learnDim: " << learnDim << endl;
 
-	long** xyDataLearn = GD::RandomxyDataLearn(xyData, learnDim, sampleDim, factorDim);
+	double** xyDataLearn = GD::RandomxyDataLearn(xyData, learnDim, sampleDim, factorDim);
 
 	double alpha0, alpha1, alpha2;
 	double etaprev, eta;

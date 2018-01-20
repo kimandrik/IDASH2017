@@ -17,7 +17,7 @@ public:
 
 	CipherGD(Scheme& scheme, SecretKey& secretKey) : scheme(scheme), secretKey(secretKey) {}
 
-	void encxyData(Ciphertext* cxyData, long** xyData, long& slots, long& factorDim, long& learnDim, long& batch, long& cnum, long& xyBits);
+	void encxyData(Ciphertext* cxyData, double** xyData, long& slots, long& factorDim, long& learnDim, long& batch, long& cnum, long& xyBits);
 	void encwData(Ciphertext* cwData, Ciphertext* cxyData, long& cnum, long& sBits, long& ldimBits, long& bBits, long& xyBits, long& wBits);
 	ZZX generateAuxPoly(long& slots, long& batch, long& pBits);
 
