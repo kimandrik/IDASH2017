@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 	bool isYfirst = atoi(argv[2]);
 	long iter = atol(argv[3]);
 	double learnPortion = atof(argv[4]);
-	long approx = atol(argv[5]);
+	long approxDeg = atol(argv[5]);
 	bool isEncrypted = atoi(argv[6]);
 
 	string testfile = argc > 7 ? string(argv[7]) : trainfile;
@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
 
 	cout << "iter: " << iter << endl;
 	cout << "isEncrypted: " << isEncrypted << endl;
-	cout << "approx: " << approx << endl;
+	cout << "approx: " << approxDeg << endl;
 	cout << "gammaUpCnst: " << gammaUpCnst << endl;
 	cout << "gammaDownCnst: " << gammaDownCnst << endl;
 	cout << "sampleDim: " << sampleDim << endl;
@@ -105,9 +105,22 @@ int main(int argc, char **argv) {
 	double gamma;
 
 	alpha0 = 0.01;
-
 	alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;
 	alpha2 = (1. + sqrt(1. + 4.0 * alpha1 * alpha1)) / 2.0;
+
+//	etaprev = (1 - alpha0) / alpha1;
+//	eta = (1 - alpha1) / alpha2;
+//
+//	alpha0 = alpha1;
+//	alpha1 = alpha2;
+//	alpha2 = (1. + sqrt(1. + 4.0 * alpha1 * alpha1)) / 2.0;
+//
+//	etaprev = (1 - alpha0) / alpha1;
+//	eta = (1 - alpha1) / alpha2;
+//
+//	alpha0 = alpha1;
+//	alpha1 = alpha2;
+//	alpha2 = (1. + sqrt(1. + 4.0 * alpha1 * alpha1)) / 2.0;
 
 	if(!isEncrypted) {
 		double* vData = new double[factorDim];
@@ -127,7 +140,10 @@ int main(int argc, char **argv) {
 			eta = (1 - alpha1) / alpha2;
 			gamma = gammaDownCnst > 0 ? gammaUpCnst / gammaDownCnst / learnDim : gammaUpCnst / (k - gammaDownCnst) / learnDim;
 
-			GD::stepNLGD(xyDataLearn, wData, vData, factorDim, learnDim, gamma, eta);
+			cout << "eta:" << eta << endl;
+			cout << "etaprev:" << etaprev << endl;
+//			GD::stepNLGD(xyDataLearn, wData, vData, factorDim, learnDim, gamma, eta);
+			GD::stepNLGDimitate(xyDataLearn, wData, vData, factorDim, learnDim, gamma, eta, etaprev);
 
 			timeutils.start("check on train data");
 			GD::check(xyData, wData, factorDim, sampleDim);
@@ -149,12 +165,11 @@ int main(int argc, char **argv) {
 		long fdimBits = (long)ceil(log2(factorDim));
 		long ldimBits = (long)ceil(log2(learnDim));
 		long wBits = 30;
-		long xyBits = 30;
 		long lBits = 5;
 		long pBits = 20;
 		long aBits = 2;
-		long logQ = (approx == 3) ? (ldimBits + xyBits) + iter * (2 * wBits + xyBits + pBits + aBits) + lBits
-				: (ldimBits + xyBits) + iter * (3 * wBits + xyBits + pBits + aBits) + lBits;
+		long logQ = (approxDeg == 3) ? (ldimBits + wBits + lBits) + iter * (3 * wBits + pBits + aBits)
+				: (ldimBits + wBits + lBits) + iter * (4 * wBits + pBits + aBits);
 		long logN = Params::suggestlogN(80, logQ);
 		long bBits = min(logN - 1 - ldimBits, fdimBits);
 		long batch = 1 << bBits;
@@ -165,7 +180,6 @@ int main(int argc, char **argv) {
 
 		cout << "fdimBits: " << fdimBits << endl;
 		cout << "ldimBits: " << ldimBits << endl;
-		cout << "xyBits: " << xyBits << endl;
 		cout << "wBits: " << wBits << endl;
 		cout << "lBits: " << lBits << endl;
 		cout << "pBits: " << pBits << endl;
@@ -206,14 +220,14 @@ int main(int argc, char **argv) {
 
 		Ciphertext* cxyData = new Ciphertext[cnum];
 		timeutils.start("Encrypting xyData...");
-		cipherGD.encxyData(cxyData, xyDataLearn, slots, factorDim, learnDim, batch, cnum, xyBits);
+		cipherGD.encxyData(cxyData, xyDataLearn, slots, factorDim, learnDim, batch, cnum, wBits);
 		timeutils.stop("xyData encryption");
 
 		Ciphertext* cwData = new Ciphertext[cnum];
 		Ciphertext* cvData = new Ciphertext[cnum];
 
 		timeutils.start("Encrypting wData and vData...");
-		cipherGD.encwData(cwData, cxyData, cnum, sBits, ldimBits, bBits, xyBits, wBits);
+		cipherGD.encwData(cwData, cxyData, cnum, sBits, bBits);
 		for (long i = 0; i < cnum; ++i) {
 			cvData[i] = cwData[i];
 		}
@@ -236,8 +250,13 @@ int main(int argc, char **argv) {
 
 			cout << "cwData logq: " << cwData[0].logq << endl;
 			timeutils.start("Encrypting NLGD step...");
-			cipherGD.encNLGDiteration(approx, cxyData, cwData, cvData, poly, cnum, gamma, eta, etaprev, sBits, bBits, xyBits, wBits, pBits, aBits);
+		 	Ciphertext* cgrad = new Ciphertext[cnum];
+			Ciphertext cip = cipherGD.encIP(cxyData, cwData, poly, cnum, bBits, wBits);
+			cipherGD.encSigmoid(approxDeg, cxyData, cgrad, cip, cnum, gamma, sBits, bBits, wBits, pBits, aBits);
+			cipherGD.encNLGDstep(cwData, cvData, cgrad, eta, etaprev, cnum, wBits);
+			delete[] cgrad;
 			timeutils.stop("NLGD step ");
+
 			cout << "cwData logq: " << cwData[0].logq << endl;
 
 			alpha0 = alpha1;

@@ -39,7 +39,7 @@ double** GD::xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool
 	if(isfirst) {
 		for(long j = 0; j < sampleDim; ++j){
 			double* xyj = new double[factorDim];
-			xyj[0] = xyline[j][0] < 0.5 : -1 : 1;
+			xyj[0] = 2 * xyline[j][0] - 1;
 			for(long i = 1; i < factorDim; ++i){
 				xyj[i] = xyj[0] * xyline[j][i];
 			}
@@ -48,7 +48,7 @@ double** GD::xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool
 	} else {
 		for(long j = 0; j < sampleDim; ++j){
 			double* xyj = new double[factorDim];
-			xyj[0] = xyline[j][factorDim - 1] < 0.5 : -1: 1;
+			xyj[0] = 2 * xyline[j][factorDim - 1] - 1;
 			for(long i = 1; i < factorDim; ++i){
 				xyj[i] = xyj[0] * xyline[j][i-1];
 			}
@@ -58,7 +58,7 @@ double** GD::xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool
 	return xyData;
 }
 
-double** GD::RandomxyDataLearn(double** xyData, long& learnDim, long& sampleDim, long& factorDim) {
+double** GD::RandomxyDataLearn(double** xyData, long learnDim, long sampleDim, long factorDim) {
 	double** res = new double*[learnDim];
 
 	bool* notTaken = new bool[sampleDim];
@@ -80,7 +80,7 @@ double** GD::RandomxyDataLearn(double** xyData, long& learnDim, long& sampleDim,
 	return res;
 }
 
-double GD::innerprod(double* w, double* xy, long& size){
+double GD::innerprod(double* w, double* xy, long size){
 	double res = 0.0;
 	for(long i = 0; i < size; ++i) {
 		res += w[i] * xy[i];
@@ -88,7 +88,7 @@ double GD::innerprod(double* w, double* xy, long& size){
 	return res;
 }
 
-void GD::stepLGD(double** xyData, double* wData, long& factorDim, long& learnDim, double& gamma) {
+void GD::stepLGD(double** xyData, double* wData, long factorDim, long learnDim, double& gamma) {
 	double* grad = new double[factorDim]();
 
 	for(long j = 0; j < learnDim; ++j) {
@@ -110,7 +110,7 @@ void GD::stepLGD(double** xyData, double* wData, long& factorDim, long& learnDim
 	delete[] grad;
 }
 
-void GD::stepMLGD(double** xyData, double* wData, double* vData, long& factorDim, long& learnDim, double& gamma, double& eta) {
+void GD::stepMLGD(double** xyData, double* wData, double* vData, long factorDim, long learnDim, double& gamma, double& eta) {
 	double* grad = new double[factorDim]();
 
 	for(long j = 0; j < learnDim; ++j) {
@@ -133,10 +133,10 @@ void GD::stepMLGD(double** xyData, double* wData, double* vData, long& factorDim
 	delete[] grad;
 }
 
-void GD::stepNLGD(double** xyData, double* wData, double* vData, long& factorDim, long& learnDim, double& gamma, double& eta) {
+void GD::stepNLGD(double** xyData, double* wData, double* vData, long factorDim, long learnDim, double& gamma, double& eta) {
 	double* grad = new double[factorDim]();
 
-	for(int j = 0; j < learnDim; ++j) {
+	for(long j = 0; j < learnDim; ++j) {
 		double ip = innerprod(vData, xyData[j], factorDim);
 		double tmp = (ip > 15.0) ? 0 : (ip < -15.0) ? -1.0 : - 1. / (1. + exp(ip));
 		if(ip > 6) {
@@ -144,13 +144,13 @@ void GD::stepNLGD(double** xyData, double* wData, double* vData, long& factorDim
 		} else if(ip < -6) {
 			cout << "too small ip: " << ip << endl;
 		}
-		for(int i = 0; i < factorDim; ++i) {
+		for(long i = 0; i < factorDim; ++i) {
 			grad[i] += tmp * (double) xyData[j][i];
 		}
 	}
 
 	// Nesterov steps
-	for (int i = 0; i < factorDim; ++i) {
+	for (long i = 0; i < factorDim; ++i) {
 		double tmpw = vData[i] - gamma * grad[i];
 		vData[i] = (1.0 - eta) * tmpw + eta * wData[i];
 		wData[i] = tmpw;
@@ -158,7 +158,34 @@ void GD::stepNLGD(double** xyData, double* wData, double* vData, long& factorDim
 	delete[] grad;
 }
 
-void GD::check(double** xyData, double* wData, long& factorDim, long& sampleDim) {
+void GD::stepNLGDimitate(double** xyData, double* wData, double* vData, long factorDim, long learnDim, double& gamma, double& eta, double& etaprev) {
+	double* grad = new double[factorDim]();
+
+	for(long j = 0; j < learnDim; ++j) {
+		double ip = innerprod(vData, xyData[j], factorDim);
+		double tmp = (ip > 15.0) ? 0 : (ip < -15.0) ? -1.0 : - 1. / (1. + exp(ip));
+//		if(ip > 6) {
+//			cout << "too big ip: " << ip << endl;
+//		} else if(ip < -6) {
+//			cout << "too small ip: " << ip << endl;
+//		}
+		for(long i = 0; i < factorDim; ++i) {
+			grad[i] += tmp * (double) xyData[j][i];
+		}
+	}
+	for (long i = 0; i < factorDim; ++i) {
+		grad[i] *= gamma;
+	}
+
+	for (long i = 0; i < factorDim; ++i) {
+		double tmp = vData[i] * (1.0 - etaprev) - grad[i];
+		vData[i] = wData[i] * eta / (1.0 - eta)  + tmp;
+		wData[i] = tmp;
+	}
+	delete[] grad;
+}
+
+void GD::check(double** xyData, double* wData, long factorDim, long sampleDim) {
 	cout << "w:";
 	for (long i = 0; i < factorDim; ++i) {
 		cout << wData[i] << ",";
@@ -173,7 +200,7 @@ void GD::check(double** xyData, double* wData, long& factorDim, long& sampleDim)
 
 }
 
-double* GD::calculateYtrueData(double** xyData, long& sampleDim) {
+double* GD::calculateYtrueData(double** xyData, long sampleDim) {
 	double* res = new double[sampleDim];
 	for (long i = 0; i < sampleDim; ++i) {
 		res[i] = xyData[i][0] < 0 ? 0 : 1;
@@ -181,7 +208,7 @@ double* GD::calculateYtrueData(double** xyData, long& sampleDim) {
 	return res;
 }
 
-double* GD::calculateYpredictData(double** xyData, double* wData, long& factorDim, long& sampleDim) {
+double* GD::calculateYpredictData(double** xyData, double* wData, long factorDim, long sampleDim) {
 	double* res = new double[sampleDim];
 	for(long i = 0; i < sampleDim; ++i){
 		res[i] = innerprod(wData, xyData[i], factorDim) * xyData[i][0] / 2. + 0.5;
@@ -189,7 +216,7 @@ double* GD::calculateYpredictData(double** xyData, double* wData, long& factorDi
 	return res;
 }
 
-double GD::calcuateAUC(double** xyData, double* wData, long& factorDim, long& sampleDim, long steps) {
+double GD::calcuateAUC(double** xyData, double* wData, long factorDim, long sampleDim, long steps) {
 
 	double* yTrueData = calculateYtrueData(xyData, sampleDim);
 	double* yPredictData = calculateYpredictData(xyData, wData, factorDim, sampleDim);
