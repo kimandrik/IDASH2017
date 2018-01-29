@@ -108,13 +108,13 @@ int main(int argc, char **argv) {
 	alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;
 	alpha2 = (1. + sqrt(1. + 4.0 * alpha1 * alpha1)) / 2.0;
 
-//	etaprev = (1 - alpha0) / alpha1;
-//	eta = (1 - alpha1) / alpha2;
-//
-//	alpha0 = alpha1;
-//	alpha1 = alpha2;
-//	alpha2 = (1. + sqrt(1. + 4.0 * alpha1 * alpha1)) / 2.0;
-//
+	etaprev = (1 - alpha0) / alpha1;
+	eta = (1 - alpha1) / alpha2;
+
+	alpha0 = alpha1;
+	alpha1 = alpha2;
+	alpha2 = (1. + sqrt(1. + 4.0 * alpha1 * alpha1)) / 2.0;
+
 //	etaprev = (1 - alpha0) / alpha1;
 //	eta = (1 - alpha1) / alpha2;
 //
@@ -123,8 +123,8 @@ int main(int argc, char **argv) {
 //	alpha2 = (1. + sqrt(1. + 4.0 * alpha1 * alpha1)) / 2.0;
 
 	if(!isEncrypted) {
-		double* vData = new double[factorDim];
-		double* wData = new double[factorDim];
+		double* vData = new double[factorDim]();
+		double* wData = new double[factorDim]();
 		for (long i = 0; i < factorDim; ++i) {
 			double tmp = 0.0;
 			for (long j = 0; j < learnDim; ++j) {
@@ -142,8 +142,7 @@ int main(int argc, char **argv) {
 
 			cout << "eta:" << eta << endl;
 			cout << "etaprev:" << etaprev << endl;
-//			GD::stepNLGD(xyDataLearn, wData, vData, factorDim, learnDim, gamma, eta);
-			GD::stepNLGDimitate(xyDataLearn, wData, vData, factorDim, learnDim, gamma, eta, etaprev);
+			GD::stepNLGD(xyDataLearn, wData, vData, factorDim, learnDim, gamma, eta);
 
 			timeutils.start("check on train data");
 			GD::check(xyData, wData, factorDim, sampleDim);
@@ -166,10 +165,9 @@ int main(int argc, char **argv) {
 		long ldimBits = (long)ceil(log2(learnDim));
 		long wBits = 30;
 		long lBits = 5;
-		long pBits = 20;
 		long aBits = 2;
-		long logQ = (approxDeg == 3) ? (ldimBits + wBits + lBits) + iter * (3 * wBits + pBits + aBits)
-				: (ldimBits + wBits + lBits) + iter * (4 * wBits + pBits + aBits);
+		long logQ = (approxDeg == 3) ? (ldimBits + wBits + lBits) + iter * (4 * wBits + aBits)
+				: (ldimBits + wBits + lBits) + iter * (5 * wBits + aBits);
 		long logN = Params::suggestlogN(80, logQ);
 		long bBits = min(logN - 1 - ldimBits, fdimBits);
 		long batch = 1 << bBits;
@@ -182,7 +180,6 @@ int main(int argc, char **argv) {
 		cout << "ldimBits: " << ldimBits << endl;
 		cout << "wBits: " << wBits << endl;
 		cout << "lBits: " << lBits << endl;
-		cout << "pBits: " << pBits << endl;
 		cout << "aBits: " << aBits << endl;
 		cout << "bBits: " << bBits << endl;
 		cout << "slots: " << slots << endl;
@@ -214,10 +211,6 @@ int main(int argc, char **argv) {
 		cout << "HEAAN PARAMETER h: " << params.h << endl;
 		cout << "HEAAN PARAMETER sigma: " << params.sigma << endl;
 
-		timeutils.start("Polynomial generating...");
-		ZZX poly = cipherGD.generateAuxPoly(slots, batch, pBits);
-		timeutils.stop("Polynomial generation");
-
 		Ciphertext* cxyData = new Ciphertext[cnum];
 		timeutils.start("Encrypting xyData...");
 		cipherGD.encxyData(cxyData, xyDataLearn, slots, factorDim, learnDim, batch, cnum, wBits);
@@ -241,18 +234,21 @@ int main(int argc, char **argv) {
 
 		double* dwData = new double[factorDim];
 		for (long k = 0; k < iter; ++k) {
-
 			cout << " !!! START " << k + 1 << " ITERATION !!! " << endl;
 
 			etaprev = (1 - alpha0) / alpha1;
 			eta = (1 - alpha1) / alpha2;
 			gamma = gammaDownCnst > 0 ? gammaUpCnst / gammaDownCnst / learnDim : gammaUpCnst / (k - gammaDownCnst) / learnDim;
 
+			timeutils.start("Polynomial generating...");
+			ZZX poly = cipherGD.generateAuxPolyNLGD(slots, batch, wBits, etaprev);
+			timeutils.stop("Polynomial generation");
+
 			cout << "cwData logq: " << cwData[0].logq << endl;
 			timeutils.start("Encrypting NLGD step...");
 		 	Ciphertext* cgrad = new Ciphertext[cnum];
-			Ciphertext cip = cipherGD.encIP(cxyData, cwData, poly, cnum, bBits, wBits);
-			cipherGD.encSigmoid(approxDeg, cxyData, cgrad, cip, cnum, gamma, sBits, bBits, wBits, pBits, aBits);
+			Ciphertext cip = cipherGD.encIP(cxyData, cvData, poly, cnum, bBits, wBits);
+			cipherGD.encSigmoid(approxDeg, cxyData, cgrad, cip, cnum, gamma, sBits, bBits, wBits, aBits);
 			cipherGD.encNLGDstep(cwData, cvData, cgrad, eta, etaprev, cnum, wBits);
 			delete[] cgrad;
 			timeutils.stop("NLGD step ");

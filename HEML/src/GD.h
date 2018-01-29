@@ -19,8 +19,6 @@ public:
 
 	static void stepNLGD(double** xyData, double* wData, double* vData, long factorDim, long learnDim, double& gamma, double& eta);
 
-	static void stepNLGDimitate(double** xyData, double* wData, double* vData, long factorDim, long learnDim, double& gamma, double& eta, double& etaprev);
-
 	static void stepMLGD(double** xyData, double* wData, double* vData, long factorDim, long learnDim, double& gamma, double& eta);
 
 	static void check(double** xyData, double* wData, long factorDim, long sampleDim);

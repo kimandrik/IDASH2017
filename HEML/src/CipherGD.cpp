@@ -45,11 +45,22 @@ void CipherGD::encwData(Ciphertext* cwData, Ciphertext* cxyData, long cnum, long
 	NTL_EXEC_RANGE_END;
 }
 
-ZZX CipherGD::generateAuxPoly(long slots, long batch, long pBits) {
-	ZZ p = power2_ZZ(pBits);
+ZZX CipherGD::generateAuxPoly(long slots, long batch, long wBits) {
+	ZZ p = power2_ZZ(wBits);
 	CZZ* pvals = new CZZ[slots];
 	for (long j = 0; j < slots; j += batch) {
 		pvals[j].r = p;
+	}
+	ZZX msg = scheme.context.encodeSmall(pvals, slots);
+	delete[] pvals;
+	return msg;
+}
+
+ZZX CipherGD::generateAuxPolyNLGD(long slots, long batch, long wBits, double etaprev) {
+	ZZ tmpzz = EvaluatorUtils::evalZZ(1. - etaprev, wBits);
+	CZZ* pvals = new CZZ[slots];
+	for (long j = 0; j < slots; j += batch) {
+		pvals[j].r = tmpzz;
 	}
 	ZZX msg = scheme.context.encodeSmall(pvals, slots);
 	delete[] pvals;
@@ -83,8 +94,8 @@ Ciphertext CipherGD::encIP(Ciphertext* cxyData, Ciphertext* cwData, ZZX& poly, l
 	return cip;
 }
 
-void CipherGD::encSigmoid(long approxDeg, Ciphertext* cxyData, Ciphertext* cgrad, Ciphertext& cip, long cnum, double gamma, long sBits, long bBits, long wBits, long pBits, long aBits) {
-	scheme.reScaleByAndEqual(cip, pBits + aBits);
+void CipherGD::encSigmoid(long approxDeg, Ciphertext* cxyData, Ciphertext* cgrad, Ciphertext& cip, long cnum, double gamma, long sBits, long bBits, long wBits, long aBits) {
+	scheme.reScaleByAndEqual(cip, wBits + aBits);
 	Ciphertext cip2 = scheme.square(cip);
 	scheme.reScaleByAndEqual(cip2, wBits);
 
@@ -234,26 +245,26 @@ void CipherGD::encNLGDstep(Ciphertext* cwData, Ciphertext* cvData, Ciphertext* c
 	NTL_EXEC_RANGE_END;
 }
 
-void CipherGD::encLGDiteration(long approxDeg, Ciphertext* cxyData, Ciphertext* cwData, ZZX& poly, long cnum, double gamma, long sBits, long bBits, long wBits, long pBits, long aBits) {
+void CipherGD::encLGDiteration(long approxDeg, Ciphertext* cxyData, Ciphertext* cwData, ZZX& poly, long cnum, double gamma, long sBits, long bBits, long wBits, long aBits) {
  	Ciphertext* cgrad = new Ciphertext[cnum];
 	Ciphertext cip = encIP(cxyData, cwData, poly, cnum, bBits, wBits);
-	encSigmoid(approxDeg, cxyData, cgrad, cip, cnum, gamma, sBits, bBits, wBits, pBits, aBits);
+	encSigmoid(approxDeg, cxyData, cgrad, cip, cnum, gamma, sBits, bBits, wBits, aBits);
 	encLGDstep(cwData, cgrad, cnum);
 	delete[] cgrad;
 }
 
-void CipherGD::encMLGDiteration(long approxDeg, Ciphertext* cxyData, Ciphertext* cwData, Ciphertext* cvData, ZZX& poly, long cnum, double gamma, double eta, long sBits, long bBits, long wBits, long pBits, long aBits) {
+void CipherGD::encMLGDiteration(long approxDeg, Ciphertext* cxyData, Ciphertext* cwData, Ciphertext* cvData, ZZX& poly, long cnum, double gamma, double eta, long sBits, long bBits, long wBits, long aBits) {
  	Ciphertext* cgrad = new Ciphertext[cnum];
 	Ciphertext cip = encIP(cxyData, cwData, poly, cnum, bBits, wBits);
-	encSigmoid(approxDeg, cxyData, cgrad, cip, cnum, gamma, sBits, bBits, wBits, pBits, aBits);
+	encSigmoid(approxDeg, cxyData, cgrad, cip, cnum, gamma, sBits, bBits, wBits, aBits);
 	encMLGDstep(cwData, cvData, cgrad, eta, cnum, wBits);
 	delete[] cgrad;
 }
 
-void CipherGD::encNLGDiteration(long approxDeg, Ciphertext* cxyData, Ciphertext* cwData, Ciphertext* cvData, ZZX& poly, long cnum, double gamma, double eta, double etaprev, long sBits, long bBits, long wBits, long pBits, long aBits) {
+void CipherGD::encNLGDiteration(long approxDeg, Ciphertext* cxyData, Ciphertext* cwData, Ciphertext* cvData, ZZX& poly, long cnum, double gamma, double eta, double etaprev, long sBits, long bBits, long wBits, long aBits) {
  	Ciphertext* cgrad = new Ciphertext[cnum];
-	Ciphertext cip = encIP(cxyData, cwData, poly, cnum, bBits, wBits);
-	encSigmoid(approxDeg, cxyData, cgrad, cip, cnum, gamma, sBits, bBits, wBits, pBits, aBits);
+	Ciphertext cip = encIP(cxyData, cvData, poly, cnum, bBits, wBits);
+	encSigmoid(approxDeg, cxyData, cgrad, cip, cnum, gamma, sBits, bBits, wBits, aBits);
 	encNLGDstep(cwData, cvData, cgrad, eta, etaprev, cnum, wBits);
 	delete[] cgrad;
 }

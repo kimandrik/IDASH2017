@@ -25,19 +25,21 @@ public:
 
 	void encwData(Ciphertext* cwData, Ciphertext* cxyData, long cnum, long sBits, long bBits);
 
-	ZZX generateAuxPoly(long slots, long batch, long pBits);
+	ZZX generateAuxPoly(long slots, long batch, long wBits);
+
+	ZZX generateAuxPolyNLGD(long slots, long batch, long wBits, double etaprev);
 
 	Ciphertext encIP(Ciphertext* cxyData, Ciphertext* cwData, ZZX& poly, long cnum, long bBits, long wBits);
 
-	void encSigmoid(long approxDeg, Ciphertext* cxyData, Ciphertext* cgrad, Ciphertext& cip, long cnum, double gamma, long sBits, long bBits, long wBits, long pBits, long aBits);
+	void encSigmoid(long approxDeg, Ciphertext* cxyData, Ciphertext* cgrad, Ciphertext& cip, long cnum, double gamma, long sBits, long bBits, long wBits, long aBits);
 
 	void encLGDstep(Ciphertext* cwData, Ciphertext* cgrad, long cnum);
 	void encMLGDstep(Ciphertext* cwData, Ciphertext* cvData, Ciphertext* cgrad, double eta, long cnum, long wBits);
 	void encNLGDstep(Ciphertext* cwData, Ciphertext* cvData, Ciphertext* cgrad, double eta, double etaprev, long cnum, long wBits);
 
-	void encLGDiteration(long approxDeg, Ciphertext* cxyData, Ciphertext* cwData, ZZX& poly, long cnum, double gamma, long sBits, long bBits, long wBits, long pBits, long aBits);
-	void encMLGDiteration(long approxDeg, Ciphertext* cxyData, Ciphertext* cwData, Ciphertext* cvData, ZZX& poly, long cnum, double gamma, double eta, long sBits, long bBits, long wBits, long pBits, long aBits);
-	void encNLGDiteration(long approxDeg, Ciphertext* cxyData, Ciphertext* cwData, Ciphertext* cvData, ZZX& poly, long cnum, double gamma, double eta, double etaprev, long sBits, long bBits, long wBits, long pBits, long aBits);
+	void encLGDiteration(long approxDeg, Ciphertext* cxyData, Ciphertext* cwData, ZZX& poly, long cnum, double gamma, long sBits, long bBits, long wBits, long aBits);
+	void encMLGDiteration(long approxDeg, Ciphertext* cxyData, Ciphertext* cwData, Ciphertext* cvData, ZZX& poly, long cnum, double gamma, double eta, long sBits, long bBits, long wBits, long aBits);
+	void encNLGDiteration(long approxDeg, Ciphertext* cxyData, Ciphertext* cwData, Ciphertext* cvData, ZZX& poly, long cnum, double gamma, double eta, double etaprev, long sBits, long bBits, long wBits, long aBits);
 
 	void decwData(double* wData, Ciphertext* cwData, long factorDim, long batch, long cnum, long wBits);
 };

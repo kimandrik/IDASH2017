@@ -158,33 +158,6 @@ void GD::stepNLGD(double** xyData, double* wData, double* vData, long factorDim,
 	delete[] grad;
 }
 
-void GD::stepNLGDimitate(double** xyData, double* wData, double* vData, long factorDim, long learnDim, double& gamma, double& eta, double& etaprev) {
-	double* grad = new double[factorDim]();
-
-	for(long j = 0; j < learnDim; ++j) {
-		double ip = innerprod(vData, xyData[j], factorDim);
-		double tmp = (ip > 15.0) ? 0 : (ip < -15.0) ? -1.0 : - 1. / (1. + exp(ip));
-//		if(ip > 6) {
-//			cout << "too big ip: " << ip << endl;
-//		} else if(ip < -6) {
-//			cout << "too small ip: " << ip << endl;
-//		}
-		for(long i = 0; i < factorDim; ++i) {
-			grad[i] += tmp * (double) xyData[j][i];
-		}
-	}
-	for (long i = 0; i < factorDim; ++i) {
-		grad[i] *= gamma;
-	}
-
-	for (long i = 0; i < factorDim; ++i) {
-		double tmp = vData[i] * (1.0 - etaprev) - grad[i];
-		vData[i] = wData[i] * eta / (1.0 - eta)  + tmp;
-		wData[i] = tmp;
-	}
-	delete[] grad;
-}
-
 void GD::check(double** xyData, double* wData, long factorDim, long sampleDim) {
 	cout << "w:";
 	for (long i = 0; i < factorDim; ++i) {
