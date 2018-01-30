@@ -3,6 +3,7 @@
 
 #include <iostream>
 
+using namespace NTL;
 using namespace std;
 
 static double degree3[3] = {-0.5,0.15012,-0.001593};
@@ -20,6 +21,8 @@ public:
 	static double** xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool isfirst = true);
 
 	static double** RandomxyDataLearn(double** xyData, long learnDim, long sampleDim, long factorDim);
+
+	static void normalizexyData(double** xyData, long factorDim, long learnDim);
 
 	static double* plainIP(double** a, double* b, long factorDim, long learnDim);
 
