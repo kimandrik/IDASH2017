@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
 	long wBits = 30;
 	long pBits = 20;
 	long lBits = 5;
-	long aBits = 2;
+	long aBits = 3;
 	long logQ = (approxDeg == 3) ? (ldimBits + wBits + lBits) + iter * (3 * wBits + 2 * pBits + aBits)
 			: (ldimBits + wBits + lBits) + iter * (4 * wBits + 2 * pBits + aBits);
 	long logN = Params::suggestlogN(80, logQ);
@@ -188,13 +188,14 @@ int main(int argc, char **argv) {
 		eta = (1 - alpha0) / alpha1;
 		gamma = gammaDownCnst > 0 ? gammaUpCnst / gammaDownCnst / learnDim : gammaUpCnst / (k - gammaDownCnst) / learnDim;
 
+//		GD::trueNLGDiteration(xyData, wData, vData, factorDim, learnDim, gamma, eta);
+		GD::plainNLGDiteration(approxDeg, xyData, wData, vData, factorDim, learnDim, gamma, eta);
+
 		cout << "cwData logq: " << cwData[0].logq << endl;
 		timeutils.start("Enc NLGD");
 		cipherGD.encNLGDiteration(approxDeg, cxyData, cwData, cvData, poly, cnum, gamma, eta, sBits, bBits, wBits, pBits, aBits);
 		timeutils.stop("Enc NLGD");
 		cout << "cwData logq: " << cwData[0].logq << endl;
-
-		GD::stepNLGD(xyData, wData, vData, factorDim, learnDim, gamma, eta);
 
 		alpha0 = alpha1;
 		alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;

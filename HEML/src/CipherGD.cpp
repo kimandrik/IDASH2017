@@ -88,14 +88,15 @@ void CipherGD::encSigmoid(long approxDeg, Ciphertext* cxyData, Ciphertext* cgrad
 	scheme.reScaleByAndEqual(cip2, wBits);
 
 	if(approxDeg == 3) {
-		ZZ tmpzz = EvaluatorUtils::evalZZ(degree3[1] / degree3[2], wBits - 2 * aBits);
-		scheme.addConstAndEqual(cip2, tmpzz);
-		tmpzz = EvaluatorUtils::evalZZ(gamma * degree3[0], wBits);
-		ZZ tmpzz1 = EvaluatorUtils::evalZZ(gamma  * degree3[2], wBits + 3 * aBits);
+		ZZ ptmp1 = EvaluatorUtils::evalZZ(degree3[1] / degree3[2], wBits - 2 * aBits);
+		ZZ ptmp2 = EvaluatorUtils::evalZZ(gamma * degree3[0], wBits);
+		ZZ ptmp3 = EvaluatorUtils::evalZZ(gamma  * degree3[2], wBits + 3 * aBits);
+
+		scheme.addConstAndEqual(cip2, ptmp1);
 
 		NTL_EXEC_RANGE(cnum, first, last);
 		for (long i = first; i < last; ++i) {
-			cgrad[i] = scheme.multByConst(cxyData[i], tmpzz1);
+			cgrad[i] = scheme.multByConst(cxyData[i], ptmp3);
 			scheme.reScaleByAndEqual(cgrad[i], wBits);
 			scheme.modDownToAndEqual(cgrad[i], cip.logq);
 			scheme.multAndEqual(cgrad[i], cip);
@@ -103,27 +104,28 @@ void CipherGD::encSigmoid(long approxDeg, Ciphertext* cxyData, Ciphertext* cgrad
 			scheme.multAndEqual(cgrad[i], cip2);
 			scheme.reScaleByAndEqual(cgrad[i], wBits);
 
-			Ciphertext tmp = scheme.multByConst(cxyData[i], tmpzz);
+			Ciphertext tmp = scheme.multByConst(cxyData[i], ptmp2);
 			scheme.reScaleByAndEqual(tmp, wBits);
 			scheme.modDownToAndEqual(tmp, cgrad[i].logq);
 			scheme.addAndEqual(cgrad[i], tmp);
 		}
 		NTL_EXEC_RANGE_END;
 	} else if (approxDeg == 5) {
+		ZZ ptmp1 = EvaluatorUtils::evalZZ(degree5[2] / degree5[3], wBits - 2 * aBits);
+		ZZ ptmp2 = EvaluatorUtils::evalZZ(degree5[1] / degree5[3], wBits - 4 * aBits);
+		ZZ ptmp3 = EvaluatorUtils::evalZZ(gamma * degree5[0], wBits);
+		ZZ ptmp4 = EvaluatorUtils::evalZZ(gamma * degree5[3], wBits + 5 * aBits);
+
 		Ciphertext cip4 = scheme.square(cip2);
-		ZZ tmpzz = EvaluatorUtils::evalZZ(degree5[2] / degree5[3], wBits - 2 * aBits);
-		scheme.multByConstAndEqual(cip2, tmpzz);
+		scheme.multByConstAndEqual(cip2, ptmp1);
 		scheme.reScaleByAndEqual(cip2, wBits);
 		scheme.reScaleByAndEqual(cip4, wBits);
 		scheme.addAndEqual(cip4, cip2);
-		tmpzz = EvaluatorUtils::evalZZ(degree5[1] / degree5[3], wBits - 4 * aBits);
-		scheme.addConstAndEqual(cip4, tmpzz);
-		tmpzz = EvaluatorUtils::evalZZ(gamma * degree5[0], wBits);
-		ZZ tmpzz1 = EvaluatorUtils::evalZZ(gamma * degree5[3], wBits + 5 * aBits);
+		scheme.addConstAndEqual(cip4, ptmp2);
 
 		NTL_EXEC_RANGE(cnum, first, last);
 		for (long i = first; i < last; ++i) {
-			cgrad[i] = scheme.multByConst(cxyData[i], tmpzz1);
+			cgrad[i] = scheme.multByConst(cxyData[i], ptmp4);
 			scheme.reScaleByAndEqual(cgrad[i], wBits);
 			scheme.modDownToAndEqual(cgrad[i], cip.logq);
 			scheme.multAndEqual(cgrad[i], cip);
@@ -132,38 +134,40 @@ void CipherGD::encSigmoid(long approxDeg, Ciphertext* cxyData, Ciphertext* cgrad
 			scheme.multAndEqual(cgrad[i], cip4);
 			scheme.reScaleByAndEqual(cgrad[i], wBits);
 
-			Ciphertext tmp = scheme.multByConst(cxyData[i], tmpzz);
+			Ciphertext tmp = scheme.multByConst(cxyData[i], ptmp3);
 			scheme.reScaleByAndEqual(tmp, wBits);
 			scheme.modDownToAndEqual(tmp, cgrad[i].logq);
 			scheme.addAndEqual(cgrad[i], tmp);
 		}
 		NTL_EXEC_RANGE_END;
 	} else {
+		ZZ ptmp1 = EvaluatorUtils::evalZZ(degree7[3] / degree7[4], wBits - 2 * aBits);
+		ZZ ptmp2 = EvaluatorUtils::evalZZ(degree7[2] / degree7[4], wBits - 4 * aBits);
+		ZZ ptmp3 = EvaluatorUtils::evalZZ(gamma * degree7[0], wBits);
+		ZZ ptmp4 = EvaluatorUtils::evalZZ(gamma * degree7[1], wBits + aBits);
+		ZZ ptmp5 = EvaluatorUtils::evalZZ(gamma * degree7[4], wBits + 7 * aBits);
+
 		Ciphertext cip4 = scheme.square(cip2);
 		scheme.reScaleByAndEqual(cip4, wBits);
-		ZZ tmpzz = EvaluatorUtils::evalZZ(degree7[3] / degree7[4], wBits - 2 * aBits);
-		Ciphertext cip2c = scheme.multByConst(cip2, tmpzz);
+		Ciphertext cip2c = scheme.multByConst(cip2, ptmp1);
 		scheme.reScaleByAndEqual(cip2c, wBits);
 		scheme.addAndEqual(cip4, cip2c);
-		tmpzz = EvaluatorUtils::evalZZ(degree7[2] / degree7[4], wBits - 4 * aBits);
-		scheme.addConstAndEqual(cip4, tmpzz);
-		tmpzz = EvaluatorUtils::evalZZ(gamma * degree7[0], wBits);
-		ZZ tmpzz1 = EvaluatorUtils::evalZZ(gamma * degree7[1], wBits + aBits);
-		ZZ tmpzz2 = EvaluatorUtils::evalZZ(gamma * degree7[4], wBits + 7 * aBits);
+		scheme.addConstAndEqual(cip4, ptmp2);
+
 		NTL_EXEC_RANGE(cnum, first, last);
 		for (long i = first; i < last; ++i) {
-			Ciphertext tmp = scheme.multByConst(cxyData[i], tmpzz1);
+			Ciphertext tmp = scheme.multByConst(cxyData[i], ptmp4);
 			scheme.reScaleByAndEqual(tmp, wBits);
 			scheme.modDownToAndEqual(tmp, cip.logq);
 			scheme.multAndEqual(tmp, cip);
 			scheme.reScaleByAndEqual(tmp, wBits);
 
-			cgrad[i] = scheme.multByConst(cxyData[i], tmpzz);
+			cgrad[i] = scheme.multByConst(cxyData[i], ptmp3);
 			scheme.reScaleByAndEqual(cgrad[i], wBits);
 			scheme.modDownToAndEqual(cgrad[i], tmp.logq);
 			scheme.addAndEqual(tmp, cgrad[i]);
 
-			cgrad[i] = scheme.multByConst(cxyData[i], tmpzz2);
+			cgrad[i] = scheme.multByConst(cxyData[i], ptmp5);
 			scheme.reScaleByAndEqual(cgrad[i], wBits);
 			scheme.modDownToAndEqual(cgrad[i], cip.logq);
 			scheme.multAndEqual(cgrad[i], cip);
@@ -199,12 +203,13 @@ void CipherGD::encLGDstep(Ciphertext* cwData, Ciphertext* cgrad, long cnum) {
 	NTL_EXEC_RANGE_END;
 }
 
-void CipherGD::encMLGDstep(Ciphertext* cwData, Ciphertext* cvData, Ciphertext* cgrad, double eta, long cnum, long wBits) {
-	ZZ peta = EvaluatorUtils::evalZZ(eta, wBits);
+void CipherGD::encMLGDstep(Ciphertext* cwData, Ciphertext* cvData, Ciphertext* cgrad, double eta, long cnum, long pBits) {
+	ZZ peta = EvaluatorUtils::evalZZ(eta, pBits);
+
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
 		scheme.multByConstAndEqual(cvData[i], peta);
-		scheme.reScaleByAndEqual(cvData[i], wBits);
+		scheme.reScaleByAndEqual(cvData[i], pBits);
 		scheme.modDownToAndEqual(cvData[i], cgrad[i].logq);
 		scheme.addAndEqual(cvData[i], cgrad[i]);
 		scheme.modDownToAndEqual(cwData[i], cvData[i].logq);
@@ -214,16 +219,16 @@ void CipherGD::encMLGDstep(Ciphertext* cwData, Ciphertext* cvData, Ciphertext* c
 }
 
 void CipherGD::encNLGDstep(Ciphertext* cwData, Ciphertext* cvData, Ciphertext* cgrad, double eta, long cnum, long pBits) {
-	ZZ tmpzz = EvaluatorUtils::evalZZ(1. - eta, pBits);
-	ZZ tmpzz1 = EvaluatorUtils::evalZZ(eta, pBits);
+	ZZ petabar = EvaluatorUtils::evalZZ(1. - eta, pBits);
+	ZZ peta = EvaluatorUtils::evalZZ(eta, pBits);
 
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
 		scheme.modDownToAndEqual(cvData[i], cgrad[i].logq);
 		Ciphertext ctmpw = scheme.sub(cvData[i], cgrad[i]);
-		cvData[i] = scheme.multByConst(ctmpw, tmpzz);
+		cvData[i] = scheme.multByConst(ctmpw, petabar);
 		scheme.reScaleByAndEqual(cvData[i], pBits);
-		scheme.multByConstAndEqual(cwData[i], tmpzz1);
+		scheme.multByConstAndEqual(cwData[i], peta);
 		scheme.reScaleByAndEqual(cwData[i], pBits);
 		scheme.modDownToAndEqual(cwData[i], cvData[i].logq);
 		scheme.addAndEqual(cvData[i], cwData[i]);
@@ -260,24 +265,11 @@ void CipherGD::encNLGDiteration(long approxDeg, Ciphertext* cxyData, Ciphertext*
 void CipherGD::decwData(double* wData, Ciphertext* cwData, long factorDim, long batch, long cnum, long wBits) {
 	for (long i = 0; i < (cnum - 1); ++i) {
 		CZZ* dcw = scheme.decrypt(secretKey, cwData[i]);
-		for (long l = 0; l < batch; ++l) {
-			RR wi = to_RR(dcw[l].r);
-			wi.e -= wBits;
-			wData[batch * i + l] = to_double(wi);
-		}
+		EvaluatorUtils::evalRealArray(wData + batch * i, dcw, batch, wBits);
 		delete[] dcw;
 	}
 	CZZ* dcw = scheme.decrypt(secretKey, cwData[cnum-1]);
 	long rest = factorDim - batch * (cnum - 1);
-	for (long l = 0; l < rest; ++l) {
-		RR wi = to_RR(dcw[l].r);
-		wi.e -= wBits;
-		wData[batch * (cnum - 1) + l] = to_double(wi);
-	}
+	EvaluatorUtils::evalRealArray(wData + batch * (cnum - 1), dcw, rest, wBits);
 	delete[] dcw;
-	cout << "w:";
-	for (long i = 0; i < factorDim; ++i) {
-		cout << wData[i] << ",";
-	}
-	cout << endl;
 }
