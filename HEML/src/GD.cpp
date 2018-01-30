@@ -164,7 +164,6 @@ void GD::check(double** xyData, double* wData, long factorDim, long sampleDim) {
 		cout << wData[i] << ",";
 	}
 	cout << endl;
-
 	long num = 0;
 	for(long j = 0; j < sampleDim; ++j){
 		if(innerprod(wData, xyData[j], factorDim) > 0) num++;
