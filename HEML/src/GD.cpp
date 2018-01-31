@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+using namespace NTL;
+
 double** GD::xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool isfirst) {
 	vector<vector<double>> xyline;
 	factorDim = 1; 	// dimension of x
@@ -86,6 +88,26 @@ void GD::normalizexyData(double** xyData, long factorDim, long learnDim) {
 		}
 		for (long j = 0; j < learnDim; ++j) {
 			xyData[j][i] /= m;
+		}
+	}
+}
+
+void GD::normalizexyData2(double** xyDataLearn, double** xyDataTest, long factorDim, long learnDim, long learnDimTest) {
+	long i, j;
+	double m;
+	for (i = 0; i < factorDim; ++i) {
+		m = 0.0;
+		for (j = 0; j < learnDim; ++i) {
+			m = max(m, abs(xyDataLearn[j][i]));
+		}
+		for (j = 0; j < learnDimTest; ++j) {
+			m = max(m, abs(xyDataTest[j][i]));
+		}
+		for (j = 0; j < learnDim; ++j) {
+			xyDataLearn[j][i] /= m;
+		}
+		for (j = 0; j < learnDimTest; ++j) {
+			xyDataTest[j][i] /= m;
 		}
 	}
 }

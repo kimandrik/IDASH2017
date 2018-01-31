@@ -74,19 +74,27 @@ int main(int argc, char **argv) {
 
 	long factorDim = 0;
 	long sampleDim = 0;
+	long learnDim = 0;
 	long factorDimTest = 0;
 	long sampleDimTest = 0;
 
 	double** xyData = GD::xyDataFromFile(trainfile, factorDim, sampleDim, isYfirst);
 	double** xyDataTest;
+	double** xyDataLearn;
 	if(argc > 7) {
+		learnDim = sampleDim;
 		xyDataTest = GD::xyDataFromFile(testfile, factorDimTest, sampleDimTest, isYfirst);
+		xyDataLearn = xyData;
+		if(factorDimTest != factorDim) {
+			invalid_argument("factor dimensions of learn and test datasets do not match");
+		}
 	} else {
+		learnDim = (long)((double)sampleDim * learnPortion);
 		xyDataTest = xyData;
+		xyDataLearn = GD::RandomxyDataLearn(xyData, learnDim, sampleDim, factorDim);
 		factorDimTest = factorDim;
 		sampleDimTest = sampleDim;
 	}
-	long learnDim = (long)((double)sampleDim * learnPortion);
 
 	cout << "iter: " << iter << endl;
 	cout << "approxDeg: " << approxDeg << endl;
@@ -112,7 +120,6 @@ int main(int argc, char **argv) {
 	long logN = Params::suggestlogN(80, logQ);
 	long bBits = min(logN - 1 - ldimBits, fdimBits);
 	long batch = 1 << bBits;
-
 	long sBits = ldimBits + bBits;
 	long slots =  1 << sBits;
 	long cnum = (long)ceil((double)factorDim / batch);
@@ -126,8 +133,6 @@ int main(int argc, char **argv) {
 	cout << "bBits: " << bBits << endl;
 	cout << "slots: " << slots << endl;
 	cout << "cnum: " << cnum << endl;
-
-	double** xyDataLearn = GD::RandomxyDataLearn(xyData, learnDim, sampleDim, factorDim);
 
 	double* wData = new double[factorDim];
 	double* vData = new double[factorDim];
@@ -188,44 +193,58 @@ int main(int argc, char **argv) {
 		eta = (1 - alpha0) / alpha1;
 		gamma = gammaDownCnst > 0 ? gammaUpCnst / gammaDownCnst / learnDim : gammaUpCnst / (k - gammaDownCnst) / learnDim;
 
-//		GD::trueNLGDiteration(xyData, wData, vData, factorDim, learnDim, gamma, eta);
-		GD::plainNLGDiteration(approxDeg, xyData, wData, vData, factorDim, learnDim, gamma, eta);
+		//-----------------------------------------
 
 		cout << "cwData logq: " << cwData[0].logq << endl;
 		timeutils.start("Enc NLGD");
 		cipherGD.encNLGDiteration(approxDeg, cxyData, cwData, cvData, poly, cnum, gamma, eta, sBits, bBits, wBits, pBits, aBits);
 		timeutils.stop("Enc NLGD");
 		cout << "cwData logq: " << cwData[0].logq << endl;
-
-		alpha0 = alpha1;
-		alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;
-
-		cout << " !!! STOP " << k + 1 << " ITERATION !!! " << endl;
-
 		cipherGD.decwData(dwData, cwData, factorDim, batch, cnum, wBits);
 		timeutils.start("Encrypted check on train data");
 		GD::check(xyData, dwData, factorDim, sampleDim);
 		auctrain = GD::calcuateAUC(xyData, dwData, factorDim, sampleDim, 100);
 		cout << "auc train: " << auctrain << endl;
 		timeutils.stop("Encrypted check on train data");
-
 		timeutils.start("Encrypted check on test data");
 		GD::check(xyDataTest, dwData, factorDimTest, sampleDimTest);
 		auctest = GD::calcuateAUC(xyDataTest, dwData, factorDimTest, sampleDimTest, 100);
 		cout << "auc test: " << auctest << endl;
 		timeutils.stop("Encrypted check on test data");
 
+		//-----------------------------------------
+
+		GD::plainNLGDiteration(approxDeg, xyData, wData, vData, factorDim, learnDim, gamma, eta);
 		timeutils.start("Plain check on train data");
 		GD::check(xyData, wData, factorDim, sampleDim);
 		auctrain = GD::calcuateAUC(xyData, wData, factorDim, sampleDim, 100);
 		cout << "auc train: " << auctrain << endl;
-		timeutils.stop("Encrypted check on train data");
-
+		timeutils.stop("Plain check on train data");
 		timeutils.start("Plain check on test data");
 		GD::check(xyDataTest, wData, factorDimTest, sampleDimTest);
 		auctest = GD::calcuateAUC(xyDataTest, wData, factorDimTest, sampleDimTest, 100);
 		cout << "auc test: " << auctest << endl;
 		timeutils.stop("Plain check on test data");
+
+		//-----------------------------------------
+
+//		GD::trueNLGDiteration(xyData, wData, vData, factorDim, learnDim, gamma, eta);
+//		timeutils.start("True check on train data");
+//		GD::check(xyData, wData, factorDim, sampleDim);
+//		auctrain = GD::calcuateAUC(xyData, wData, factorDim, sampleDim, 100);
+//		cout << "auc train: " << auctrain << endl;
+//		timeutils.stop("True check on train data");
+//		timeutils.start("True check on test data");
+//		GD::check(xyDataTest, wData, factorDimTest, sampleDimTest);
+//		auctest = GD::calcuateAUC(xyDataTest, wData, factorDimTest, sampleDimTest, 100);
+//		cout << "auc test: " << auctest << endl;
+//		timeutils.stop("True check on test data");
+
+		//-----------------------------------------
+
+		alpha0 = alpha1;
+		alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;
+		cout << " !!! STOP " << k + 1 << " ITERATION !!! " << endl;
 	}
 	return 0;
 }
