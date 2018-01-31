@@ -11,17 +11,9 @@ public:
 	Scheme& scheme;
 	SecretKey& secretKey;
 
-	double degree3[3] = {-0.5,0.15012,-0.001593};
-	double degree5[4] = {-0.5,0.19131,-0.0045963, 0.0000412332};
-	double degree7[5] = {-0.5,0.216884,-0.00819276,0.000165861,-0.00000119581};
-
-//	double degree3[3] = {-0.5,0.19,-0.0035};
-//	double degree5[4] = {-0.5,0.2166,-0.0077,0.00011};
-//	double degree7[5] = {-0.5,0.216884,-0.00819276,0.000165861,-0.00000119581};
-
 	CipherGD(Scheme& scheme, SecretKey& secretKey) : scheme(scheme), secretKey(secretKey) {}
 
-	void encxyData(Ciphertext* cxyData, double** xyData, long slots, long factorDim, long learnDim, long batch, long cnum, long wBits);
+	void encxyData(Ciphertext* cxyData, double** xyData, long slots, long factorDim, long sampleDim, long batch, long cnum, long wBits);
 
 	void encwData(Ciphertext* cwData, Ciphertext* cxyData, long cnum, long sBits, long bBits);
 

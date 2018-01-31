@@ -1,4 +1,5 @@
 #include "CipherGD.h"
+#include "GD.h"
 
 #include <Ciphertext.h>
 #include <CZZ.h>
@@ -7,10 +8,10 @@
 #include <NTL/RR.h>
 #include <NTL/ZZ.h>
 
-void CipherGD::encxyData(Ciphertext* cxyData, double** xyData, long slots, long factorDim, long learnDim, long batch, long cnum, long wBits) {
+void CipherGD::encxyData(Ciphertext* cxyData, double** xyData, long slots, long factorDim, long sampleDim, long batch, long cnum, long wBits) {
 	CZZ* pxyData = new CZZ[slots];
 	for (long i = 0; i < cnum - 1; ++i) {
-		for (long j = 0; j < learnDim; ++j) {
+		for (long j = 0; j < sampleDim; ++j) {
 			for (long l = 0; l < batch; ++l) {
 				pxyData[batch * j + l] = EvaluatorUtils::evalCZZ0(xyData[j][batch * i + l], wBits);
 			}
@@ -19,7 +20,7 @@ void CipherGD::encxyData(Ciphertext* cxyData, double** xyData, long slots, long 
 	}
 
 	long rest = factorDim - batch * (cnum - 1);
-	for (long j = 0; j < learnDim; ++j) {
+	for (long j = 0; j < sampleDim; ++j) {
 		for (long l = 0; l < rest; ++l) {
 			pxyData[batch * j + l] = EvaluatorUtils::evalCZZ0(xyData[j][batch * (cnum - 1) + l], wBits);
 		}
