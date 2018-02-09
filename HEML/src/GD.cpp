@@ -279,68 +279,68 @@ void GD::check(double** xyData, double* wData, long factorDim, long sampleDim) {
 
 }
 
-double* GD::calculateYtrueData(double** xyData, long sampleDim) {
-	double* res = new double[sampleDim];
-	for (long i = 0; i < sampleDim; ++i) {
-		res[i] = (xyData[i][0] + 1.) / 2.;
-	}
-	return res;
+double GD::calculateAUC(double** xyData, double* wData, long factorDim, long sampleDim) {
+    long n_fail_y1 = 0;
+    long n_fail_y0 = 0;
+
+    vector<double> xtheta_y1;
+    vector<double> xtheta_y0;
+
+    for(int i = 0; i < sampleDim; ++i){
+        if(xyData[i][0] > 0){
+            if(GD::trueIP(xyData[i], wData, factorDim) < 0) n_fail_y1++;
+            xtheta_y1.push_back(xyData[i][0] * GD::trueIP(xyData[i] + 1, wData + 1, factorDim - 1));
+        } else{
+            if(GD::trueIP(xyData[i], wData, factorDim) < 0) n_fail_y0++;
+            xtheta_y0.push_back(xyData[i][0] * GD::trueIP(xyData[i] + 1, wData + 1, factorDim - 1));
+        }
+    }
+
+    double correctness = 100.0 - (100.0 * (n_fail_y0 + n_fail_y1) / sampleDim);
+    cout << "Failure rate: (y = 1) " << n_fail_y1 << "/" << xtheta_y1.size() << " + (y = 0) " << n_fail_y0 << "/" ;
+    cout << xtheta_y0.size() << " = " <<  (100.0 * (n_fail_y0 + n_fail_y1) / sampleDim) << " %." << endl;
+    cout << "Correctness: " << correctness  << " %." << endl;
+
+    if(xtheta_y0.size() == 0 || xtheta_y1.size() ==0){
+        cout << "n_test_yi = 0 : cannot compute AUC" << endl;
+        return 0.0;
+    } else{
+        double auc = 0.0;
+        for(long i = 0; i < xtheta_y1.size(); ++i){
+            for(long j = 0; j < xtheta_y0.size(); ++j){
+                if(xtheta_y0[j] <= xtheta_y1[i]) auc++;
+            }
+        }
+        auc /= xtheta_y1.size() * xtheta_y0.size();
+        return auc;
+        cout << "AUC: " << auc << endl;
+    }
 }
 
-double* GD::calculateYpredictData(double** xyData, double* wData, long factorDim, long sampleDim) {
-	double* res = new double[sampleDim];
-	for(long i = 0; i < sampleDim; ++i){
-		res[i] = (trueIP(wData, xyData[i], factorDim) * xyData[i][0] + 1.) / 2.;
-	}
-	return res;
+
+double GD::calculateMSE(double* wData1, double* wData2, long factorDim) {
+    double res= 0.0;
+
+    for(long i = 0; i < factorDim; ++i) {
+        res += pow(wData1[i] - wData2[i], 2.0);
+    }
+    res /= factorDim;
+
+    return res;
 }
 
-double GD::calcuateAUC(double** xyData, double* wData, long factorDim, long sampleDim, long steps) {
 
-	double* yTrueData = calculateYtrueData(xyData, sampleDim);
-	double* yPredictData = calculateYpredictData(xyData, wData, factorDim, sampleDim);
+double GD::calculateNMSE(double* wData1, double* wData2, long factorDim) {
+    double res= 0.0;
 
-	double* TPR = new double[steps + 1]();
-	double* FPR = new double[steps + 1]();
+    for(long i = 0; i < factorDim; ++i) {
+        res += pow(wData1[i], 2.0);
+    }
+    res /= factorDim;
 
-	TPR[0] = 1.;
-	FPR[0] = 1.;
-	for (long i = 1; i < steps - 1; ++i) {
-		double threshold =  (double)i / steps;
+    double mse = GD::calculateMSE(wData1, wData2, factorDim);
+    res = mse / res;
 
-		long FP = 0;
-		long TP = 0;
-		long TN = 0;
-		long FN = 0;
+    return res;
 
-		for (long j = 0; j < sampleDim; ++j) {
-			if(yTrueData[j] < 0.5) {
-				if(yPredictData[j] > threshold) FP++;
-				else TN++;
-			} else {
-				if(yPredictData[j] > threshold) TP++;
-				else FN++;
-			}
-		}
-		long TPFN = TP + FN;
-		long FPTN = FP + TN;
-
-		TPR[i] = (double)TP / TPFN;
-		FPR[i] = (double)FP / FPTN;
-	}
-
-	TPR[steps] = 0.;
-	FPR[steps] = 0.;
-
-	double auc = 0.0;
-
-	for (long i = 0; i < steps; ++i) {
-		auc += (TPR[i] + TPR[i + 1]) * (FPR[i] - FPR[i + 1]) / 2.;
-	}
-
-	delete[] TPR;
-	delete[] FPR;
-	delete[] yTrueData;
-	delete[] yPredictData;
-	return auc;
 }

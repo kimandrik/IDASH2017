@@ -179,7 +179,7 @@ int main(int argc, char **argv) {
 	double gammaUpCnst = 10;
 	double gammaDownCnst = -1;
 	double alpha0, alpha1, eta, gamma;
-	double auctrain, auctest;
+	double auctrain, auctest, msetrain, msetest, nmsetrain, nmsetest;
 
 	/*
 	 * gammaDownCnst > 0 : gamma = gammaUpCnst / gammaDownCnst / learnDim -> constant gamma
@@ -206,42 +206,58 @@ int main(int argc, char **argv) {
 		cipherGD.decwData(dwData, cwData, factorDimTrain, batch, cnum, wBits);
 		timeutils.start("Encrypted check on train data");
 		GD::check(xyDataTrain, dwData, factorDimTrain, sampleDimTrain);
-		auctrain = GD::calcuateAUC(xyDataTrain, dwData, factorDimTrain, sampleDimTrain, 1000);
+		auctrain = GD::calculateAUC(xyDataTrain, dwData, factorDimTrain, sampleDimTrain);
 		cout << "auc train: " << auctrain << endl;
 		timeutils.stop("Encrypted check on train data");
 		timeutils.start("Encrypted check on test data");
 		GD::check(xyDataTest, dwData, factorDimTest, sampleDimTest);
-		auctest = GD::calcuateAUC(xyDataTest, dwData, factorDimTest, sampleDimTest, 1000);
+		auctest = GD::calculateAUC(xyDataTest, dwData, factorDimTest, sampleDimTest);
 		cout << "auc test: " << auctest << endl;
 		timeutils.stop("Encrypted check on test data");
 
 		//-----------------------------------------
 
-		GD::plainNLGDiteration(approxDeg, xyDataTrain, wData, vData, factorDimTrain, sampleDimTrain, gamma, eta);
-		timeutils.start("Plain check on train data");
-		GD::check(xyDataTrain, wData, factorDimTrain, sampleDimTrain);
-		auctrain = GD::calcuateAUC(xyDataTrain, wData, factorDimTrain, sampleDimTrain, 1000);
-		cout << "auc train: " << auctrain << endl;
-		timeutils.stop("Plain check on train data");
-		timeutils.start("Plain check on test data");
-		GD::check(xyDataTest, wData, factorDimTest, sampleDimTest);
-		auctest = GD::calcuateAUC(xyDataTest, wData, factorDimTest, sampleDimTest, 100);
-		cout << "auc test: " << auctest << endl;
-		timeutils.stop("Plain check on test data");
+//		GD::plainNLGDiteration(approxDeg, xyDataTrain, wData, vData, factorDimTrain, sampleDimTrain, gamma, eta);
+//		timeutils.start("Plain check on train data");
+//		GD::check(xyDataTrain, wData, factorDimTrain, sampleDimTrain);
+//		auctrain = GD::calculateAUC(xyDataTrain, wData, factorDimTrain, sampleDimTrain);
+//		msetrain = GD::calculateMSE(wData, dwData, factorDimTrain);
+//		nmsetrain = GD::calculateNMSE(wData, dwData, factorDimTrain);
+//		cout << "auc train: " << auctrain << endl;
+//		cout << "mse train: " << msetrain << endl;
+//		cout << "nmse train: " << nmsetrain << endl;
+//		timeutils.stop("Plain check on train data");
+//		timeutils.start("Plain check on test data");
+//		GD::check(xyDataTest, wData, factorDimTest, sampleDimTest);
+//		auctest = GD::calculateAUC(xyDataTest, wData, factorDimTest, sampleDimTest);
+//		msetest = GD::calculateMSE(wData, dwData, factorDimTest);
+//		nmsetest = GD::calculateNMSE(wData, dwData, factorDimTest);
+//		cout << "auc test: " << auctest << endl;
+//		cout << "mse test: " << msetest << endl;
+//		cout << "nmse test: " << nmsetest << endl;
+//		timeutils.stop("Plain check on test data");
 
 		//-----------------------------------------
 
-//		GD::trueNLGDiteration(xyDataLearn, wData, vData, factorDim, sampleDimLearn, gamma, eta);
-//		timeutils.start("True check on train data");
-//		GD::check(xyDataLearn, wData, factorDim, sampleDimLearn);
-//		auctrain = GD::calcuateAUC(xyData, wData, factorDim, sampleDimLearn, 100);
-//		cout << "auc train: " << auctrain << endl;
-//		timeutils.stop("True check on train data");
-//		timeutils.start("True check on test data");
-//		GD::check(xyDataTest, wData, factorDimTest, sampleDimTest);
-//		auctest = GD::calcuateAUC(xyDataTest, wData, factorDimTest, sampleDimTest, 100);
-//		cout << "auc test: " << auctest << endl;
-//		timeutils.stop("True check on test data");
+		GD::trueNLGDiteration(xyDataTrain, wData, vData, factorDimTrain, sampleDimTrain, gamma, eta);
+		timeutils.start("True check on train data");
+		GD::check(xyDataTrain, wData, factorDimTrain, sampleDimTrain);
+		auctrain = GD::calculateAUC(xyDataTrain, wData, factorDimTrain, sampleDimTrain);
+		msetrain = GD::calculateMSE(wData, dwData, factorDimTrain);
+		nmsetrain = GD::calculateNMSE(wData, dwData, factorDimTrain);
+		cout << "auc train: " << auctrain << endl;
+		cout << "mse train: " << msetrain << endl;
+		cout << "nmse train: " << nmsetrain << endl;
+		timeutils.stop("True check on train data");
+		timeutils.start("True check on test data");
+		GD::check(xyDataTest, wData, factorDimTest, sampleDimTest);
+		auctest = GD::calculateAUC(xyDataTest, wData, factorDimTest, sampleDimTest);
+		msetest = GD::calculateMSE(wData, dwData, factorDimTest);
+		nmsetest = GD::calculateNMSE(wData, dwData, factorDimTest);
+		cout << "auc test: " << auctest << endl;
+		cout << "mse test: " << msetest << endl;
+		cout << "nmse test: " << nmsetest << endl;
+		timeutils.stop("True check on test data");
 
 		//-----------------------------------------
 		alpha0 = alpha1;

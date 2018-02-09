@@ -44,9 +44,11 @@ public:
 
 	static void check(double** xyData, double* wData, long factorDim, long sampleDim);
 
-	static double* calculateYtrueData(double** xyData, long sampleDim);
-	static double* calculateYpredictData(double** xyData, double* wData, long factorDim, long sampleDim);
-	static double calcuateAUC(double** xyData, double* wData, long factorDim, long sampleDim, long steps);
+	static double calculateAUC(double** xyData, double* wData, long factorDim, long sampleDim);
+
+	static double calculateMSE(double* wData1, double* wData2, long factorDim);
+
+	static double calculateNMSE(double* wData1, double* wData2, long factorDim);
 };
 
 #endif /* SGD_SGD_H_ */
