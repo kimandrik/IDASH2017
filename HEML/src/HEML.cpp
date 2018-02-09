@@ -179,7 +179,7 @@ int main(int argc, char **argv) {
 	double gammaUpCnst = 10;
 	double gammaDownCnst = -1;
 	double alpha0, alpha1, eta, gamma;
-	double auctrain, auctest, msetrain, msetest, nmsetrain, nmsetest;
+	double auctrain, auctest, mse, nmse;
 
 	/*
 	 * gammaDownCnst > 0 : gamma = gammaUpCnst / gammaDownCnst / learnDim -> constant gamma
@@ -221,20 +221,12 @@ int main(int argc, char **argv) {
 //		timeutils.start("Plain check on train data");
 //		GD::check(xyDataTrain, wData, factorDimTrain, sampleDimTrain);
 //		auctrain = GD::calculateAUC(xyDataTrain, wData, factorDimTrain, sampleDimTrain);
-//		msetrain = GD::calculateMSE(wData, dwData, factorDimTrain);
-//		nmsetrain = GD::calculateNMSE(wData, dwData, factorDimTrain);
 //		cout << "auc train: " << auctrain << endl;
-//		cout << "mse train: " << msetrain << endl;
-//		cout << "nmse train: " << nmsetrain << endl;
 //		timeutils.stop("Plain check on train data");
 //		timeutils.start("Plain check on test data");
 //		GD::check(xyDataTest, wData, factorDimTest, sampleDimTest);
 //		auctest = GD::calculateAUC(xyDataTest, wData, factorDimTest, sampleDimTest);
-//		msetest = GD::calculateMSE(wData, dwData, factorDimTest);
-//		nmsetest = GD::calculateNMSE(wData, dwData, factorDimTest);
 //		cout << "auc test: " << auctest << endl;
-//		cout << "mse test: " << msetest << endl;
-//		cout << "nmse test: " << nmsetest << endl;
 //		timeutils.stop("Plain check on test data");
 
 		//-----------------------------------------
@@ -243,21 +235,20 @@ int main(int argc, char **argv) {
 		timeutils.start("True check on train data");
 		GD::check(xyDataTrain, wData, factorDimTrain, sampleDimTrain);
 		auctrain = GD::calculateAUC(xyDataTrain, wData, factorDimTrain, sampleDimTrain);
-		msetrain = GD::calculateMSE(wData, dwData, factorDimTrain);
-		nmsetrain = GD::calculateNMSE(wData, dwData, factorDimTrain);
 		cout << "auc train: " << auctrain << endl;
-		cout << "mse train: " << msetrain << endl;
-		cout << "nmse train: " << nmsetrain << endl;
 		timeutils.stop("True check on train data");
 		timeutils.start("True check on test data");
 		GD::check(xyDataTest, wData, factorDimTest, sampleDimTest);
 		auctest = GD::calculateAUC(xyDataTest, wData, factorDimTest, sampleDimTest);
-		msetest = GD::calculateMSE(wData, dwData, factorDimTest);
-		nmsetest = GD::calculateNMSE(wData, dwData, factorDimTest);
 		cout << "auc test: " << auctest << endl;
-		cout << "mse test: " << msetest << endl;
-		cout << "nmse test: " << nmsetest << endl;
 		timeutils.stop("True check on test data");
+
+		//-----------------------------------------
+
+		mse = GD::calculateMSE(wData, dwData, factorDimTrain);
+		nmse = GD::calculateNMSE(wData, dwData, factorDimTrain);
+		cout << "mse: " << mse << endl;
+		cout << "nmse: " << nmse << endl;
 
 		//-----------------------------------------
 		alpha0 = alpha1;
