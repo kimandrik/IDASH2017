@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <StringUtils.h>
 
 using namespace NTL;
 
@@ -90,6 +91,7 @@ void GD::normalizexyData(double** xyData, long factorDim, long sampleDim) {
 		for (long j = 0; j < sampleDim; ++i) {
 			m = max(m, abs(xyData[j][i]));
 		}
+		if(m < 1e-10) continue;
 		for (long j = 0; j < sampleDim; ++j) {
 			xyData[j][i] /= m;
 		}
@@ -107,6 +109,7 @@ void GD::normalizexyData2(double** xyDataLearn, double** xyDataTest, long factor
 		for (j = 0; j < sampleDimTest; ++j) {
 			m = max(m, abs(xyDataTest[j][i]));
 		}
+		if(m < 1e-10) continue;
 		for (j = 0; j < sampleDimLearn; ++j) {
 			xyDataLearn[j][i] /= m;
 		}
@@ -279,7 +282,7 @@ void GD::check(double** xyData, double* wData, long factorDim, long sampleDim) {
 double* GD::calculateYtrueData(double** xyData, long sampleDim) {
 	double* res = new double[sampleDim];
 	for (long i = 0; i < sampleDim; ++i) {
-		res[i] = xyData[i][0] < 0 ? 0 : 1;
+		res[i] = (xyData[i][0] + 1.) / 2.;
 	}
 	return res;
 }
@@ -287,7 +290,7 @@ double* GD::calculateYtrueData(double** xyData, long sampleDim) {
 double* GD::calculateYpredictData(double** xyData, double* wData, long factorDim, long sampleDim) {
 	double* res = new double[sampleDim];
 	for(long i = 0; i < sampleDim; ++i){
-		res[i] = trueIP(wData, xyData[i], factorDim) * xyData[i][0] / 2. + 0.5;
+		res[i] = (trueIP(wData, xyData[i], factorDim) * xyData[i][0] + 1.) / 2.;
 	}
 	return res;
 }
@@ -297,10 +300,12 @@ double GD::calcuateAUC(double** xyData, double* wData, long factorDim, long samp
 	double* yTrueData = calculateYtrueData(xyData, sampleDim);
 	double* yPredictData = calculateYpredictData(xyData, wData, factorDim, sampleDim);
 
-	double* TPR = new double[steps + 1];
-	double* FPR = new double[steps + 1];
+	double* TPR = new double[steps + 1]();
+	double* FPR = new double[steps + 1]();
 
-	for (long i = 0; i < steps + 1; ++i) {
+	TPR[0] = 1.;
+	FPR[0] = 1.;
+	for (long i = 1; i < steps - 1; ++i) {
 		double threshold =  (double)i / steps;
 
 		long FP = 0;
@@ -309,7 +314,7 @@ double GD::calcuateAUC(double** xyData, double* wData, long factorDim, long samp
 		long FN = 0;
 
 		for (long j = 0; j < sampleDim; ++j) {
-			if(yTrueData[j] == 0) {
+			if(yTrueData[j] < 0.5) {
 				if(yPredictData[j] > threshold) FP++;
 				else TN++;
 			} else {
@@ -317,17 +322,22 @@ double GD::calcuateAUC(double** xyData, double* wData, long factorDim, long samp
 				else FN++;
 			}
 		}
-		double TPFN = TP + FN;
-		double FPTN = FP + TN;
+		long TPFN = TP + FN;
+		long FPTN = FP + TN;
 
-		TPR[i] = TP / TPFN;
-		FPR[i] = FP / FPTN;
+		TPR[i] = (double)TP / TPFN;
+		FPR[i] = (double)FP / FPTN;
 	}
+
+	TPR[steps] = 0.;
+	FPR[steps] = 0.;
+
 	double auc = 0.0;
 
 	for (long i = 0; i < steps; ++i) {
 		auc += (TPR[i] + TPR[i + 1]) * (FPR[i] - FPR[i + 1]) / 2.;
 	}
+
 	delete[] TPR;
 	delete[] FPR;
 	delete[] yTrueData;

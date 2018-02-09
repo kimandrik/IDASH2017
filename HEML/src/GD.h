@@ -1,5 +1,5 @@
-#ifndef SGD_SGD_H_
-#define SGD_SGD_H_
+#ifndef HEML_GD_H_
+#define HEML_GD_H_
 
 #include <iostream>
 

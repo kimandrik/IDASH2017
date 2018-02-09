@@ -1,5 +1,4 @@
 #include <Ciphertext.h>
-#include <CZZ.h>
 #include <NTL/BasicThreadPool.h>
 #include <NTL/tools.h>
 #include <NTL/ZZ.h>
@@ -155,11 +154,11 @@ int main(int argc, char **argv) {
 	Context context(params);
 	SecretKey secretKey(params);
 	Scheme scheme(secretKey, context);
-	CipherGD cipherGD(scheme, secretKey);
 	scheme.addLeftRotKeys(secretKey);
 	scheme.addRightRotKeys(secretKey);
 	timeutils.stop("Scheme generation");
 
+	CipherGD cipherGD(scheme, secretKey);
 	timeutils.start("Encrypting xyData...");
 	cipherGD.encxyData(cxyData, xyDataTrain, slots, factorDimTrain, sampleDimTrain, batch, cnum, wBits);
 	timeutils.stop("xyData encryption");
@@ -177,7 +176,7 @@ int main(int argc, char **argv) {
 
 	//-----------------------------------------
 
-	double gammaUpCnst = 1;
+	double gammaUpCnst = 10;
 	double gammaDownCnst = -1;
 	double alpha0, alpha1, eta, gamma;
 	double auctrain, auctest;
@@ -199,20 +198,20 @@ int main(int argc, char **argv) {
 		gamma = gammaDownCnst > 0 ? gammaUpCnst / gammaDownCnst / sampleDimTrain : gammaUpCnst / (k - gammaDownCnst) / sampleDimTrain;
 		//-----------------------------------------
 
-		cout << "cwData logq: " << cwData[0].logq << endl;
+		cout << "cwData logq before: " << cwData[0].logq << endl;
 		timeutils.start("Enc NLGD");
 		cipherGD.encNLGDiteration(approxDeg, cxyData, cwData, cvData, poly, cnum, gamma, eta, sBits, bBits, wBits, pBits, aBits);
 		timeutils.stop("Enc NLGD");
-		cout << "cwData logq: " << cwData[0].logq << endl;
+		cout << "cwData logq after: " << cwData[0].logq << endl;
 		cipherGD.decwData(dwData, cwData, factorDimTrain, batch, cnum, wBits);
 		timeutils.start("Encrypted check on train data");
 		GD::check(xyDataTrain, dwData, factorDimTrain, sampleDimTrain);
-		auctrain = GD::calcuateAUC(xyDataTrain, dwData, factorDimTrain, sampleDimTrain, 100);
+		auctrain = GD::calcuateAUC(xyDataTrain, dwData, factorDimTrain, sampleDimTrain, 1000);
 		cout << "auc train: " << auctrain << endl;
 		timeutils.stop("Encrypted check on train data");
 		timeutils.start("Encrypted check on test data");
 		GD::check(xyDataTest, dwData, factorDimTest, sampleDimTest);
-		auctest = GD::calcuateAUC(xyDataTest, dwData, factorDimTest, sampleDimTest, 100);
+		auctest = GD::calcuateAUC(xyDataTest, dwData, factorDimTest, sampleDimTest, 1000);
 		cout << "auc test: " << auctest << endl;
 		timeutils.stop("Encrypted check on test data");
 
@@ -221,7 +220,7 @@ int main(int argc, char **argv) {
 		GD::plainNLGDiteration(approxDeg, xyDataTrain, wData, vData, factorDimTrain, sampleDimTrain, gamma, eta);
 		timeutils.start("Plain check on train data");
 		GD::check(xyDataTrain, wData, factorDimTrain, sampleDimTrain);
-		auctrain = GD::calcuateAUC(xyDataTrain, wData, factorDimTrain, sampleDimTrain, 100);
+		auctrain = GD::calcuateAUC(xyDataTrain, wData, factorDimTrain, sampleDimTrain, 1000);
 		cout << "auc train: " << auctrain << endl;
 		timeutils.stop("Plain check on train data");
 		timeutils.start("Plain check on test data");
