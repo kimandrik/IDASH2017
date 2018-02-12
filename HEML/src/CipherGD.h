@@ -20,6 +20,8 @@ public:
 
 	void encwData(Ciphertext* cwData, Ciphertext* cxyData, long cnum, long sBits, long bBits);
 
+	void encwData0(Ciphertext* cwData, long cnum, long slots, long wBits);
+
 	ZZX generateAuxPoly(long slots, long batch, long pBits);
 
 	Ciphertext encIP(Ciphertext* cxyData, Ciphertext* cwData, ZZX& poly, long cnum, long bBits, long wBits, long pBits);

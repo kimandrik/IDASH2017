@@ -98,9 +98,14 @@ int main(int argc, char **argv) {
 	long wBits = 30;
 	long pBits = 20;
 	long lBits = 5;
-	long aBits = 2;
-	long logQ = (approxDeg == 3) ? (sdimBits + wBits + lBits) + iter * (3 * wBits + 2 * pBits + aBits)
-			: (sdimBits + wBits + lBits) + iter * (4 * wBits + 2 * pBits + aBits);
+	long aBits = 3;
+
+//	long logQ = (approxDeg == 3) ? (sdimBits + wBits + lBits) + iter * (3 * wBits + 2 * pBits + aBits)
+//			: (sdimBits + wBits + lBits) + iter * (4 * wBits + 2 * pBits + aBits);
+
+	long logQ = (approxDeg == 3) ? (wBits + lBits) + iter * (3 * wBits + 2 * pBits + aBits)
+			: (wBits + lBits) + iter * (4 * wBits + 2 * pBits + aBits);
+
 	long logN = Params::suggestlogN(80, logQ);
 	long bBits = min(logN - 1 - sdimBits, fdimBits);
 	long batch = 1 << bBits;
@@ -123,15 +128,20 @@ int main(int argc, char **argv) {
 	double* dwData = new double[factorDimTrain];
 	double* dvData = new double[factorDimTrain];
 
-	long sdimPow = 1 << sdimBits;
+//	long sdimPow = 1 << sdimBits;
+//	for (long i = 0; i < factorDimTrain; ++i) {
+//		double tmp = 0.0;
+//		for (long j = 0; j < sampleDimTrain; ++j) {
+//			tmp += xyDataTrain[j][i];
+//		}
+//		tmp /= sdimPow;
+//		wData[i] = tmp;
+//		vData[i] = tmp;
+//	}
+
 	for (long i = 0; i < factorDimTrain; ++i) {
-		double tmp = 0.0;
-		for (long j = 0; j < sampleDimTrain; ++j) {
-			tmp += xyDataTrain[j][i];
-		}
-		tmp /= sdimPow;
-		wData[i] = tmp;
-		vData[i] = tmp;
+		wData[i] = 0.0;
+		vData[i] = 0.0;
 	}
 
 	//	size_t currentAfterSchemeSize = getCurrentRSS( ) >> 20;
@@ -163,8 +173,15 @@ int main(int argc, char **argv) {
 	cipherGD.encxyData(cxyData, xyDataTrain, slots, factorDimTrain, sampleDimTrain, batch, cnum, wBits);
 	timeutils.stop("xyData encryption");
 
+//	timeutils.start("Encrypting wData and vData...");
+//	cipherGD.encwData(cwData, cxyData, cnum, sBits, bBits);
+//	for (long i = 0; i < cnum; ++i) {
+//		cvData[i] = cwData[i];
+//	}
+//	timeutils.stop("wData and vData encryption");
+
 	timeutils.start("Encrypting wData and vData...");
-	cipherGD.encwData(cwData, cxyData, cnum, sBits, bBits);
+	cipherGD.encwData0(cwData, cnum, slots, wBits);
 	for (long i = 0; i < cnum; ++i) {
 		cvData[i] = cwData[i];
 	}
@@ -176,8 +193,8 @@ int main(int argc, char **argv) {
 
 	//-----------------------------------------
 
-	double gammaUpCnst = 10;
-	double gammaDownCnst = -1;
+	double gammaUpCnst = 70;
+	double gammaDownCnst = -5;
 	double alpha0, alpha1, eta, gamma;
 	double auctrain, auctest, mse, nmse;
 

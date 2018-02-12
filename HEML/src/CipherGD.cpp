@@ -45,6 +45,13 @@ void CipherGD::encwData(Ciphertext* cwData, Ciphertext* cxyData, long cnum, long
 	NTL_EXEC_RANGE_END;
 }
 
+void CipherGD::encwData0(Ciphertext* cwData, long cnum, long slots, long wBits) {
+	for (long i = 0; i < cnum; ++i) {
+		cwData[i] = scheme.encryptZeros(slots, wBits, scheme.context.logQ);
+	}
+}
+
+
 ZZX CipherGD::generateAuxPoly(long slots, long batch, long pBits) {
 	complex<double>* pvals = new complex<double>[slots];
 	for (long j = 0; j < slots; j += batch) {
