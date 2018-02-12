@@ -19,20 +19,28 @@ public:
 
 	static double** xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool isfirst = true);
 	static double** RandomxyDataLearn(double** xyData, long sampleDimLearn, long sampleDim, long factorDim);
+
 	static void normalizexyData(double** xyData, long factorDim, long sampleDim);
 	static void normalizexyData2(double** xyDataLearn, double** xyDataTest, long factorDim, long sampleDimLearn, long sampleDimTest);
 
 	static double* plainIP(double** a, double* b, long factorDim, long learnDim);
-
 	static double* plainSigmoid(long approxDeg, double** xyData, double* ip, long factorDim, long sampleDim, double gamma);
 
 	static void plainLGDstep(double* wData, double* grad, long factorDim);
 	static void plainMLGDstep(double* wData, double* vData, double* grad, long factorDim, double eta);
 	static void plainNLGDstep(double* wData, double* vData, double* grad, long factorDim, double eta);
 
+	static void plainLGDL2step(double* wData, double* grad, long factorDim, double lambda);
+	static void plainMLGDL2step(double* wData, double* vData, double* grad, long factorDim, double eta, double lambda);
+	static void plainNLGDL2step(double* wData, double* vData, double* grad, long factorDim, double eta, double lambda);
+
 	static void plainLGDiteration(long approxDeg, double** xyData, double* wData, long factorDim, long sampleDim, double gamma);
 	static void plainMLGDiteration(long approxDeg, double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta);
 	static void plainNLGDiteration(long approxDeg, double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta);
+
+	static void plainLGDL2iteration(long approxDeg, double** xyData, double* wData, long factorDim, long sampleDim, double gamma, double lambda);
+	static void plainMLGDL2iteration(long approxDeg, double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda);
+	static void plainNLGDL2iteration(long approxDeg, double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda);
 
 	//-----------------------------------------
 
@@ -42,12 +50,14 @@ public:
 	static void trueMLGDiteration(double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta);
 	static void trueNLGDiteration(double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta);
 
+	static void trueLGDL2iteration(double** xyData, double* wData, long factorDim, long sampleDim, double gamma, double lambda);
+	static void trueMLGDL2iteration(double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda);
+	static void trueNLGDL2iteration(double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda);
+
 	static void check(double** xyData, double* wData, long factorDim, long sampleDim);
 
 	static double calculateAUC(double** xyData, double* wData, long factorDim, long sampleDim);
-
 	static double calculateMSE(double* wData1, double* wData2, long factorDim);
-
 	static double calculateNMSE(double* wData1, double* wData2, long factorDim);
 };
 

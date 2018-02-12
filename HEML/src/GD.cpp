@@ -177,6 +177,18 @@ void GD::plainNLGDstep(double* wData, double* vData, double* grad, long factorDi
 	}
 }
 
+void GD::plainLGDL2step(double* wData, double* grad, long factorDim, double lambda) {
+	//TODO: implement method
+}
+
+void GD::plainMLGDL2step(double* wData, double* vData, double* grad, long factorDim, double eta, double lambda) {
+	//TODO: implement method
+}
+
+void GD::plainNLGDL2step(double* wData, double* vData, double* grad, long factorDim, double eta, double lambda) {
+	//TODO: implement method
+}
+
 void GD::plainLGDiteration(long approxDeg, double** xyData, double* wData, long factorDim, long sampleDim, double gamma) {
 	double* ip = plainIP(xyData, wData, factorDim, sampleDim);
 	double* grad = plainSigmoid(approxDeg, xyData, ip, factorDim, sampleDim, gamma);
@@ -193,6 +205,7 @@ void GD::plainMLGDiteration(long approxDeg, double** xyData, double* wData, doub
 	delete[] grad;
 }
 
+
 void GD::plainNLGDiteration(long approxDeg, double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta) {
 	double* ip = plainIP(xyData, vData, factorDim, sampleDim);
 	double* grad = plainSigmoid(approxDeg, xyData, ip, factorDim, sampleDim, gamma);
@@ -200,6 +213,18 @@ void GD::plainNLGDiteration(long approxDeg, double** xyData, double* wData, doub
 
 	delete[] ip;
 	delete[] grad;
+}
+
+void GD::plainLGDL2iteration(long approxDeg, double** xyData, double* wData, long factorDim, long sampleDim, double gamma, double lambda) {
+	//TODO: implement method
+}
+
+void GD::plainMLGDL2iteration(long approxDeg, double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda) {
+	//TODO: implement method
+}
+
+void GD::plainNLGDL2iteration(long approxDeg, double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda) {
+	//TODO: implement method
 }
 
 //-----------------------------------------
@@ -263,6 +288,18 @@ void GD::trueNLGDiteration(double** xyData, double* wData, double* vData, long f
 		wData[i] = tmpw;
 	}
 	delete[] grad;
+}
+
+void GD::trueLGDiteration(double** xyData, double* wData, long factorDim, long sampleDim, double gamma, double lambda) {
+	//TODO: implement method
+}
+
+void GD::trueMLGDiteration(double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda) {
+	//TODO: implement method
+}
+
+void GD::trueNLGDiteration(double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda) {
+	//TODO: implement method
 }
 
 void GD::check(double** xyData, double* wData, long factorDim, long sampleDim) {
