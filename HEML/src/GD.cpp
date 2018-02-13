@@ -6,12 +6,15 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <StringUtils.h>
+#include <algorithm>    // std::shuffle
+#include <array>        // std::array
+#include <random>       // std::default_random_engine
+#include <chrono>       // std::chrono::system_clock
 
 using namespace NTL;
 
-double** GD::xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool isfirst) {
-	vector<vector<double>> xyline;
+double** GD::zDataFromFile(string& path, long& factorDim, long& sampleDim, bool isfirst) {
+	vector<vector<double>> zline;
 	factorDim = 1; 	// dimension of x
 	sampleDim = 0;	// number of samples
 	ifstream openFile(path.data());
@@ -30,92 +33,102 @@ double** GD::xyDataFromFile(string& path, long& factorDim, long& sampleDim, bool
 				vecline.push_back(atof(temp.c_str()));
 				start = end + 1;
 			} while(start);
-			xyline.push_back(vecline);
+			zline.push_back(vecline);
 			sampleDim++;
 		}
 	} else {
 		cout << "Error: cannot read file" << endl;
 	}
-	double** xyData = new double*[sampleDim];
+	double** zData = new double*[sampleDim];
 	if(isfirst) {
 		for(long j = 0; j < sampleDim; ++j){
-			double* xyj = new double[factorDim];
-			xyj[0] = 2 * xyline[j][0] - 1;
+			double* zj = new double[factorDim];
+			zj[0] = 2 * zline[j][0] - 1;
 			for(long i = 1; i < factorDim; ++i){
-				xyj[i] = xyj[0] * xyline[j][i];
+				zj[i] = zj[0] * zline[j][i];
 			}
-			xyData[j] = xyj;
+			zData[j] = zj;
 		}
 	} else {
 		for(long j = 0; j < sampleDim; ++j){
-			double* xyj = new double[factorDim];
-			xyj[0] = 2 * xyline[j][factorDim - 1] - 1;
+			double* zj = new double[factorDim];
+			zj[0] = 2 * zline[j][factorDim - 1] - 1;
 			for(long i = 1; i < factorDim; ++i){
-				xyj[i] = xyj[0] * xyline[j][i-1];
+				zj[i] = zj[0] * zline[j][i-1];
 			}
-			xyData[j] = xyj;
+			zData[j] = zj;
 		}
 	}
-	return xyData;
+	return zData;
 }
 
-double** GD::RandomxyDataLearn(double** xyData, long sampleDimLearn, long sampleDim, long factorDim) {
-	double** res = new double*[sampleDimLearn];
-
-	bool* notTaken = new bool[sampleDim];
-	fill_n(notTaken, sampleDim, false);
-	long r;
-	for (long j = 0; j < sampleDim - sampleDimLearn; ++j) {
-		do {
-			r = RandomBnd(sampleDim);
-		} while(notTaken[r]);
-		notTaken[r] = true;
+void GD::shuffleZData(double** zData, long factorDim, long sampleDim) {
+	srand(time(NULL));
+	double* tmp = new double[factorDim];
+	for (long i = 0; i < sampleDim; ++i) {
+		long idx = i + rand() / (RAND_MAX / (sampleDim - i) + 1);
+		copy(zData[i], zData[i] + factorDim, tmp);
+		copy(zData[idx], zData[idx] + factorDim, zData[i]);
+		copy(tmp, tmp + factorDim, zData[idx]);
 	}
-	long idx = 0;
-	for (long j = 0; j < sampleDim; ++j) {
-		if(!notTaken[j]) {
-			res[idx] = new double[factorDim];
-			for (long i = 0; i < factorDim; ++i) {
-				res[idx][i] = xyData[j][i];
-			}
-			idx++;
-		}
-	}
-	delete[] notTaken;
-	return res;
 }
 
-void GD::normalizexyData(double** xyData, long factorDim, long sampleDim) {
-	for (long i = 0; i < factorDim; ++i) {
-		double m = 0;
-		for (long j = 0; j < sampleDim; ++i) {
-			m = max(m, abs(xyData[j][i]));
+void GD::normalizeZData(double** zData, long factorDim, long sampleDim) {
+	long i, j;
+	double m;
+	for (i = 0; i < factorDim; ++i) {
+		m = 0.0;
+		for (j = 0; j < sampleDim; ++j) {
+			m = max(m, abs(zData[j][i]));
 		}
+
 		if(m < 1e-10) continue;
-		for (long j = 0; j < sampleDim; ++j) {
-			xyData[j][i] /= m;
+
+		for (j = 0; j < sampleDim; ++j) {
+			zData[j][i] /= m;
 		}
 	}
 }
 
-void GD::normalizexyData2(double** xyDataLearn, double** xyDataTest, long factorDim, long sampleDimLearn, long sampleDimTest) {
+void GD::normalizezData2(double** zDataLearn, double** zDataTest, long factorDim, long sampleDimLearn, long sampleDimTest) {
 	long i, j;
 	double m;
 	for (i = 0; i < factorDim; ++i) {
 		m = 0.0;
 		for (j = 0; j < sampleDimLearn; ++j) {
-			m = max(m, abs(xyDataLearn[j][i]));
+			m = max(m, abs(zDataLearn[j][i]));
 		}
 		for (j = 0; j < sampleDimTest; ++j) {
-			m = max(m, abs(xyDataTest[j][i]));
+			m = max(m, abs(zDataTest[j][i]));
 		}
 		if(m < 1e-10) continue;
 		for (j = 0; j < sampleDimLearn; ++j) {
-			xyDataLearn[j][i] /= m;
+			zDataLearn[j][i] /= m;
 		}
 		for (j = 0; j < sampleDimTest; ++j) {
-			xyDataTest[j][i] /= m;
+			zDataTest[j][i] /= m;
 		}
+	}
+}
+
+void GD::initialWDataVDataAverage(double* wData, double* vData, double** zData, long factorDim, long sampleDim) {
+	long sdimBits = (long)ceil(log2(sampleDim));
+	long sdimPow = 1 << sdimBits;
+	for (long i = 0; i < factorDim; ++i) {
+		double tmp = 0.0;
+		for (long j = 0; j < sampleDim; ++j) {
+			tmp += zData[j][i];
+		}
+		tmp /= sdimPow;
+		wData[i] = tmp;
+		vData[i] = tmp;
+	}
+}
+
+void GD::initialWDataVDataZero(double* wData, double* vData, long factorDim) {
+	for (long i = 0; i < factorDim; ++i) {
+		wData[i] = 0.0;
+		vData[i] = 0.0;
 	}
 }
 
@@ -129,26 +142,26 @@ double* GD::plainIP(double** a, double* b, long factorDim, long sampleDim) {
 	return res;
 }
 
-double* GD::plainSigmoid(long approxDeg, double** xyData, double* ip, long factorDim, long sampleDim, double gamma) {
+double* GD::plainSigmoid(long approxDeg, double** zData, double* ip, long factorDim, long sampleDim, double gamma) {
 	double* grad = new double[factorDim]();
 	if(approxDeg == 3) {
 		for (long i = 0; i < factorDim; ++i) {
 			for (long j = 0; j < sampleDim; ++j) {
-				grad[i] += (degree3[0] + ip[j] * degree3[1] + pow(ip[j], 3) * degree3[2]) * xyData[j][i];
+				grad[i] += (degree3[0] + ip[j] * degree3[1] + pow(ip[j], 3) * degree3[2]) * zData[j][i];
 			}
 			grad[i] *= gamma;
 		}
 	} else if(approxDeg == 5) {
 		for (long i = 0; i < factorDim; ++i) {
 			for (long j = 0; j < sampleDim; ++j) {
-				grad[i] += (degree5[0] + ip[j] * degree5[1] + pow(ip[j], 3) * degree5[2] + pow(ip[j], 5) * degree5[3]) * xyData[j][i];
+				grad[i] += (degree5[0] + ip[j] * degree5[1] + pow(ip[j], 3) * degree5[2] + pow(ip[j], 5) * degree5[3]) * zData[j][i];
 			}
 			grad[i] *= gamma;
 		}
 	} else {
 		for (long i = 0; i < factorDim; ++i) {
 			for (long j = 0; j < sampleDim; ++j) {
-				grad[i] += (degree7[0] + ip[j] * degree7[1] + pow(ip[j], 3) * degree7[2] + pow(ip[j], 5) * degree7[3] + pow(ip[j], 7) * degree7[4]) * xyData[j][i];
+				grad[i] += (degree7[0] + ip[j] * degree7[1] + pow(ip[j], 3) * degree7[2] + pow(ip[j], 5) * degree7[3] + pow(ip[j], 7) * degree7[4]) * zData[j][i];
 			}
 			grad[i] *= gamma;
 		}
@@ -189,41 +202,41 @@ void GD::plainNLGDL2step(double* wData, double* vData, double* grad, long factor
 	//TODO: implement method
 }
 
-void GD::plainLGDiteration(long approxDeg, double** xyData, double* wData, long factorDim, long sampleDim, double gamma) {
-	double* ip = plainIP(xyData, wData, factorDim, sampleDim);
-	double* grad = plainSigmoid(approxDeg, xyData, ip, factorDim, sampleDim, gamma);
+void GD::plainLGDiteration(long approxDeg, double** zData, double* wData, long factorDim, long sampleDim, double gamma) {
+	double* ip = plainIP(zData, wData, factorDim, sampleDim);
+	double* grad = plainSigmoid(approxDeg, zData, ip, factorDim, sampleDim, gamma);
 	plainLGDstep(wData, grad, factorDim);
 	delete[] ip;
 	delete[] grad;
 }
 
-void GD::plainMLGDiteration(long approxDeg, double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta) {
-	double* ip = plainIP(xyData, wData, factorDim, sampleDim);
-	double* grad = plainSigmoid(approxDeg, xyData, ip, factorDim, sampleDim, gamma);
+void GD::plainMLGDiteration(long approxDeg, double** zData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta) {
+	double* ip = plainIP(zData, wData, factorDim, sampleDim);
+	double* grad = plainSigmoid(approxDeg, zData, ip, factorDim, sampleDim, gamma);
 	plainMLGDstep(wData, vData, grad, factorDim, eta);
 	delete[] ip;
 	delete[] grad;
 }
 
 
-void GD::plainNLGDiteration(long approxDeg, double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta) {
-	double* ip = plainIP(xyData, vData, factorDim, sampleDim);
-	double* grad = plainSigmoid(approxDeg, xyData, ip, factorDim, sampleDim, gamma);
+void GD::plainNLGDiteration(long approxDeg, double** zData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta) {
+	double* ip = plainIP(zData, vData, factorDim, sampleDim);
+	double* grad = plainSigmoid(approxDeg, zData, ip, factorDim, sampleDim, gamma);
 	plainNLGDstep(wData, vData, grad, factorDim, eta);
 
 	delete[] ip;
 	delete[] grad;
 }
 
-void GD::plainLGDL2iteration(long approxDeg, double** xyData, double* wData, long factorDim, long sampleDim, double gamma, double lambda) {
+void GD::plainLGDL2iteration(long approxDeg, double** zData, double* wData, long factorDim, long sampleDim, double gamma, double lambda) {
 	//TODO: implement method
 }
 
-void GD::plainMLGDL2iteration(long approxDeg, double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda) {
+void GD::plainMLGDL2iteration(long approxDeg, double** zData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda) {
 	//TODO: implement method
 }
 
-void GD::plainNLGDL2iteration(long approxDeg, double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda) {
+void GD::plainNLGDL2iteration(long approxDeg, double** zData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda) {
 	//TODO: implement method
 }
 
@@ -237,14 +250,14 @@ double GD::trueIP(double* a, double* b, long size) {
 	return res;
 }
 
-void GD::trueLGDiteration(double** xyData, double* wData, long factorDim, long sampleDim, double gamma) {
+void GD::trueLGDiteration(double** zData, double* wData, long factorDim, long sampleDim, double gamma) {
 	double* grad = new double[factorDim]();
 
 	for(long j = 0; j < sampleDim; ++j) {
-		double ip = trueIP(wData, xyData[j], factorDim);
+		double ip = trueIP(wData, zData[j], factorDim);
 		double tmp = (ip > 15.0) ? 0 : (ip < -15.0) ? -1.0 : - 1. / (1. + exp(ip));
 		for(int i = 0; i < factorDim; ++i) {
-			grad[i] += tmp * (double) xyData[j][i];
+			grad[i] += tmp * (double) zData[j][i];
 		}
 	}
 
@@ -254,14 +267,14 @@ void GD::trueLGDiteration(double** xyData, double* wData, long factorDim, long s
 	delete[] grad;
 }
 
-void GD::trueMLGDiteration(double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta) {
+void GD::trueMLGDiteration(double** zData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta) {
 	double* grad = new double[factorDim]();
 
 	for(long j = 0; j < sampleDim; ++j) {
-		double ip = trueIP(wData, xyData[j], factorDim);
+		double ip = trueIP(wData, zData[j], factorDim);
 		double tmp = (ip > 15.0) ? 0 : (ip < -15.0) ? -1.0 : - 1. / (1. + exp(ip));
 		for(long i = 0; i < factorDim; ++i) {
-			grad[i] += tmp * (double) xyData[j][i];
+			grad[i] += tmp * (double) zData[j][i];
 		}
 	}
 
@@ -272,14 +285,14 @@ void GD::trueMLGDiteration(double** xyData, double* wData, double* vData, long f
 	delete[] grad;
 }
 
-void GD::trueNLGDiteration(double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta) {
+void GD::trueNLGDiteration(double** zData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta) {
 	double* grad = new double[factorDim]();
 
 	for(long j = 0; j < sampleDim; ++j) {
-		double ip = trueIP(vData, xyData[j], factorDim);
+		double ip = trueIP(vData, zData[j], factorDim);
 		double tmp = (ip > 15.0) ? 0 : (ip < -15.0) ? -1.0 : - 1. / (1. + exp(ip));
 		for(long i = 0; i < factorDim; ++i) {
-			grad[i] += tmp * (double) xyData[j][i];
+			grad[i] += tmp * (double) zData[j][i];
 		}
 	}
 	for (long i = 0; i < factorDim; ++i) {
@@ -290,67 +303,59 @@ void GD::trueNLGDiteration(double** xyData, double* wData, double* vData, long f
 	delete[] grad;
 }
 
-void GD::trueLGDL2iteration(double** xyData, double* wData, long factorDim, long sampleDim, double gamma, double lambda) {
+void GD::trueLGDL2iteration(double** zData, double* wData, long factorDim, long sampleDim, double gamma, double lambda) {
 	//TODO: implement method
 }
 
-void GD::trueMLGDL2iteration(double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda) {
+void GD::trueMLGDL2iteration(double** zData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda) {
 	//TODO: implement method
 }
 
-void GD::trueNLGDL2iteration(double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda) {
+void GD::trueNLGDL2iteration(double** zData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda) {
 	//TODO: implement method
 }
 
-void GD::check(double** xyData, double* wData, long factorDim, long sampleDim) {
+double GD::calculateAUC(double** zData, double* wData, long factorDim, long sampleDim) {
 	cout << "w:";
 	for (long i = 0; i < factorDim; ++i) {
 		cout << wData[i] << ",";
 	}
 	cout << endl;
-	long num = 0;
-	for(long j = 0; j < sampleDim; ++j){
-		if(trueIP(wData, xyData[j], factorDim) > 0) num++;
-	}
-	cout << "Correctness: " << num << "/" << sampleDim << endl;
 
-}
+	long TN = 0, FP = 0;
 
-double GD::calculateAUC(double** xyData, double* wData, long factorDim, long sampleDim) {
-    long n_fail_y1 = 0;
-    long n_fail_y0 = 0;
-
-    vector<double> xtheta_y1;
-    vector<double> xtheta_y0;
+    vector<double> thetaTN;
+    vector<double> thetaFP;
 
     for(int i = 0; i < sampleDim; ++i){
-        if(xyData[i][0] > 0){
-            if(GD::trueIP(xyData[i], wData, factorDim) < 0) n_fail_y1++;
-            xtheta_y1.push_back(xyData[i][0] * GD::trueIP(xyData[i] + 1, wData + 1, factorDim - 1));
+        if(zData[i][0] > 0){
+            if(GD::trueIP(zData[i], wData, factorDim) < 0) TN++;
+            thetaTN.push_back(zData[i][0] * GD::trueIP(zData[i] + 1, wData + 1, factorDim - 1));
         } else{
-            if(GD::trueIP(xyData[i], wData, factorDim) < 0) n_fail_y0++;
-            xtheta_y0.push_back(xyData[i][0] * GD::trueIP(xyData[i] + 1, wData + 1, factorDim - 1));
+            if(GD::trueIP(zData[i], wData, factorDim) < 0) FP++;
+            thetaFP.push_back(zData[i][0] * GD::trueIP(zData[i] + 1, wData + 1, factorDim - 1));
         }
     }
 
-    double correctness = 100.0 - (100.0 * (n_fail_y0 + n_fail_y1) / sampleDim);
-    cout << "Failure rate: (y = 1) " << n_fail_y1 << "/" << xtheta_y1.size() << " + (y = 0) " << n_fail_y0 << "/" ;
-    cout << xtheta_y0.size() << " = " <<  (100.0 * (n_fail_y0 + n_fail_y1) / sampleDim) << " %." << endl;
+    double correctness = 100.0 - (100.0 * (FP + TN) / sampleDim);
+//    cout << "Failure rate: (y = 1) " << TN << "/" << thetaTN.size() << " + (y = 0) " << FP << "/" ;
+//    cout << thetaFP.size() << " = " <<  (100.0 * (FP + TN) / sampleDim) << " %." << endl;
     cout << "Correctness: " << correctness  << " %." << endl;
 
-    if(xtheta_y0.size() == 0 || xtheta_y1.size() ==0){
+    if(thetaFP.size() == 0 || thetaTN.size() == 0) {
         cout << "n_test_yi = 0 : cannot compute AUC" << endl;
         return 0.0;
     } else{
         double auc = 0.0;
-        for(long i = 0; i < xtheta_y1.size(); ++i){
-            for(long j = 0; j < xtheta_y0.size(); ++j){
-                if(xtheta_y0[j] <= xtheta_y1[i]) auc++;
+        for(long i = 0; i < thetaTN.size(); ++i){
+            for(long j = 0; j < thetaFP.size(); ++j){
+                if(thetaFP[j] <= thetaTN[i]) auc++;
             }
         }
-        auc /= xtheta_y1.size() * xtheta_y0.size();
-        return auc;
+        auc /= thetaTN.size() * thetaFP.size();
         cout << "AUC: " << auc << endl;
+
+        return auc;
     }
 }
 
@@ -362,7 +367,7 @@ double GD::calculateMSE(double* wData1, double* wData2, long factorDim) {
         res += pow(wData1[i] - wData2[i], 2.0);
     }
     res /= factorDim;
-
+    cout << "MSE = " << res << endl;
     return res;
 }
 
@@ -378,6 +383,7 @@ double GD::calculateNMSE(double* wData1, double* wData2, long factorDim) {
     double mse = GD::calculateMSE(wData1, wData2, factorDim);
     res = mse / res;
 
+    cout << "NMSE = " << res << endl;
     return res;
 
 }
