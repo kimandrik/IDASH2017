@@ -193,8 +193,8 @@ int main(int argc, char **argv) {
 
 	//-----------------------------------------
 
-	double gammaUpCnst = 70;
-	double gammaDownCnst = -5;
+	double gammaUpCnst = 10;
+	double gammaDownCnst = -3;
 	double alpha0, alpha1, eta, gamma;
 	double auctrain, auctest, mse, nmse;
 

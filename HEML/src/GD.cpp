@@ -290,15 +290,15 @@ void GD::trueNLGDiteration(double** xyData, double* wData, double* vData, long f
 	delete[] grad;
 }
 
-void GD::trueLGDiteration(double** xyData, double* wData, long factorDim, long sampleDim, double gamma, double lambda) {
+void GD::trueLGDL2iteration(double** xyData, double* wData, long factorDim, long sampleDim, double gamma, double lambda) {
 	//TODO: implement method
 }
 
-void GD::trueMLGDiteration(double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda) {
+void GD::trueMLGDL2iteration(double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda) {
 	//TODO: implement method
 }
 
-void GD::trueNLGDiteration(double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda) {
+void GD::trueNLGDL2iteration(double** xyData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda) {
 	//TODO: implement method
 }
 
