@@ -67,24 +67,21 @@ ZZX CipherGD::generateAuxPoly(long slots, long batch, long pBits) {
 }
 
 Ciphertext CipherGD::encInnerProduct(Ciphertext* encZData, Ciphertext* encWData, ZZX& poly, long cnum, long bBits, long wBits, long pBits) {
-	Ciphertext encIP = scheme.modDownTo(encZData[0], encWData[0].logq);
-	scheme.multAndEqual(encIP, encWData[0]); // xy * w
-	for (long l = 0; l < bBits; ++l) {
-		Ciphertext rot = scheme.leftRotateByPo2(encIP, l);
-		scheme.addAndEqual(encIP, rot);
-	}
-
+	Ciphertext* encIPvec = new Ciphertext[cnum];
 	NTL_EXEC_RANGE(cnum, first, last);
-	for (long i = first + 1; i < last; ++i) {
-		Ciphertext tmp = scheme.modDownTo(encZData[i], encWData[i].logq);
-		scheme.multAndEqual(tmp, encWData[i]); // xy * w
+	for (long i = first; i < last; ++i) {
+		encIPvec[i] = scheme.modDownTo(encZData[i], encWData[i].logq);
+		scheme.multAndEqual(encIPvec[i], encWData[i]); // xy * w
 		for (long l = 0; l < bBits; ++l) {
-			Ciphertext rot = scheme.leftRotateByPo2(tmp, l);
-			scheme.addAndEqual(tmp, rot);
+			Ciphertext rot = scheme.leftRotateByPo2(encIPvec[i], l);
+			scheme.addAndEqual(encIPvec[i], rot);
 		}
-		scheme.addAndEqual(encIP, tmp);
 	}
 	NTL_EXEC_RANGE_END
+	Ciphertext encIP = encIPvec[0];
+	for (long i = 1; i < cnum; ++i) {
+		scheme.addAndEqual(encIP, encIPvec[i]);
+	}
 
 	scheme.reScaleByAndEqual(encIP, wBits);
 	scheme.multByPolyAndEqual(encIP, poly, pBits);
@@ -92,6 +89,7 @@ Ciphertext CipherGD::encInnerProduct(Ciphertext* encZData, Ciphertext* encWData,
 		Ciphertext tmp = scheme.rightRotateByPo2(encIP, l);
 		scheme.addAndEqual(encIP, tmp);
 	}
+	delete[] encIPvec;
 	return encIP;
 }
 
