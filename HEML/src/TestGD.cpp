@@ -108,17 +108,17 @@ void TestGD::testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim
 		timeutils.stop("Enc NLGD");
 		cout << "encWData.logq after: " << encWData[0].logq << endl;
 
-		cout << "----ENCRYPTED-----" << endl;
-		cipherGD.decWData(cwData, encWData, factorDim, batch, cnum, wBits);
-		GD::calculateAUC(zDataTest, cwData, factorDim, sampleDimTest);
-		cout << "------------------" << endl;
+//		cout << "----ENCRYPTED-----" << endl;
+//		cipherGD.decWData(cwData, encWData, factorDim, batch, cnum, wBits);
+//		GD::calculateAUC(zDataTest, cwData, factorDim, sampleDimTest);
+//		cout << "------------------" << endl;
 
 		GD::plainNLGDiteration(kdeg, zDataTrain, pwData, pvData, factorDim, sampleDimTrain, gamma, eta);
 		GD::trueNLGDiteration(zDataTrain, twData, tvData, factorDim, sampleDimTrain, gamma, eta);
 
-		cout << "-------TRUE-------" << endl;
-		GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
-		cout << "------------------" << endl;
+//		cout << "-------TRUE-------" << endl;
+//		GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
+//		cout << "------------------" << endl;
 
 		alpha0 = alpha1;
 		alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;
@@ -327,17 +327,17 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 			timeutils.stop("Enc NLGD");
 			cout << "encWData.logq after: " << encWData[0].logq << endl;
 
-			cout << "----ENCRYPTED-----" << endl;
-			cipherGD.decWData(cwData, encWData, factorDim, batch, cnum, wBits);
-			GD::calculateAUC(zDataTest, cwData, factorDim, sampleDimTest);
-			cout << "------------------" << endl;
+//			cout << "----ENCRYPTED-----" << endl;
+//			cipherGD.decWData(cwData, encWData, factorDim, batch, cnum, wBits);
+//			GD::calculateAUC(zDataTest, cwData, factorDim, sampleDimTest);
+//			cout << "------------------" << endl;
 
 			GD::plainNLGDiteration(kdeg, zDataTrain, pwData, pvData, factorDim, sampleDimTrain, gamma, eta);
 			GD::trueNLGDiteration(zDataTrain, twData, tvData, factorDim, sampleDimTrain, gamma, eta);
 
-			cout << "-------TRUE-------" << endl;
-			GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
-			cout << "------------------" << endl;
+//			cout << "-------TRUE-------" << endl;
+//			GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
+//			cout << "------------------" << endl;
 
 			alpha0 = alpha1;
 			alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;
@@ -431,12 +431,6 @@ void TestGD::testPlainNLGDFOLD(long fold, double** zData, long factorDim, long s
 
 			GD::plainNLGDiteration(kdeg, zDataTrain, pwData, pvData, factorDim, sampleDimTrain, gamma, eta);
 			GD::trueNLGDiteration(zDataTrain, twData, tvData, factorDim, sampleDimTrain, gamma, eta);
-
-			cout << "------PLAIN-------" << endl;
-	//		GD::calculateAUC(zDataTrain, pwData, factorDim, sampleDimTrain);
-			cout << "------------------" << endl;
-			GD::calculateAUC(zDataTest, pwData, factorDim, sampleDimTest);
-			cout << "------------------" << endl;
 
 			alpha0 = alpha1;
 			alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;
