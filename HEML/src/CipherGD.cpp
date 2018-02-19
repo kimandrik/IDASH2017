@@ -32,7 +32,20 @@ void CipherGD::encZData(Ciphertext* encZData, double** zData, long slots, long f
 	delete[] pzData;
 }
 
-void CipherGD::encWDataVDataAverage(Ciphertext* encWData, Ciphertext* encVData, Ciphertext* encZData, long cnum, long sBits, long bBits) {
+void CipherGD::encWDataAverage(Ciphertext* encWData, Ciphertext* encZData, long cnum, long sBits, long bBits) {
+	NTL_EXEC_RANGE(cnum, first, last);
+	for (long i = first; i < last; ++i) {
+		encWData[i] = encZData[i];
+		for (long l = bBits; l < sBits; ++l) {
+			Ciphertext rot = scheme.leftRotateByPo2(encWData[i], l);
+			scheme.addAndEqual(encWData[i], rot);
+		}
+		scheme.divByPo2AndEqual(encWData[i], sBits - bBits);
+	}
+	NTL_EXEC_RANGE_END;
+}
+
+void CipherGD::encWVDataAverage(Ciphertext* encWData, Ciphertext* encVData, Ciphertext* encZData, long cnum, long sBits, long bBits) {
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
 		encWData[i] = encZData[i];
@@ -46,7 +59,15 @@ void CipherGD::encWDataVDataAverage(Ciphertext* encWData, Ciphertext* encVData, 
 	NTL_EXEC_RANGE_END;
 }
 
-void CipherGD::encWDataVDataZero(Ciphertext* encWData, Ciphertext* encVData, long cnum, long slots, long wBits) {
+void CipherGD::encWDataZero(Ciphertext* encWData, long cnum, long slots, long wBits) {
+	NTL_EXEC_RANGE(cnum, first, last);
+	for (long i = first; i < last; ++i) {
+		encWData[i] = scheme.encryptZeros(slots, wBits, scheme.context.logQ);
+	}
+	NTL_EXEC_RANGE_END;
+}
+
+void CipherGD::encWVDataZero(Ciphertext* encWData, Ciphertext* encVData, long cnum, long slots, long wBits) {
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
 		encWData[i] = scheme.encryptZeros(slots, wBits, scheme.context.logQ);
@@ -54,7 +75,6 @@ void CipherGD::encWDataVDataZero(Ciphertext* encWData, Ciphertext* encVData, lon
 	}
 	NTL_EXEC_RANGE_END;
 }
-
 
 ZZX CipherGD::generateAuxPoly(long slots, long batch, long pBits) {
 	complex<double>* pvals = new complex<double>[slots];

@@ -78,9 +78,9 @@ void TestGD::testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim
 
 	timeutils.start("Encrypting wData and vData...");
 	if(isInitZero) {
-		cipherGD.encWDataVDataZero(encWData, encVData, cnum, slots, wBits);
+		cipherGD.encWVDataZero(encWData, encVData, cnum, slots, wBits);
 	} else {
-		cipherGD.encWDataVDataAverage(encWData, encVData, encZData, cnum, sBits, bBits);
+		cipherGD.encWVDataAverage(encWData, encVData, encZData, cnum, sBits, bBits);
 	}
 	timeutils.stop("wData and vData encryption");
 
@@ -116,6 +116,10 @@ void TestGD::testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim
 		GD::plainNLGDiteration(kdeg, zDataTrain, pwData, pvData, factorDim, sampleDimTrain, gamma, eta);
 		GD::trueNLGDiteration(zDataTrain, twData, tvData, factorDim, sampleDimTrain, gamma, eta);
 
+//		cout << "------PLAIN-------" << endl;
+//		GD::calculateAUC(zDataTest, pwData, factorDim, sampleDimTest);
+//		cout << "------------------" << endl;
+
 //		cout << "-------TRUE-------" << endl;
 //		GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
 //		cout << "------------------" << endl;
@@ -126,25 +130,15 @@ void TestGD::testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim
 	}
 	cout << "----ENCRYPTED-----" << endl;
 	cipherGD.decWData(cwData, encWData, factorDim, batch, cnum, wBits);
-//	GD::calculateAUC(zDataTrain, cwData, factorDim, sampleDimTrain);
-	cout << "------------------" << endl;
 	GD::calculateAUC(zDataTest, cwData, factorDim, sampleDimTest);
 	cout << "------------------" << endl;
 
-//	cout << "------PLAIN-------" << endl;
-//	GD::calculateAUC(zDataTrain, pwData, factorDim, sampleDimTrain);
-//	cout << "------------------" << endl;
-//	GD::calculateAUC(zDataTest, pwData, factorDim, sampleDimTest);
-//	cout << "------------------" << endl;
+	cout << "-------TRUE-------" << endl;
+	GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
+	cout << "------------------" << endl;
 
-//	cout << "-------TRUE-------" << endl;
-//	GD::calculateAUC(zDataTrain, twData, factorDim, sampleDimTrain);
-//	cout << "------------------" << endl;
-//	GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
-//	cout << "------------------" << endl;
-
-	GD::calculateMSE(twData, cwData, factorDim);
-	GD::calculateNMSE(twData, cwData, factorDim);
+//	GD::calculateMSE(twData, cwData, factorDim);
+//	GD::calculateNMSE(twData, cwData, factorDim);
 
 }
 
@@ -189,19 +183,15 @@ void TestGD::testPlainNLGD(double** zDataTrain, double** zDataTest, long factorD
 	}
 
 	cout << "------PLAIN-------" << endl;
-	GD::calculateAUC(zDataTrain, pwData, factorDim, sampleDimTrain);
-	cout << "------------------" << endl;
 	GD::calculateAUC(zDataTest, pwData, factorDim, sampleDimTest);
 	cout << "------------------" << endl;
 
 	cout << "-------TRUE-------" << endl;
-	GD::calculateAUC(zDataTrain, twData, factorDim, sampleDimTrain);
-	cout << "------------------" << endl;
 	GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
 	cout << "------------------" << endl;
 
-	GD::calculateMSE(twData, pwData, factorDim);
-	GD::calculateNMSE(twData, pwData, factorDim);
+//	GD::calculateMSE(twData, pwData, factorDim);
+//	GD::calculateNMSE(twData, pwData, factorDim);
 
 }
 
@@ -295,9 +285,9 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 
 		timeutils.start("Encrypting wData and vData...");
 		if(isInitZero) {
-			cipherGD.encWDataVDataZero(encWData, encVData, cnum, slots, wBits);
+			cipherGD.encWVDataZero(encWData, encVData, cnum, slots, wBits);
 		} else {
-			cipherGD.encWDataVDataAverage(encWData, encVData, encZData, cnum, sBits, bBits);
+			cipherGD.encWVDataAverage(encWData, encVData, encZData, cnum, sBits, bBits);
 		}
 		timeutils.stop("wData and vData encryption");
 
@@ -345,23 +335,13 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 		}
 		cout << "----ENCRYPTED-----" << endl;
 		cipherGD.decWData(cwData, encWData, factorDim, batch, cnum, wBits);
-//		GD::calculateAUC(zDataTrain, cwData, factorDim, sampleDimTrain);
-		cout << "------------------" << endl;
 		GD::calculateAUC(zDataTest, cwData, factorDim, sampleDimTest);
 		cout << "------------------" << endl;
 
-//		cout << "------PLAIN-------" << endl;
-//		GD::calculateAUC(zDataTrain, pwData, factorDim, sampleDimTrain);
-//		cout << "------------------" << endl;
-//		GD::calculateAUC(zDataTest, pwData, factorDim, sampleDimTest);
-//		cout << "------------------" << endl;
-//
-//		cout << "-------TRUE-------" << endl;
-//		GD::calculateAUC(zDataTrain, twData, factorDim, sampleDimTrain);
-//		cout << "------------------" << endl;
-//		GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
-//		cout << "------------------" << endl;
-//
+		cout << "-------TRUE-------" << endl;
+		GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
+		cout << "------------------" << endl;
+
 //		GD::calculateMSE(twData, cwData, factorDim);
 //		GD::calculateNMSE(twData, cwData, factorDim);
 
@@ -436,16 +416,12 @@ void TestGD::testPlainNLGDFOLD(long fold, double** zData, long factorDim, long s
 			alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;
 		}
 		cout << "------PLAIN-------" << endl;
-//		GD::calculateAUC(zDataTrain, pwData, factorDim, sampleDimTrain);
-		cout << "------------------" << endl;
 		GD::calculateAUC(zDataTest, pwData, factorDim, sampleDimTest);
 		cout << "------------------" << endl;
 
-//		cout << "-------TRUE-------" << endl;
-//		GD::calculateAUC(zDataTrain, twData, factorDim, sampleDimTrain);
-//		cout << "------------------" << endl;
-//		GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
-//		cout << "------------------" << endl;
+		cout << "-------TRUE-------" << endl;
+		GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
+		cout << "------------------" << endl;
 
 //		GD::calculateMSE(twData, pwData, factorDim);
 //		GD::calculateNMSE(twData, pwData, factorDim);

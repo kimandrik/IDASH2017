@@ -18,9 +18,13 @@ public:
 
 	void encZData(Ciphertext* encZData, double** zData, long slots, long factorDim, long sampleDim, long batch, long cnum, long wBits);
 
-	void encWDataVDataAverage(Ciphertext* encWData, Ciphertext* encVData, Ciphertext* encZData, long cnum, long sBits, long bBits);
+	void encWDataAverage(Ciphertext* encWData, Ciphertext* encZData, long cnum, long sBits, long bBits);
 
-	void encWDataVDataZero(Ciphertext* encWData, Ciphertext* encVData, long cnum, long slots, long wBits);
+	void encWVDataAverage(Ciphertext* encWData, Ciphertext* encVData, Ciphertext* encZData, long cnum, long sBits, long bBits);
+
+	void encWDataZero(Ciphertext* encWData, long cnum, long slots, long wBits);
+
+	void encWVDataZero(Ciphertext* encWData, Ciphertext* encVData, long cnum, long slots, long wBits);
 
 	ZZX generateAuxPoly(long slots, long batch, long pBits);
 
