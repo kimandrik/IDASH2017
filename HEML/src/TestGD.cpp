@@ -3,7 +3,6 @@
 #include <Ciphertext.h>
 #include <Context.h>
 #include <NTL/ZZX.h>
-#include <Params.h>
 #include <Scheme.h>
 #include <SecretKey.h>
 #include <TimeUtils.h>
@@ -11,6 +10,12 @@
 
 #include "CipherGD.h"
 #include "GD.h"
+
+long TestGD::suggestLogN(long lambda, long logQ) {
+	long NBnd = ceil(logQ * (lambda + 110) / 3.6);
+	double logNBnd = log2((double)NBnd);
+	return (long)ceil(logNBnd);
+}
 
 void TestGD::testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim, long sampleDimTrain, long sampleDimTest,
 		bool isYfirst, long numIter, long kdeg, double gammaUp, double gammaDown, bool isInitZero) {
@@ -30,7 +35,7 @@ void TestGD::testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim
 	long logQ = isInitZero ? (wBits + lBits) + numIter * ((kBits + 1) * wBits + 2 * pBits + aBits) :
 			(sdimBits + wBits + lBits) + numIter * ((kBits + 1) * wBits + 2 * pBits + aBits);
 
-	long logN = Params::suggestlogN(80, logQ);
+	long logN = TestGD::suggestLogN(80, logQ);
 	long bBits = min(logN - 1 - sdimBits, fdimBits);
 	long batch = 1 << bBits;
 	long sBits = sdimBits + bBits;
@@ -44,9 +49,8 @@ void TestGD::testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim
 
 	TimeUtils timeutils;
 	timeutils.start("Scheme generating...");
-	Params params(logN, logQ);
-	Context context(params);
-	SecretKey secretKey(params);
+	Context context(logN, logQ);
+	SecretKey secretKey(logN);
 	Scheme scheme(secretKey, context);
 	scheme.addLeftRotKeys(secretKey);
 	scheme.addRightRotKeys(secretKey);
@@ -216,7 +220,7 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 	long logQ = isInitZero ? (wBits + lBits) + numIter * ((kBits + 1) * wBits + 2 * pBits + aBits) :
 			(sdimBits + wBits + lBits) + numIter * ((kBits + 1) * wBits + 2 * pBits + aBits);
 
-	long logN = Params::suggestlogN(80, logQ);
+	long logN = TestGD::suggestLogN(80, logQ);
 	long bBits = min(logN - 1 - sdimBits, fdimBits);
 	long batch = 1 << bBits;
 	long sBits = sdimBits + bBits;
@@ -230,9 +234,8 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 
 	TimeUtils timeutils;
 	timeutils.start("Scheme generating...");
-	Params params(logN, logQ);
-	Context context(params);
-	SecretKey secretKey(params);
+	Context context(logN, logQ);
+	SecretKey secretKey(logN);
 	Scheme scheme(secretKey, context);
 	scheme.addLeftRotKeys(secretKey);
 	scheme.addRightRotKeys(secretKey);

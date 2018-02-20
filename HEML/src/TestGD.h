@@ -4,6 +4,8 @@
 class TestGD {
 public:
 
+	static long suggestLogN(long lambda, long logQ);
+
 	static void testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim, long sampleDimTrain, long sampleDimTest,
 			bool isYfirst, long numIter, long k, double gammaUp, double gammaDown, bool isInitZero);
 
