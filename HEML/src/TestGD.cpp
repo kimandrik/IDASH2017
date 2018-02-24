@@ -112,21 +112,21 @@ void TestGD::testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim
 		timeutils.stop("Enc NLGD");
 		cout << "encWData.logq after: " << encWData[0].logq << endl;
 
-//		cout << "----ENCRYPTED-----" << endl;
-//		cipherGD.decWData(cwData, encWData, factorDim, batch, cnum, wBits);
-//		GD::calculateAUC(zDataTest, cwData, factorDim, sampleDimTest);
-//		cout << "------------------" << endl;
+		cout << "----ENCRYPTED-----" << endl;
+		cipherGD.decWData(cwData, encWData, factorDim, batch, cnum, wBits);
+		GD::calculateAUC(zDataTest, cwData, factorDim, sampleDimTest);
+		cout << "------------------" << endl;
 
 		GD::plainNLGDiteration(kdeg, zDataTrain, pwData, pvData, factorDim, sampleDimTrain, gamma, eta);
 		GD::trueNLGDiteration(zDataTrain, twData, tvData, factorDim, sampleDimTrain, gamma, eta);
 
-//		cout << "------PLAIN-------" << endl;
-//		GD::calculateAUC(zDataTest, pwData, factorDim, sampleDimTest);
-//		cout << "------------------" << endl;
+		cout << "------PLAIN-------" << endl;
+		GD::calculateAUC(zDataTest, pwData, factorDim, sampleDimTest);
+		cout << "------------------" << endl;
 
-//		cout << "-------TRUE-------" << endl;
-//		GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
-//		cout << "------------------" << endl;
+		cout << "-------TRUE-------" << endl;
+		GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
+		cout << "------------------" << endl;
 
 		alpha0 = alpha1;
 		alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;
@@ -267,6 +267,9 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 	GD::normalizeZData(zData, factorDim, sampleDim);
 	GD::shuffleZData(zData, factorDim, sampleDim);
 
+	double avgAUCENC = 0.;
+	double avgAUCTRUE = 0.;
+
 	for (long fnum = 0; fnum < fold; ++fnum) {
 		cout << " !!! START " << fnum + 1 << " FOLD !!! " << endl;
 
@@ -338,11 +341,11 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 		}
 		cout << "----ENCRYPTED-----" << endl;
 		cipherGD.decWData(cwData, encWData, factorDim, batch, cnum, wBits);
-		GD::calculateAUC(zDataTest, cwData, factorDim, sampleDimTest);
+		avgAUCENC += GD::calculateAUC(zDataTest, cwData, factorDim, sampleDimTest);
 		cout << "------------------" << endl;
 
 		cout << "-------TRUE-------" << endl;
-		GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
+		avgAUCTRUE += GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
 		cout << "------------------" << endl;
 
 //		GD::calculateMSE(twData, cwData, factorDim);
@@ -351,6 +354,9 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 		cout << " !!! STOP " << fnum + 1 << " FOLD !!! " << endl;
 		cout << "------------------" << endl;
 	}
+
+	cout << "average AUC (True) : " << avgAUCTRUE / to_double(fold) << endl;
+	cout << "average AUC (Encrypted) : " << avgAUCENC / to_double(fold) << endl;
 }
 
 void TestGD::testPlainNLGDFOLD(long fold, double** zData, long factorDim, long sampleDim,
@@ -377,6 +383,9 @@ void TestGD::testPlainNLGDFOLD(long fold, double** zData, long factorDim, long s
 
 	GD::normalizeZData(zData, factorDim, sampleDim);
 	GD::shuffleZData(zData, factorDim, sampleDim);
+
+	double avgAUCTRUE = 0.;
+	double avgAUCPLAIN = 0.;
 
 	for (long fnum = 0; fnum < fold; ++fnum) {
 		cout << " !!! START " << fnum + 1 << " FOLD !!! " << endl;
@@ -419,11 +428,11 @@ void TestGD::testPlainNLGDFOLD(long fold, double** zData, long factorDim, long s
 			alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;
 		}
 		cout << "------PLAIN-------" << endl;
-		GD::calculateAUC(zDataTest, pwData, factorDim, sampleDimTest);
+		avgAUCPLAIN += GD::calculateAUC(zDataTest, pwData, factorDim, sampleDimTest);
 		cout << "------------------" << endl;
 
 		cout << "-------TRUE-------" << endl;
-		GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
+		avgAUCTRUE += GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
 		cout << "------------------" << endl;
 
 //		GD::calculateMSE(twData, pwData, factorDim);
@@ -432,5 +441,7 @@ void TestGD::testPlainNLGDFOLD(long fold, double** zData, long factorDim, long s
 		cout << " !!! STOP " << fnum + 1 << " FOLD !!! " << endl;
 		cout << "------------------" << endl;
 	}
+	cout << "average AUC (True) : " << avgAUCTRUE / to_double(fold) << endl;
+	cout << "average AUC (Plain) : " << avgAUCPLAIN / to_double(fold) << endl;
 }
 

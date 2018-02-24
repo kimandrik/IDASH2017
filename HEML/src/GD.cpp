@@ -39,6 +39,7 @@ double** GD::zDataFromFile(string& path, long& factorDim, long& sampleDim, bool 
 	} else {
 		cout << "Error: cannot read file" << endl;
 	}
+
 	double** zData = new double*[sampleDim];
 	if(isfirst) {
 		for(long j = 0; j < sampleDim; ++j){
