@@ -1,11 +1,11 @@
 #include "TestGD.h"
 
-#include <Ciphertext.h>
-#include <Context.h>
-#include <NTL/ZZX.h>
-#include <Scheme.h>
-#include <SecretKey.h>
-#include <TimeUtils.h>
+#include "Ciphertext.h"
+#include "Context.h"
+#include "NTL/ZZX.h"
+#include "Scheme.h"
+#include "SecretKey.h"
+#include "TimeUtils.h"
 #include <cmath>
 
 #include "CipherGD.h"
@@ -77,12 +77,12 @@ void TestGD::testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim
 	GD::normalizezData2(zDataTrain, zDataTest, factorDim, sampleDimTrain, sampleDimTest);
 
 	timeutils.start("Encrypting zData...");
-	cipherGD.encZData(encZData, zDataTrain, slots, factorDim, sampleDimTrain, batch, cnum, wBits);
+	cipherGD.encZData(encZData, zDataTrain, slots, factorDim, sampleDimTrain, batch, cnum, wBits, logQ);
 	timeutils.stop("zData encryption");
 
 	timeutils.start("Encrypting wData and vData...");
 	if(isInitZero) {
-		cipherGD.encWVDataZero(encWData, encVData, cnum, slots, wBits);
+		cipherGD.encWVDataZero(encWData, encVData, cnum, slots, wBits, logQ);
 	} else {
 		cipherGD.encWVDataAverage(encWData, encVData, encZData, cnum, sBits, bBits);
 	}
@@ -286,12 +286,12 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 		}
 
 		timeutils.start("Encrypting zData...");
-		cipherGD.encZData(encZData, zDataTrain, slots, factorDim, sampleDimTrain, batch, cnum, wBits);
+		cipherGD.encZData(encZData, zDataTrain, slots, factorDim, sampleDimTrain, batch, cnum, wBits, logQ);
 		timeutils.stop("zData encryption");
 
 		timeutils.start("Encrypting wData and vData...");
 		if(isInitZero) {
-			cipherGD.encWVDataZero(encWData, encVData, cnum, slots, wBits);
+			cipherGD.encWVDataZero(encWData, encVData, cnum, slots, wBits, logQ);
 		} else {
 			cipherGD.encWVDataAverage(encWData, encVData, encZData, cnum, sBits, bBits);
 		}

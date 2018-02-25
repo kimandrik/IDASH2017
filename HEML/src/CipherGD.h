@@ -16,15 +16,15 @@ public:
 
 	CipherGD(Scheme& scheme, SecretKey& secretKey) : scheme(scheme), secretKey(secretKey) {}
 
-	void encZData(Ciphertext* encZData, double** zData, long slots, long factorDim, long sampleDim, long batch, long cnum, long wBits);
+	void encZData(Ciphertext* encZData, double** zData, long slots, long factorDim, long sampleDim, long batch, long cnum, long wBits, long logQ);
 
 	void encWDataAverage(Ciphertext* encWData, Ciphertext* encZData, long cnum, long sBits, long bBits);
 
 	void encWVDataAverage(Ciphertext* encWData, Ciphertext* encVData, Ciphertext* encZData, long cnum, long sBits, long bBits);
 
-	void encWDataZero(Ciphertext* encWData, long cnum, long slots, long wBits);
+	void encWDataZero(Ciphertext* encWData, long cnum, long slots, long wBits, long logQ);
 
-	void encWVDataZero(Ciphertext* encWData, Ciphertext* encVData, long cnum, long slots, long wBits);
+	void encWVDataZero(Ciphertext* encWData, Ciphertext* encVData, long cnum, long slots, long wBits, long logQ);
 
 	ZZX generateAuxPoly(long slots, long batch, long pBits);
 
