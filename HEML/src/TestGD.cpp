@@ -97,6 +97,7 @@ void TestGD::testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim
 	}
 
 	double alpha0, alpha1, eta, gamma;
+	double enccor, encauc, truecor, trueauc;
 
 	alpha0 = 0.01;
 	alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;
@@ -121,11 +122,11 @@ void TestGD::testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim
 		GD::trueNLGDiteration(zDataTrain, twData, tvData, factorDim, sampleDimTrain, gamma, eta);
 
 //		cout << "------PLAIN-------" << endl;
-//		GD::calculateAUC(zDataTest, pwData, factorDim, sampleDimTest);
+//		GD::calculateAUC(zDataTest, pwData, factorDim, sampleDimTest, correctness, auc);
 //		cout << "------------------" << endl;
 
 //		cout << "-------TRUE-------" << endl;
-//		GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
+//		GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest, correctness, auc);
 //		cout << "------------------" << endl;
 
 		alpha0 = alpha1;
@@ -134,11 +135,11 @@ void TestGD::testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim
 	}
 	cout << "----ENCRYPTED-----" << endl;
 	cipherGD.decWData(cwData, encWData, factorDim, batch, cnum, wBits);
-	GD::calculateAUC(zDataTest, cwData, factorDim, sampleDimTest);
+	GD::calculateAUC(zDataTest, cwData, factorDim, sampleDimTest, enccor, encauc);
 	cout << "------------------" << endl;
 
 	cout << "-------TRUE-------" << endl;
-	GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
+	GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest, truecor, trueauc);
 	cout << "------------------" << endl;
 
 //	GD::calculateMSE(twData, cwData, factorDim);
@@ -171,6 +172,7 @@ void TestGD::testPlainNLGD(double** zDataTrain, double** zDataTest, long factorD
 	}
 
 	double alpha0, alpha1, eta, gamma;
+	double plaincor, plainauc, truecor, trueauc;
 
 	alpha0 = 0.01;
 	alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;
@@ -187,11 +189,11 @@ void TestGD::testPlainNLGD(double** zDataTrain, double** zDataTest, long factorD
 	}
 
 	cout << "------PLAIN-------" << endl;
-	GD::calculateAUC(zDataTest, pwData, factorDim, sampleDimTest);
+	GD::calculateAUC(zDataTest, pwData, factorDim, sampleDimTest, plaincor, plainauc);
 	cout << "------------------" << endl;
 
 	cout << "-------TRUE-------" << endl;
-	GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
+	GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest, truecor, trueauc);
 	cout << "------------------" << endl;
 
 //	GD::calculateMSE(twData, pwData, factorDim);
@@ -267,6 +269,9 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 	GD::normalizeZData(zData, factorDim, sampleDim);
 	GD::shuffleZData(zData, factorDim, sampleDim);
 
+	double enccor, encauc, truecor, trueauc;
+	double averenccor = 0, averencauc = 0, avertruecor = 0, avertrueauc = 0;
+
 	for (long fnum = 0; fnum < fold; ++fnum) {
 		cout << " !!! START " << fnum + 1 << " FOLD !!! " << endl;
 
@@ -304,7 +309,7 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 
 		//-----------------------------------------
 
-		double alpha0, alpha1, eta, gamma, auctrain, auctest, mse, nmse;
+		double alpha0, alpha1, eta, gamma;
 
 		alpha0 = 0.01;
 		alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;
@@ -329,7 +334,7 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 			GD::trueNLGDiteration(zDataTrain, twData, tvData, factorDim, sampleDimTrain, gamma, eta);
 
 //			cout << "-------TRUE-------" << endl;
-//			GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
+//			GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest, correctness, auc);
 //			cout << "------------------" << endl;
 
 			alpha0 = alpha1;
@@ -338,12 +343,17 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 		}
 		cout << "----ENCRYPTED-----" << endl;
 		cipherGD.decWData(cwData, encWData, factorDim, batch, cnum, wBits);
-		GD::calculateAUC(zDataTest, cwData, factorDim, sampleDimTest);
+		GD::calculateAUC(zDataTest, cwData, factorDim, sampleDimTest, enccor, encauc);
 		cout << "------------------" << endl;
 
 		cout << "-------TRUE-------" << endl;
-		GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
+		GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest, truecor, trueauc);
 		cout << "------------------" << endl;
+
+		averenccor += enccor;
+		averencauc += encauc;
+		avertruecor += truecor;
+		avertrueauc += trueauc;
 
 //		GD::calculateMSE(twData, cwData, factorDim);
 //		GD::calculateNMSE(twData, cwData, factorDim);
@@ -351,6 +361,16 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 		cout << " !!! STOP " << fnum + 1 << " FOLD !!! " << endl;
 		cout << "------------------" << endl;
 	}
+	averenccor /= fold;
+	averencauc /= fold;
+	avertruecor /= fold;
+	avertrueauc /= fold;
+
+	cout << "Average Encrypted correctness: " << averenccor << "%" << endl;
+	cout << "Average Encrypted AUC: " << averencauc << endl;
+	cout << "Average True correctness: " << avertruecor << "%" << endl;
+	cout << "Average True AUC: " << avertrueauc << endl;
+
 }
 
 void TestGD::testPlainNLGDFOLD(long fold, double** zData, long factorDim, long sampleDim,
@@ -378,6 +398,9 @@ void TestGD::testPlainNLGDFOLD(long fold, double** zData, long factorDim, long s
 	GD::normalizeZData(zData, factorDim, sampleDim);
 	GD::shuffleZData(zData, factorDim, sampleDim);
 
+	double plaincor, plainauc, truecor, trueauc;
+	double averplaincor = 0, averplainauc = 0, avertruecor = 0, avertrueauc = 0;
+
 	for (long fnum = 0; fnum < fold; ++fnum) {
 		cout << " !!! START " << fnum + 1 << " FOLD !!! " << endl;
 
@@ -403,7 +426,7 @@ void TestGD::testPlainNLGDFOLD(long fold, double** zData, long factorDim, long s
 
 		//-----------------------------------------
 
-		double alpha0, alpha1, eta, gamma, auctrain, auctest, mse, nmse;
+		double alpha0, alpha1, eta, gamma;
 
 		alpha0 = 0.01;
 		alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;
@@ -419,18 +442,30 @@ void TestGD::testPlainNLGDFOLD(long fold, double** zData, long factorDim, long s
 			alpha1 = (1. + sqrt(1. + 4.0 * alpha0 * alpha0)) / 2.0;
 		}
 		cout << "------PLAIN-------" << endl;
-		GD::calculateAUC(zDataTest, pwData, factorDim, sampleDimTest);
+		GD::calculateAUC(zDataTest, pwData, factorDim, sampleDimTest, plaincor, plainauc);
 		cout << "------------------" << endl;
 
 		cout << "-------TRUE-------" << endl;
-		GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest);
+		GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest, truecor, trueauc);
 		cout << "------------------" << endl;
 
-//		GD::calculateMSE(twData, pwData, factorDim);
-//		GD::calculateNMSE(twData, pwData, factorDim);
+		averplaincor += plaincor;
+		averplainauc += plainauc;
+		avertruecor += truecor;
+		avertrueauc += trueauc;
 
 		cout << " !!! STOP " << fnum + 1 << " FOLD !!! " << endl;
 		cout << "------------------" << endl;
 	}
+
+	averplaincor /= fold;
+	averplainauc /= fold;
+	avertruecor /= fold;
+	avertrueauc /= fold;
+
+	cout << "Average Plain correctness: " << averplaincor << "%" << endl;
+	cout << "Average Plain AUC: " << averplainauc << endl;
+	cout << "Average True correctness: " << avertruecor << "%" << endl;
+	cout << "Average True AUC: " << avertrueauc << endl;
 }
 

@@ -58,7 +58,7 @@ public:
 	static void trueMLGDL2iteration(double** zData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda);
 	static void trueNLGDL2iteration(double** zData, double* wData, double* vData, long factorDim, long sampleDim, double gamma, double eta, double lambda);
 
-	static double calculateAUC(double** zData, double* wData, long factorDim, long sampleDim);
+	static void calculateAUC(double** zData, double* wData, long factorDim, long sampleDim, double& correctness, double& AUC);
 	static double calculateMSE(double* wData1, double* wData2, long factorDim);
 	static double calculateNMSE(double* wData1, double* wData2, long factorDim);
 };

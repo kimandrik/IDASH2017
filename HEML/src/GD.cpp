@@ -315,7 +315,7 @@ void GD::trueNLGDL2iteration(double** zData, double* wData, double* vData, long 
 	//TODO: implement method
 }
 
-double GD::calculateAUC(double** zData, double* wData, long factorDim, long sampleDim) {
+void GD::calculateAUC(double** zData, double* wData, long factorDim, long sampleDim, double& correctness, double& auc) {
 	cout << "w:";
 	for (long i = 0; i < factorDim; ++i) {
 		cout << wData[i] << ",";
@@ -337,16 +337,16 @@ double GD::calculateAUC(double** zData, double* wData, long factorDim, long samp
         }
     }
 
-    double correctness = 100.0 - (100.0 * (FP + TN) / sampleDim);
+    correctness = 100.0 - (100.0 * (FP + TN) / sampleDim);
 //    cout << "Failure rate: (y = 1) " << TN << "/" << thetaTN.size() << " + (y = 0) " << FP << "/" ;
 //    cout << thetaFP.size() << " = " <<  (100.0 * (FP + TN) / sampleDim) << " %." << endl;
     cout << "Correctness: " << correctness  << " %." << endl;
 
     if(thetaFP.size() == 0 || thetaTN.size() == 0) {
         cout << "n_test_yi = 0 : cannot compute AUC" << endl;
-        return 0.0;
+        auc = 0.0;
     } else{
-        double auc = 0.0;
+        auc = 0.0;
         for(long i = 0; i < thetaTN.size(); ++i){
             for(long j = 0; j < thetaFP.size(); ++j){
                 if(thetaFP[j] <= thetaTN[i]) auc++;
@@ -354,8 +354,6 @@ double GD::calculateAUC(double** zData, double* wData, long factorDim, long samp
         }
         auc /= thetaTN.size() * thetaFP.size();
         cout << "AUC: " << auc << endl;
-
-        return auc;
     }
 }
 
