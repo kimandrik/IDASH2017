@@ -7,7 +7,7 @@
 #include <NTL/RR.h>
 #include <NTL/ZZ.h>
 
-void CipherGD::encZData(Ciphertext* encZData, double** zData, long slots, long factorDim, long sampleDim, long batch, long cnum, long wBits) {
+void CipherGD::encZData(Ciphertext* encZData, double** zData, long slots, long factorDim, long sampleDim, long batch, long cnum, long wBits, long logQ) {
 	complex<double>* pzData = new complex<double>[slots];
 	for (long i = 0; i < cnum - 1; ++i) {
 		for (long j = 0; j < sampleDim; ++j) {
@@ -15,7 +15,7 @@ void CipherGD::encZData(Ciphertext* encZData, double** zData, long slots, long f
 				pzData[batch * j + l].real(zData[j][batch * i + l]);
 			}
 		}
-		encZData[i] = scheme.encrypt(pzData, slots, wBits, scheme.context.logQ);
+		encZData[i] = scheme.encrypt(pzData, slots, wBits, logQ);
 	}
 
 	long rest = factorDim - batch * (cnum - 1);
@@ -27,7 +27,7 @@ void CipherGD::encZData(Ciphertext* encZData, double** zData, long slots, long f
 			pzData[batch * j + l] = 0;
 		}
 	}
-	encZData[cnum - 1] = scheme.encrypt(pzData, slots, wBits, scheme.context.logQ);
+	encZData[cnum - 1] = scheme.encrypt(pzData, slots, wBits, logQ);
 
 	delete[] pzData;
 }
@@ -59,18 +59,18 @@ void CipherGD::encWVDataAverage(Ciphertext* encWData, Ciphertext* encVData, Ciph
 	NTL_EXEC_RANGE_END;
 }
 
-void CipherGD::encWDataZero(Ciphertext* encWData, long cnum, long slots, long wBits) {
+void CipherGD::encWDataZero(Ciphertext* encWData, long cnum, long slots, long wBits, long logQ) {
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
-		encWData[i] = scheme.encryptZeros(slots, wBits, scheme.context.logQ);
+		encWData[i] = scheme.encryptZeros(slots, wBits, logQ);
 	}
 	NTL_EXEC_RANGE_END;
 }
 
-void CipherGD::encWVDataZero(Ciphertext* encWData, Ciphertext* encVData, long cnum, long slots, long wBits) {
+void CipherGD::encWVDataZero(Ciphertext* encWData, Ciphertext* encVData, long cnum, long slots, long wBits, long logQ) {
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
-		encWData[i] = scheme.encryptZeros(slots, wBits, scheme.context.logQ);
+		encWData[i] = scheme.encryptZeros(slots, wBits, logQ);
 		encVData[i] = encWData[i];
 	}
 	NTL_EXEC_RANGE_END;

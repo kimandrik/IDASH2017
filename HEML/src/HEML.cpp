@@ -81,6 +81,7 @@ int main(int argc, char **argv) {
 	} else {
 		long sampleDim = 0, factorDim = 0;
 		double** zData = GD::zDataFromFile(trainfile, factorDim, sampleDim, isYfirst);
+		GD::shuffleZData(zData, factorDim, sampleDim);
 		if(isEncrypted) {
 			TestGD::testEncNLGDFOLD(fold, zData, factorDim, sampleDim, isYfirst, numIter, kdeg, gammaUp, gammaDown, isInitZero);
 		} else {

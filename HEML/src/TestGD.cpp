@@ -1,11 +1,11 @@
 #include "TestGD.h"
 
-#include <Ciphertext.h>
-#include <Context.h>
-#include <NTL/ZZX.h>
-#include <Scheme.h>
-#include <SecretKey.h>
-#include <TimeUtils.h>
+#include "Ciphertext.h"
+#include "Context.h"
+#include "NTL/ZZX.h"
+#include "Scheme.h"
+#include "SecretKey.h"
+#include "TimeUtils.h"
 #include <cmath>
 
 #include "CipherGD.h"
@@ -77,12 +77,12 @@ void TestGD::testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim
 	GD::normalizezData2(zDataTrain, zDataTest, factorDim, sampleDimTrain, sampleDimTest);
 
 	timeutils.start("Encrypting zData...");
-	cipherGD.encZData(encZData, zDataTrain, slots, factorDim, sampleDimTrain, batch, cnum, wBits);
+	cipherGD.encZData(encZData, zDataTrain, slots, factorDim, sampleDimTrain, batch, cnum, wBits, logQ);
 	timeutils.stop("zData encryption");
 
 	timeutils.start("Encrypting wData and vData...");
 	if(isInitZero) {
-		cipherGD.encWVDataZero(encWData, encVData, cnum, slots, wBits);
+		cipherGD.encWVDataZero(encWData, encVData, cnum, slots, wBits, logQ);
 	} else {
 		cipherGD.encWVDataAverage(encWData, encVData, encZData, cnum, sBits, bBits);
 	}
@@ -113,20 +113,14 @@ void TestGD::testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim
 		timeutils.stop("Enc NLGD");
 		cout << "encWData.logq after: " << encWData[0].logq << endl;
 
-//		cout << "----ENCRYPTED-----" << endl;
-//		cipherGD.decWData(cwData, encWData, factorDim, batch, cnum, wBits);
-//		GD::calculateAUC(zDataTest, cwData, factorDim, sampleDimTest);
-//		cout << "------------------" << endl;
+		cout << "----ENCRYPTED-----" << endl;
+		cipherGD.decWData(cwData, encWData, factorDim, batch, cnum, wBits);
+		GD::calculateAUC(zDataTest, cwData, factorDim, sampleDimTest, enccor, encauc);
+		cout << "------------------" << endl;
 
-		GD::plainNLGDiteration(kdeg, zDataTrain, pwData, pvData, factorDim, sampleDimTrain, gamma, eta);
 		GD::trueNLGDiteration(zDataTrain, twData, tvData, factorDim, sampleDimTrain, gamma, eta);
-
-//		cout << "------PLAIN-------" << endl;
-//		GD::calculateAUC(zDataTest, pwData, factorDim, sampleDimTest, correctness, auc);
-//		cout << "------------------" << endl;
-
 //		cout << "-------TRUE-------" << endl;
-//		GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest, correctness, auc);
+//		GD::calculateAUC(zDataTest, twData, factorDim, sampleDimTest, truecor, trueauc);
 //		cout << "------------------" << endl;
 
 		alpha0 = alpha1;
@@ -288,12 +282,12 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 		}
 
 		timeutils.start("Encrypting zData...");
-		cipherGD.encZData(encZData, zDataTrain, slots, factorDim, sampleDimTrain, batch, cnum, wBits);
+		cipherGD.encZData(encZData, zDataTrain, slots, factorDim, sampleDimTrain, batch, cnum, wBits, logQ);
 		timeutils.stop("zData encryption");
 
 		timeutils.start("Encrypting wData and vData...");
 		if(isInitZero) {
-			cipherGD.encWVDataZero(encWData, encVData, cnum, slots, wBits);
+			cipherGD.encWVDataZero(encWData, encVData, cnum, slots, wBits, logQ);
 		} else {
 			cipherGD.encWVDataAverage(encWData, encVData, encZData, cnum, sBits, bBits);
 		}
@@ -361,16 +355,11 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 		cout << " !!! STOP " << fnum + 1 << " FOLD !!! " << endl;
 		cout << "------------------" << endl;
 	}
-	averenccor /= fold;
-	averencauc /= fold;
-	avertruecor /= fold;
-	avertrueauc /= fold;
 
 	cout << "Average Encrypted correctness: " << averenccor << "%" << endl;
 	cout << "Average Encrypted AUC: " << averencauc << endl;
 	cout << "Average True correctness: " << avertruecor << "%" << endl;
 	cout << "Average True AUC: " << avertrueauc << endl;
-
 }
 
 void TestGD::testPlainNLGDFOLD(long fold, double** zData, long factorDim, long sampleDim,
@@ -457,11 +446,6 @@ void TestGD::testPlainNLGDFOLD(long fold, double** zData, long factorDim, long s
 		cout << " !!! STOP " << fnum + 1 << " FOLD !!! " << endl;
 		cout << "------------------" << endl;
 	}
-
-	averplaincor /= fold;
-	averplainauc /= fold;
-	avertruecor /= fold;
-	avertrueauc /= fold;
 
 	cout << "Average Plain correctness: " << averplaincor << "%" << endl;
 	cout << "Average Plain AUC: " << averplainauc << endl;
