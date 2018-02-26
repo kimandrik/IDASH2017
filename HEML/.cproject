@@ -27,7 +27,8 @@
 									<listOptionValue builtIn="false" value="gmp"/>
 								</option>
 								<option id="macosx.cpp.link.option.paths.1082354193" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
-									<listOptionValue builtIn="false" value="/Users/kimandrik/git/HEAANBOOT/HEAANBOOT/Debug"/>
+									<listOptionValue builtIn="false" value="/Users/Han/Documents/Git/Programming/HEAANBOOT/HEAANBOOT/lib"/>
+									<listOptionValue builtIn="false" value="/Users/kimandrik/git/HEAANBOOT/HEAANBOOT/lib"/>
 									<listOptionValue builtIn="false" value="/usr/local/lib"/>
 								</option>
 								<option id="macosx.cpp.link.option.flags.1049376720" name="Linker flags" superClass="macosx.cpp.link.option.flags" useByScannerDiscovery="false" value="-pthread" valueType="string"/>
@@ -37,6 +38,9 @@
 								</inputType>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.assembler.macosx.exe.debug.1554409404" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.macosx.exe.debug">
+								<option id="gnu.both.asm.option.include.paths.921413923" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="/Users/Han/git/HEAANBOOT/HEAANBOOT/src"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1920580301" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.macosx.base.183470260" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.macosx.base"/>
@@ -45,6 +49,7 @@
 								<option id="gnu.cpp.compiler.macosx.exe.debug.option.debugging.level.1398620075" name="Debug Level" superClass="gnu.cpp.compiler.macosx.exe.debug.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.dialect.std.1341085665" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1875053148" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="/Users/Han/Documents/Git/Programming/HEAANBOOT/HEAANBOOT/src"/>
 									<listOptionValue builtIn="false" value="/usr/local/include"/>
 									<listOptionValue builtIn="false" value="/Users/kimandrik/git/HEAANBOOT/HEAANBOOT/src"/>
 								</option>
