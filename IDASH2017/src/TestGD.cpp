@@ -430,8 +430,8 @@ void TestGD::testPlainNLGDFOLD(long fold, double** zData, long factorDim, long s
 
 		for (long iter = 0; iter < numIter; ++iter) {
 			eta = (1 - alpha0) / alpha1;
+			cout << eta << endl;
 			gamma = gammaDown > 0 ? gammaUp / gammaDown / sampleDimTrain : gammaUp / (iter - gammaDown) / sampleDimTrain;
-
 			GD::plainNLGDiteration(kdeg, zDataTrain, pwData, pvData, factorDim, sampleDimTrain, gamma, eta);
 			GD::trueNLGDiteration(zDataTrain, twData, tvData, factorDim, sampleDimTrain, gamma, eta);
 
