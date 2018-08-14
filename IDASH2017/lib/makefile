@@ -38,22 +38,21 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: libHEML.a
+all: libIDASH2017.a
 
 # Tool invocations
-libHEML.a: $(OBJS) $(USER_OBJS)
+libIDASH2017.a: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC Archiver'
-	ar -r  "libHEML.a" $(OBJS) $(USER_OBJS) $(LIBS)
+	ar -r  "libIDASH2017.a" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(CC_DEPS)$(C++_DEPS)$(OBJS)$(ARCHIVES)$(C_UPPER_DEPS)$(CXX_DEPS)$(CPP_DEPS)$(C_DEPS) libHEML.a
+	-$(RM) $(CC_DEPS)$(C++_DEPS)$(OBJS)$(ARCHIVES)$(C_UPPER_DEPS)$(CXX_DEPS)$(CPP_DEPS)$(C_DEPS) libIDASH2017.a
 	-@echo ' '
 
 .PHONY: all clean dependents
-.SECONDARY:
 
 -include ../makefile.targets

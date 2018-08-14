@@ -38,19 +38,19 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: HEML
+all: IDASH2017
 
 # Tool invocations
-HEML: $(OBJS) $(USER_OBJS)
+IDASH2017: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: MacOS X C++ Linker'
-	g++ -L/Users/Han/Documents/Git/Programming/HEAANBOOT/HEAANBOOT/lib -L/Users/kimandrik/git/HEAANBOOT/HEAANBOOT/Debug -L/usr/local/lib -pthread -o "HEML" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L/Users/Han/Documents/Git/Programming/HEAANBOOT/HEAANBOOT/lib -L/Users/kimandrik/git/HEAANBOOT/HEAANBOOT/Debug -L/usr/local/lib -pthread -o "IDASH2017" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(CC_DEPS)$(C++_DEPS)$(EXECUTABLES)$(OBJS)$(C_UPPER_DEPS)$(CXX_DEPS)$(CPP_DEPS)$(C_DEPS) HEML
+	-$(RM) $(CC_DEPS)$(C++_DEPS)$(EXECUTABLES)$(OBJS)$(C_UPPER_DEPS)$(CXX_DEPS)$(CPP_DEPS)$(C_DEPS) IDASH2017
 	-@echo ' '
 
 .PHONY: all clean dependents

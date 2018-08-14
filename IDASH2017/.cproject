@@ -6,8 +6,11 @@
 				<externalSettings>
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/HEML"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/IDASH2017"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/HEML/Debug"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/IDASH2017/Debug"/>
 						<entry flags="RESOLVED" kind="libraryFile" name="HEML" srcPrefixMapping="" srcRootPath=""/>
+						<entry flags="RESOLVED" kind="libraryFile" name="IDASH2017" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
