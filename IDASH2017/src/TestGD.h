@@ -6,8 +6,8 @@
 * work.  If not, see <http://creativecommons.org/licenses/by-nc/3.0/>.
 */
 
-#ifndef HEML_TESTGD_H_
-#define HEML_TESTGD_H_
+#ifndef IDASH2017_TESTGD_H_
+#define IDASH2017_TESTGD_H_
 
 class TestGD {
 public:

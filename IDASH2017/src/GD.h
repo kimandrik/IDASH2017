@@ -6,8 +6,8 @@
 * work.  If not, see <http://creativecommons.org/licenses/by-nc/3.0/>.
 */
 
-#ifndef HEML_GD_H_
-#define HEML_GD_H_
+#ifndef IDASH2017_GD_H_
+#define IDASH2017_GD_H_
 
 #include <iostream>
 

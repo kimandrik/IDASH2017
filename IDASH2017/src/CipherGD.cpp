@@ -45,7 +45,7 @@ void CipherGD::encWDataAverage(Ciphertext* encWData, Ciphertext* encZData, long 
 	for (long i = first; i < last; ++i) {
 		encWData[i] = encZData[i];
 		for (long l = bBits; l < sBits; ++l) {
-			Ciphertext rot = scheme.leftRotateByPo2(encWData[i], l);
+			Ciphertext rot = scheme.leftRotateFast(encWData[i], (1 << l));
 			scheme.addAndEqual(encWData[i], rot);
 		}
 		scheme.divByPo2AndEqual(encWData[i], sBits - bBits);
@@ -58,7 +58,7 @@ void CipherGD::encWVDataAverage(Ciphertext* encWData, Ciphertext* encVData, Ciph
 	for (long i = first; i < last; ++i) {
 		encWData[i] = encZData[i];
 		for (long l = bBits; l < sBits; ++l) {
-			Ciphertext rot = scheme.leftRotateByPo2(encWData[i], l);
+			Ciphertext rot = scheme.leftRotateFast(encWData[i], (1 << l));
 			scheme.addAndEqual(encWData[i], rot);
 		}
 		scheme.divByPo2AndEqual(encWData[i], sBits - bBits);
@@ -84,24 +84,28 @@ void CipherGD::encWVDataZero(Ciphertext* encWData, Ciphertext* encVData, long cn
 	NTL_EXEC_RANGE_END;
 }
 
-ZZX CipherGD::generateAuxPoly(long slots, long batch, long pBits) {
+uint64_t* CipherGD::generateAuxPoly(long slots, long batch, long pBits) {
 	complex<double>* pvals = new complex<double>[slots];
 	for (long j = 0; j < slots; j += batch) {
 		pvals[j].real(1.0);
 	}
-	ZZX msg = scheme.context.encode(pvals, slots, pBits);
+	ZZ* msg = new ZZ[scheme.ring.N];
+	scheme.ring.encode(msg, pvals, slots, pBits);
+	long np = ceil((pBits + scheme.ring.logQ + scheme.ring.logN + 2)/59.);
+	uint64_t* rmsg = scheme.ring.toNTT(msg, np);
 	delete[] pvals;
-	return msg;
+	delete[] msg;
+	return rmsg;
 }
 
-Ciphertext CipherGD::encInnerProduct(Ciphertext* encZData, Ciphertext* encWData, ZZX& poly, long cnum, long bBits, long wBits, long pBits) {
+Ciphertext CipherGD::encInnerProduct(Ciphertext* encZData, Ciphertext* encWData, uint64_t* rpoly, long cnum, long bBits, long wBits, long pBits) {
 	Ciphertext* encIPvec = new Ciphertext[cnum];
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
 		encIPvec[i] = scheme.modDownTo(encZData[i], encWData[i].logq);
 		scheme.multAndEqual(encIPvec[i], encWData[i]); // xy * w
 		for (long l = 0; l < bBits; ++l) {
-			Ciphertext rot = scheme.leftRotateByPo2(encIPvec[i], l);
+			Ciphertext rot = scheme.leftRotateFast(encIPvec[i], (1 << l));
 			scheme.addAndEqual(encIPvec[i], rot);
 		}
 	}
@@ -112,9 +116,9 @@ Ciphertext CipherGD::encInnerProduct(Ciphertext* encZData, Ciphertext* encWData,
 	}
 
 	scheme.reScaleByAndEqual(encIP, wBits);
-	scheme.multByPolyAndEqual(encIP, poly, pBits);
+	scheme.multByPolyNTTAndEqual(encIP, rpoly, pBits, pBits);
 	for (long l = 0; l < bBits; ++l) {
-		Ciphertext tmp = scheme.rightRotateByPo2(encIP, l);
+		Ciphertext tmp = scheme.rightRotateFast(encIP, (1 << l));
 		scheme.addAndEqual(encIP, tmp);
 	}
 	delete[] encIPvec;
@@ -209,7 +213,7 @@ void CipherGD::encSigmoid(long kdeg, Ciphertext* encZData, Ciphertext* encGrad, 
 	NTL_EXEC_RANGE(cnum, first, last);
 	for (long i = first; i < last; ++i) {
 		for (long l = bBits; l < sBits; ++l) {
-			Ciphertext tmp = scheme.leftRotateByPo2(encGrad[i], l);
+			Ciphertext tmp = scheme.leftRotateFast(encGrad[i], (1 << l));
 			scheme.addAndEqual(encGrad[i], tmp);
 		}
 	}
@@ -254,25 +258,25 @@ void CipherGD::encNLGDstep(Ciphertext* encWData, Ciphertext* encVData, Ciphertex
 	NTL_EXEC_RANGE_END;
 }
 
-void CipherGD::encLGDiteration(long kdeg, Ciphertext* encZData, Ciphertext* encWData, ZZX& poly, long cnum, double gamma, long sBits, long bBits, long wBits, long pBits, long aBits) {
+void CipherGD::encLGDiteration(long kdeg, Ciphertext* encZData, Ciphertext* encWData, uint64_t* rpoly, long cnum, double gamma, long sBits, long bBits, long wBits, long pBits, long aBits) {
  	Ciphertext* encGrad = new Ciphertext[cnum];
-	Ciphertext encIP = encInnerProduct(encZData, encWData, poly, cnum, bBits, wBits, pBits);
+	Ciphertext encIP = encInnerProduct(encZData, encWData, rpoly, cnum, bBits, wBits, pBits);
 	encSigmoid(kdeg, encZData, encGrad, encIP, cnum, gamma, sBits, bBits, wBits, aBits);
 	encLGDstep(encWData, encGrad, cnum);
 	delete[] encGrad;
 }
 
-void CipherGD::encMLGDiteration(long kdeg, Ciphertext* encZData, Ciphertext* encWData, Ciphertext* encVData, ZZX& poly, long cnum, double gamma, double eta, long sBits, long bBits, long wBits, long pBits, long aBits) {
+void CipherGD::encMLGDiteration(long kdeg, Ciphertext* encZData, Ciphertext* encWData, Ciphertext* encVData, uint64_t* rpoly, long cnum, double gamma, double eta, long sBits, long bBits, long wBits, long pBits, long aBits) {
  	Ciphertext* encGrad = new Ciphertext[cnum];
-	Ciphertext encIP = encInnerProduct(encZData, encWData, poly, cnum, bBits, wBits, pBits);
+	Ciphertext encIP = encInnerProduct(encZData, encWData, rpoly, cnum, bBits, wBits, pBits);
 	encSigmoid(kdeg, encZData, encGrad, encIP, cnum, gamma, sBits, bBits, wBits, aBits);
 	encMLGDstep(encWData, encVData, encGrad, eta, cnum, wBits);
 	delete[] encGrad;
 }
 
-void CipherGD::encNLGDiteration(long kdeg, Ciphertext* encZData, Ciphertext* encWData, Ciphertext* encVData, ZZX& poly, long cnum, double gamma, double eta, long sBits, long bBits, long wBits, long pBits, long aBits) {
+void CipherGD::encNLGDiteration(long kdeg, Ciphertext* encZData, Ciphertext* encWData, Ciphertext* encVData, uint64_t* rpoly, long cnum, double gamma, double eta, long sBits, long bBits, long wBits, long pBits, long aBits) {
  	Ciphertext* encGrad = new Ciphertext[cnum];
-	Ciphertext encIP = encInnerProduct(encZData, encVData, poly, cnum, bBits, wBits, pBits);
+	Ciphertext encIP = encInnerProduct(encZData, encVData, rpoly, cnum, bBits, wBits, pBits);
 	scheme.reScaleByAndEqual(encIP, pBits + aBits);
 	encSigmoid(kdeg, encZData, encGrad, encIP, cnum, gamma, sBits, bBits, wBits, aBits);
 	encNLGDstep(encWData, encVData, encGrad, eta, cnum, pBits);

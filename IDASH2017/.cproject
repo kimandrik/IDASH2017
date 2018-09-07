@@ -31,13 +31,12 @@
 							<tool id="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.debug.1395746161" name="MacOS X C Linker" superClass="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.debug"/>
 							<tool id="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.debug.209574880" name="MacOS X C++ Linker" superClass="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.debug">
 								<option id="macosx.cpp.link.option.libs.1288569574" name="Libraries (-l)" superClass="macosx.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
-									<listOptionValue builtIn="false" value="HEAANBOOT"/>
+									<listOptionValue builtIn="false" value="HEAAN"/>
 									<listOptionValue builtIn="false" value="ntl"/>
 									<listOptionValue builtIn="false" value="gmp"/>
 								</option>
 								<option id="macosx.cpp.link.option.paths.1082354193" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
-									<listOptionValue builtIn="false" value="/Users/Han/Documents/Git/Programming/HEAANBOOT/HEAANBOOT/lib"/>
-									<listOptionValue builtIn="false" value="/Users/kimandrik/git/HEAANBOOT/HEAANBOOT/Debug"/>
+									<listOptionValue builtIn="false" value="/Users/kimandrik/git/HEAAN/HEAAN/Debug"/>
 									<listOptionValue builtIn="false" value="/usr/local/lib"/>
 								</option>
 								<option id="macosx.cpp.link.option.flags.1049376720" name="Linker flags" superClass="macosx.cpp.link.option.flags" useByScannerDiscovery="false" value="-pthread" valueType="string"/>
@@ -58,9 +57,8 @@
 								<option id="gnu.cpp.compiler.macosx.exe.debug.option.debugging.level.1398620075" name="Debug Level" superClass="gnu.cpp.compiler.macosx.exe.debug.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.dialect.std.1341085665" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1875053148" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="../../../HEAANBOOT/HEAANBOOT/src"/>
 									<listOptionValue builtIn="false" value="/usr/local/include"/>
-									<listOptionValue builtIn="false" value="/Users/kimandrik/git/HEAANBOOT/HEAANBOOT/src"/>
+									<listOptionValue builtIn="false" value="/Users/kimandrik/git/HEAAN/HEAAN/src"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.other.1155359534" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-pthread -c -std=c++11" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.warnings.allwarn.1354421815" name="All warnings (-Wall)" superClass="gnu.cpp.compiler.option.warnings.allwarn" useByScannerDiscovery="false" value="false" valueType="boolean"/>

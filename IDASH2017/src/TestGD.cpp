@@ -9,7 +9,6 @@
 #include "TestGD.h"
 
 #include "Ciphertext.h"
-#include "Context.h"
 #include "NTL/ZZX.h"
 #include "Scheme.h"
 #include "SecretKey.h"
@@ -57,16 +56,16 @@ void TestGD::testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim
 
 	TimeUtils timeutils;
 	timeutils.start("Scheme generating...");
-	Context context(logN, logQ);
-	SecretKey secretKey(logN);
-	Scheme scheme(secretKey, context);
+	Ring ring(logN, logQ);
+	SecretKey secretKey(ring);
+	Scheme scheme(secretKey, ring);
 	scheme.addLeftRotKeys(secretKey);
 	scheme.addRightRotKeys(secretKey);
 	timeutils.stop("Scheme generation");
 	CipherGD cipherGD(scheme, secretKey);
 
 	timeutils.start("Polynomial generating...");
-	ZZX poly = cipherGD.generateAuxPoly(slots, batch, pBits);
+	uint64_t* rpoly = cipherGD.generateAuxPoly(slots, batch, pBits);
 	timeutils.stop("Polynomial generation");
 
 	double* pwData = new double[factorDim];
@@ -117,7 +116,7 @@ void TestGD::testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim
 
 		cout << "encWData.logq before: " << encWData[0].logq << endl;
 		timeutils.start("Enc NLGD");
-		cipherGD.encNLGDiteration(kdeg, encZData, encWData, encVData, poly, cnum, gamma, eta, sBits, bBits, wBits, pBits, aBits);
+		cipherGD.encNLGDiteration(kdeg, encZData, encWData, encVData, rpoly, cnum, gamma, eta, sBits, bBits, wBits, pBits, aBits);
 		timeutils.stop("Enc NLGD");
 		cout << "encWData.logq after: " << encWData[0].logq << endl;
 
@@ -238,16 +237,16 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 
 	TimeUtils timeutils;
 	timeutils.start("Scheme generating...");
-	Context context(logN, logQ);
-	SecretKey secretKey(logN);
-	Scheme scheme(secretKey, context);
+	Ring ring(logN, logQ);
+	SecretKey secretKey(ring);
+	Scheme scheme(secretKey, ring);
 	scheme.addLeftRotKeys(secretKey);
 	scheme.addRightRotKeys(secretKey);
 	timeutils.stop("Scheme generation");
 	CipherGD cipherGD(scheme, secretKey);
 
 	timeutils.start("Polynomial generating...");
-	ZZX poly = cipherGD.generateAuxPoly(slots, batch, pBits);
+	uint64_t* rpoly = cipherGD.generateAuxPoly(slots, batch, pBits);
 	timeutils.stop("Polynomial generation");
 
 	double* pwData = new double[factorDim];
@@ -323,7 +322,7 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 
 			cout << "encWData.logq before: " << encWData[0].logq << endl;
 			timeutils.start("Enc NLGD");
-			cipherGD.encNLGDiteration(kdeg, encZData, encWData, encVData, poly, cnum, gamma, eta, sBits, bBits, wBits, pBits, aBits);
+			cipherGD.encNLGDiteration(kdeg, encZData, encWData, encVData, rpoly, cnum, gamma, eta, sBits, bBits, wBits, pBits, aBits);
 			timeutils.stop("Enc NLGD");
 			cout << "encWData.logq after: " << encWData[0].logq << endl;
 

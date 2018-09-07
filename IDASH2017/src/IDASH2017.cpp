@@ -19,10 +19,10 @@ using namespace std;
 using namespace NTL;
 
 /*
- * run: ./HEML trainfile isYfirst numIter k gammaUp gammaDown isInitZero fold isEncrypted testfile
+ * run: ./IDASH2017 trainfile isYfirst numIter k gammaUp gammaDown isInitZero fold isEncrypted testfile
  * ./HEML string bool long long double double bool long bool string
- * example: ./HEML "../data/data103x1579.txt" 1 7 5 1 -1 1 5 1
- * example: ./HEML "../data/1_training_data_csv" 1 7 5 1 -1 1 0 1 "../data/1_testing_data_csv"
+ * example: ./IDASH2017 "../data/data103x1579.txt" 1 7 5 1 -1 1 5 1
+ * example: ./IDASH2017 "../data/1_training_data_csv" 1 7 5 1 -1 1 0 1 "../data/1_testing_data_csv"
  *
  * parameters:
  * trainfile - path to train file
