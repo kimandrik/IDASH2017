@@ -34,9 +34,9 @@ public:
 
 	void encWVDataZero(Ciphertext* encWData, Ciphertext* encVData, long cnum, long slots, long wBits, long logQ);
 
-	uint64_t* generateAuxPoly(long slots, long batch, long pBits);
+	void generateAuxPoly(uint64_t* poly, long slots, long batch, long pBits);
 
-	Ciphertext encInnerProduct(Ciphertext* encZData, Ciphertext* encWData, uint64_t* rpoly, long cnum, long bBits, long wBits, long pBits);
+	void encInnerProduct(Ciphertext& encIP, Ciphertext* encZData, Ciphertext* encWData, uint64_t* rpoly, long cnum, long bBits, long wBits, long pBits);
 
 	void encSigmoid(long kdeg, Ciphertext* encZData, Ciphertext* encGrad, Ciphertext& encIP, long cnum, double gamma, long sBits, long bBits, long wBits, long aBits);
 

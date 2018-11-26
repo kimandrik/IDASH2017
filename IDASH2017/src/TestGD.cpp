@@ -38,11 +38,6 @@ void TestGD::testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim
 	long lBits = 5;
 	long aBits = 3;
 	long kBits = (long)ceil(log2(kdeg));
-
-	long logQ = isInitZero ? (wBits + lBits) + numIter * ((kBits + 1) * wBits + 2 * pBits + aBits) :
-			(sdimBits + wBits + lBits) + numIter * ((kBits + 1) * wBits + 2 * pBits + aBits);
-
-	long logN = TestGD::suggestLogN(80, logQ);
 	long bBits = min(logN - 1 - sdimBits, fdimBits);
 	long batch = 1 << bBits;
 	long sBits = sdimBits + bBits;
@@ -51,12 +46,9 @@ void TestGD::testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim
 
 	cout << "batch = " << batch << ", slots = " << slots << ", cnum = " << cnum << endl;
 
-	cout << "HEAAN PARAMETER logQ: " << logQ << endl;
-	cout << "HEAAN PARAMETER logN: " << logN << endl;
-
 	TimeUtils timeutils;
 	timeutils.start("Scheme generating...");
-	Ring ring(logN, logQ);
+	Ring ring;
 	SecretKey secretKey(ring);
 	Scheme scheme(secretKey, ring);
 	scheme.addLeftRotKeys(secretKey);
@@ -65,7 +57,9 @@ void TestGD::testEncNLGD(double** zDataTrain, double** zDataTest, long factorDim
 	CipherGD cipherGD(scheme, secretKey);
 
 	timeutils.start("Polynomial generating...");
-	uint64_t* rpoly = cipherGD.generateAuxPoly(slots, batch, pBits);
+	long np = ceil((pBits + logQ + logN + 2)/59.);
+	uint64_t* rpoly = new uint64_t[np << logN];
+	cipherGD.generateAuxPoly(rpoly, slots, batch, pBits);
 	timeutils.stop("Polynomial generation");
 
 	double* pwData = new double[factorDim];
@@ -220,10 +214,10 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 	long aBits = 3;
 	long kBits = (long)ceil(log2(kdeg));
 
-	long logQ = isInitZero ? (wBits + lBits) + numIter * ((kBits + 1) * wBits + 2 * pBits + aBits) :
-			(sdimBits + wBits + lBits) + numIter * ((kBits + 1) * wBits + 2 * pBits + aBits);
+//	long logQ = isInitZero ? (wBits + lBits) + numIter * ((kBits + 1) * wBits + 2 * pBits + aBits) :
+//			(sdimBits + wBits + lBits) + numIter * ((kBits + 1) * wBits + 2 * pBits + aBits);
 
-	long logN = TestGD::suggestLogN(80, logQ);
+//	long logN = TestGD::suggestLogN(80, logQ);
 	long bBits = min(logN - 1 - sdimBits, fdimBits);
 	long batch = 1 << bBits;
 	long sBits = sdimBits + bBits;
@@ -232,12 +226,12 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 
 	cout << "batch = " << batch << ", slots = " << slots << ", cnum = " << cnum << endl;
 
-	cout << "HEAAN PARAMETER logQ: " << logQ << endl;
-	cout << "HEAAN PARAMETER logN: " << logN << endl;
+//	cout << "HEAAN PARAMETER logQ: " << logQ << endl;
+//	cout << "HEAAN PARAMETER logN: " << logN << endl;
 
 	TimeUtils timeutils;
 	timeutils.start("Scheme generating...");
-	Ring ring(logN, logQ);
+	Ring ring;
 	SecretKey secretKey(ring);
 	Scheme scheme(secretKey, ring);
 	scheme.addLeftRotKeys(secretKey);
@@ -246,7 +240,9 @@ void TestGD::testEncNLGDFOLD(long fold, double** zData, long factorDim, long sam
 	CipherGD cipherGD(scheme, secretKey);
 
 	timeutils.start("Polynomial generating...");
-	uint64_t* rpoly = cipherGD.generateAuxPoly(slots, batch, pBits);
+	long np = ceil((pBits + logQ + logN + 2)/59.);
+	uint64_t* rpoly = new uint64_t[np << logN];
+	cipherGD.generateAuxPoly(rpoly, slots, batch, pBits);
 	timeutils.stop("Polynomial generation");
 
 	double* pwData = new double[factorDim];
