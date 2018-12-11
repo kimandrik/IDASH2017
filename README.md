@@ -13,7 +13,7 @@ work.  If not, see <http://creativecommons.org/licenses/by-nc/3.0/>.
 
 run: ./IDASH2017 trainfile isYfirst numIter k gammaUp gammaDown isInitZero fold isEncrypted testfile
 
-./HEML string bool long long double double bool long bool string
+./IDASH2017 string bool long long double double bool long bool string
 
 example: ./IDASH2017 "../data/data103x1579.txt" 1 7 5 1 -1 1 5 1
 
